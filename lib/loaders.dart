@@ -37,7 +37,6 @@ export 'package:jinja/src/loaders.dart';
 class FileSystemLoader extends Loader {
   /// {@macro jinja.FileSystemLoader}
   FileSystemLoader({
-    this.baseString,
     List<String> paths = const <String>['templates'],
     this.recursive = true,
     this.followLinks = true,
@@ -46,9 +45,6 @@ class FileSystemLoader extends Loader {
   }) : paths = paths.map<String>(normalize).toList();
 
   final List<String> paths;
-
-  /// use [baseString] instead of [paths] if you run it on web, since it does not support dart:io.
-  final String? baseString;
 
   final bool recursive;
 
@@ -125,13 +121,6 @@ class FileSystemLoader extends Loader {
     String path, {
     Map<String, Object?>? globals,
   }) {
-    if (baseString != null) {
-      return environment.fromString(
-        baseString!,
-        path: path,
-        globals: globals,
-      );
-    }
     return environment.fromString(getSource(path),
         path: path, globals: globals);
   }
