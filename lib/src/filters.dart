@@ -110,6 +110,43 @@ String doReplace(
   return value;
 }
 
+String doReplaceEach(
+  String value,
+  String from,
+  String to, [
+  int? count,
+]) {
+  if (count == null) {
+    for (var element in from.split('').toList()) {
+      value = value.replaceAll(element, to);
+    }
+  } else {
+    var start = value.indexOf(from);
+    var n = 0;
+
+    while (n < count && start != -1 && start < value.length) {
+      var start = value.indexOf(from);
+      value = value.replaceRange(start, start + from.length, to);
+      start = value.indexOf(from, start + to.length);
+      n += 1;
+    }
+  }
+
+  return value;
+}
+
+String doRegexReplace(
+  String value,
+  String from,
+  String to,
+) {
+  RegExp regex = RegExp(from);
+
+  var decodedString = value.replaceAll(regex, to);
+
+  return decodedString;
+}
+
 /// Convert a value to uppercase.
 String doUpper(String value) {
   return value.toUpperCase();
@@ -625,6 +662,8 @@ final Map<String, Function> filters = <String, Function>{
   'string': doString,
   // 'urlencode': doURLEncode,
   'replace': doReplace,
+  'replace_each': doReplaceEach,
+  'regex_replace': doRegexReplace,
   'upper': doUpper,
   'lower': doLower,
   'items': doItems,
