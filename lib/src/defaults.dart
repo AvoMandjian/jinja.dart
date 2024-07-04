@@ -21,11 +21,13 @@ Object? getItem(Object? item, dynamic object) {
     // TODO(dynamic): dynamic invocation
     // ignore: avoid_dynamic_calls
     return object[item];
-  } on NoSuchMethodError {
+  } catch (e) {
     if (object == null) {
-      rethrow;
+      throw Exception(
+          'Jinja script contains {{.$item}}, but the provided "object" is null. No object in the Jinja data contains {{.$item}}.');
     }
-
+    throw Exception(
+        'Attempted to access {{$item}} in the provided "object" {{$object}}, which may not be an object. Flutter Exception: ${e.toString()}');
     return null;
   }
 }
