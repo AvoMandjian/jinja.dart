@@ -28,7 +28,6 @@ Object? getItem(Object? item, dynamic object) {
     }
     throw Exception(
         'Attempted to access {{$item}} in the provided "object" {{$object}}, which may not be an object. Flutter Exception: ${e.toString()}');
-    return null;
   }
 }
 
