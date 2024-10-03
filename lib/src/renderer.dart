@@ -1,12 +1,9 @@
-import 'dart:collection';
 import 'dart:math' as math;
 
-import 'package:jinja/src/context.dart';
 import 'package:jinja/src/environment.dart';
 import 'package:jinja/src/exceptions.dart';
-import 'package:jinja/src/loop.dart';
-import 'package:jinja/src/namespace.dart';
 import 'package:jinja/src/nodes.dart';
+import 'package:jinja/src/runtime.dart';
 import 'package:jinja/src/tests.dart';
 import 'package:jinja/src/utils.dart';
 import 'package:jinja/src/visitor.dart';
@@ -15,72 +12,47 @@ import 'package:meta/dart2js.dart';
 abstract base class RenderContext extends Context {
   RenderContext(
     super.environment, {
-    Map<String, List<Block>>? blocks,
+    super.template,
+    super.blocks,
     super.parent,
     super.data,
-  }) : blocks = blocks ?? HashMap<String, List<Block>>();
-
-  final Map<String, List<Block>> blocks;
-
-  @override
-  RenderContext derived({
-    Map<String, List<Block>>? blocks,
-    Map<String, Object?>? data,
   });
 
-  void set(String key, Object? value) {
-    context[key] = value;
-  }
-
-  bool remove(String name) {
-    if (context.containsKey(name)) {
-      context.remove(name);
-      return true;
-    }
-
-    return false;
-  }
-
-  Object? finalize(Object? object) {
-    return environment.finalize(this, object);
-  }
-
   void assignTargets(Object? target, Object? current) {
-    if (target case String string) {
-      set(string, current);
-      return;
-    }
-
-    if (target case List<String> strings) {
+    if (target is String) {
+      set(target, current);
+    } else if (target is List<String>) {
       var values = list(current);
 
-      if (values.length < strings.length) {
+      if (values.length < target.length) {
         throw StateError('Not enough values to unpack.');
       }
 
-      if (values.length > strings.length) {
+      if (values.length > target.length) {
         throw StateError('Too many values to unpack.');
       }
 
-      for (var i = 0; i < strings.length; i++) {
-        set(strings[i], values[i]);
+      for (var i = 0; i < target.length; i++) {
+        set(target[i], values[i]);
+      }
+    } else if (target is NamespaceValue) {
+      var value = resolve(target.name);
+
+      if (value is! Namespace) {
+        throw TemplateRuntimeError('Non-namespace object.');
       }
 
-      return;
+      value[target.item] = current;
+    } else {
+      throw TypeError();
     }
+  }
 
-    if (target case NamespaceValue namespaceValue) {
-      var value = resolve(namespaceValue.name);
+  @override
+  RenderContext derived({String? template, Map<String, Object?>? data});
 
-      if (value case Namespace namespace) {
-        namespace[target.item] = current;
-        return;
-      }
-
-      throw TemplateRuntimeError('Non-namespace object');
-    }
-
-    throw TypeError();
+  Object? finalize(Object? object) {
+    return environment.finalize(this, object);
   }
 }
 
@@ -88,6 +60,7 @@ base class StringSinkRenderContext extends RenderContext {
   StringSinkRenderContext(
     super.environment,
     this.sink, {
+    super.template,
     super.blocks,
     super.parent,
     super.data,
@@ -98,14 +71,14 @@ base class StringSinkRenderContext extends RenderContext {
   @override
   StringSinkRenderContext derived({
     StringSink? sink,
-    Map<String, List<Block>>? blocks,
+    String? template,
     Map<String, Object?>? data,
     bool withContext = true,
   }) {
     Map<String, Object?> parent;
 
     if (withContext) {
-      parent = HashMap<String, Object?>.of(this.parent)..addAll(context);
+      parent = <String, Object?>{...this.parent, ...context};
     } else {
       parent = this.parent;
     }
@@ -113,7 +86,8 @@ base class StringSinkRenderContext extends RenderContext {
     return StringSinkRenderContext(
       environment,
       sink ?? this.sink,
-      blocks: blocks ?? this.blocks,
+      template: template ?? this.template,
+      blocks: blocks,
       parent: parent,
       data: data,
     );
@@ -129,11 +103,11 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   const StringSinkRenderer();
 
   Map<String, Object?> getDataForTargets(Object? targets, Object? current) {
-    if (targets case String string) {
-      return <String, Object?>{string: current};
+    if (targets is String) {
+      return <String, Object?>{targets: current};
     }
 
-    if (targets case List<Object?> targets) {
+    if (targets is List<Object?>) {
       var names = targets.cast<String>();
       var values = list(current);
 
@@ -160,8 +134,8 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     String macro(List<Object?> positional, Map<Object?, Object?> named) {
       var buffer = StringBuffer();
       var derived = context.derived(sink: buffer);
-      var index = 0;
 
+      var index = 0;
       var length = node.positional.length;
 
       for (; index < length; index += 1) {
@@ -200,7 +174,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       }
 
       node.body.accept(this, derived);
-      return '$buffer';
+      return buffer.toString();
     }
 
     return macro;
@@ -273,7 +247,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       buffer.write(value.accept(this, context));
     }
 
-    return '$buffer';
+    return buffer.toString();
   }
 
   @override
@@ -397,7 +371,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     var derived = context.derived(sink: buffer);
     node.body.accept(this, derived);
 
-    Object? value = '$buffer';
+    Object? value = buffer.toString();
 
     var filters = node.filters;
 
@@ -417,36 +391,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   void visitBlock(Block node, StringSinkRenderContext context) {
-    var blocks = context.blocks[node.name];
-
-    if (blocks == null || blocks.isEmpty) {
-      node.body.accept(this, context);
-    } else {
-      if (node.required) {
-        if (blocks.length == 1) {
-          throw TemplateRuntimeError("Required block '${node.name}' not found.");
-        }
-      }
-
-      var first = blocks[0];
-      var index = 0;
-
-      // TODO(renderer): move to context
-      String parent() {
-        if (index < blocks.length - 1) {
-          var parentBlock = blocks[index += 1];
-          parentBlock.body.accept(this, context);
-          return '';
-        }
-
-        // TODO(renderer): add error message
-        throw TemplateRuntimeError();
-      }
-
-      context.set('super', parent);
-      first.body.accept(this, context);
-      context.remove('super');
-    }
+    context.blocks[node.name]![0](context);
   }
 
   @override
@@ -487,7 +432,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     var derived = context.derived(sink: buffer);
     node.body.accept(this, derived);
 
-    Object? value = '$buffer';
+    Object? value = buffer.toString();
 
     for (var Filter(name: name, calling: calling) in node.filters) {
       var (positional, named) = calling.accept(this, context) as Parameters;
@@ -522,6 +467,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
           orElse.accept(this, context);
         }
 
+        // Empty string prevents calling `finalize` on `null`.
         return '';
       }
 
@@ -550,6 +496,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         node.body.accept(this, forContext);
       }
 
+      // Empty string prevents calling `finalize` on `null`.
       return '';
     }
 
@@ -563,45 +510,35 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     var template = switch (templateOrParth) {
       String path => context.environment.getTemplate(path),
       Template template => template,
+      // TODO(renderer): add error message
       Object? value => throw ArgumentError.value(value, 'template'),
     };
 
     for (var (name, alias) in node.names) {
       String macro(List<Object?> positional, Map<Object?, Object?> named) {
-        Macro targetMacro;
+        Macro? targetMacro;
 
-        if (template.body case Macro macro) {
-          if (macro.name != name) {
-            throw TemplateRuntimeError(
-                "The '${template.path}' does not export the requested name.");
+        for (var macro in template.body.macros) {
+          if (macro.name == name) {
+            targetMacro = macro;
+            break;
           }
-
-          targetMacro = macro;
-        } else if (template.body case TemplateNode body) {
-          found:
-          {
-            for (var macro in body.macros) {
-              if (macro.name == name) {
-                targetMacro = macro;
-                break found;
-              }
-            }
-
-            throw TemplateRuntimeError(
-                "The '${template.path}' does not export the requested name.");
-          }
-        } else {
-          throw TemplateRuntimeError('Non-macro object.');
         }
+
+        if (targetMacro == null) {
+          throw TemplateRuntimeError("The '${template.path}' does not export the requested name.");
+        }
+
+        MacroFunction function;
 
         if (node.withContext) {
-          var function = getMacroFunction(targetMacro, context);
-          return function(positional, named.cast<Symbol, Object?>());
+          function = getMacroFunction(targetMacro, context);
         } else {
           var newContext = context.derived(withContext: false);
-          var function = getMacroFunction(targetMacro, newContext);
-          return function(positional, named.cast<Symbol, Object?>());
+          function = getMacroFunction(targetMacro, newContext);
         }
+
+        return function(positional, named.cast<Symbol, Object?>());
       }
 
       context.set(alias ?? name, macro);
@@ -627,20 +564,9 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       Object? value => throw ArgumentError.value(value, 'template'),
     };
 
-    List<Macro> macros;
-
-    if (template.body case Macro macro) {
-      macros = <Macro>[macro];
-    } else if (template.body case TemplateNode body) {
-      macros = body.macros;
-    } else {
-      // TODO(renderer): update error message
-      throw TemplateRuntimeError('Non-macro object.');
-    }
-
     var namespace = Namespace();
 
-    for (var macro in macros) {
+    for (var macro in template.body.macros) {
       if (node.withContext) {
         namespace[macro.name] = getMacroFunction(macro, context);
       } else {
@@ -663,6 +589,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         String path => context.environment.getTemplate(path),
         Template template => template,
         List<Object?> paths => context.environment.selectTemplate(paths),
+        // TODO(renderer): add error message
         Object? value => throw ArgumentError.value(value, 'template'),
       };
     } on TemplateNotFound {
@@ -702,18 +629,60 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   void visitTemplateNode(TemplateNode node, StringSinkRenderContext context) {
+    // TODO(renderer): add `TemplateReference`
     var self = Namespace();
 
     for (var block in node.blocks) {
-      var blocks = context.blocks[block.name] ??= <Block>[];
-      blocks.add(block);
+      var blockName = block.name;
 
+      // TODO(compiler): switch to `ContextCallback`
       String render() {
-        block.accept(this, context);
+        var blocks = context.blocks[blockName];
+
+        if (blocks == null) {
+          throw UndefinedError("Block '$blockName' is not defined.");
+        }
+
+        // TODO(renderer): check if empty
+        blocks[0](context);
         return '';
       }
 
-      self[block.name] = render;
+      self[blockName] = render;
+
+      var blocks = context.blocks[blockName] ??= <ContextCallback>[];
+
+      if (block.required) {
+        Never callback(Context context) {
+          throw TemplateRuntimeError("Required block '${block.name}' not found.");
+        }
+
+        blocks.add(callback);
+      } else {
+        var parentIndex = blocks.length + 1;
+
+        void callback(Context context) {
+          var current = context.get('super');
+
+          // TODO(renderer): add `BlockReference`
+          String parent() {
+            var blocks = context.blocks[blockName]!;
+
+            if (parentIndex >= blocks.length) {
+              throw TemplateRuntimeError("Super block '$blockName' not found.");
+            }
+
+            blocks[parentIndex](context);
+            return '';
+          }
+
+          context.set('super', parent);
+          block.body.accept(this, context);
+          context.set('super', current);
+        }
+
+        blocks.add(callback);
+      }
     }
 
     context.set('self', self);
