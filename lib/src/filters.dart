@@ -41,9 +41,9 @@ Object? Function(Object? object) makeAttributeGetter(
   Object? getter(Object? object) {
     for (var part in parts) {
       if (part is String) {
-        object = environment.getAttribute(part, object) ?? defaultValue;
+        object = environment.getAttribute(part, object, node: attribute) ?? defaultValue;
       } else {
-        object = environment.getItem(part, object) ?? defaultValue;
+        object = environment.getItem(part, object, node: attribute) ?? defaultValue;
       }
     }
 
@@ -59,9 +59,10 @@ Object? Function(Object?) makeItemGetter(
   Environment environment,
   Object item, {
   Object? defaultValue,
+  Object? attribute,
 }) {
   Object? getter(Object? object) {
-    return environment.getItem(item, object) ?? defaultValue;
+    return environment.getItem(item, object, node: attribute) ?? defaultValue;
   }
 
   return getter;
@@ -179,10 +180,7 @@ String doTitle(String value) {
     return '';
   }
 
-  return _wordBeginningSplitRe
-      .split(value)
-      .map<String>(utils.capitalize)
-      .join();
+  return _wordBeginningSplitRe.split(value).map<String>(utils.capitalize).join();
 }
 
 /// Sort a dict and return `[key, value]` pairs.
@@ -364,11 +362,9 @@ String doTruncate(
   int leeway = 5,
 ]) {
   if (length < end.length) {
-    throw ArgumentError.value(
-        value, 'leeway', 'Expected length >= ${end.length}, got $length.');
+    throw ArgumentError.value(value, 'leeway', 'Expected length >= ${end.length}, got $length.');
   } else if (leeway < 0) {
-    throw ArgumentError.value(
-        value, 'leeway', 'Expected leeway >= 0, got $leeway.');
+    throw ArgumentError.value(value, 'leeway', 'Expected leeway >= 0, got $leeway.');
   }
 
   if (value.length <= length + leeway) {
@@ -410,10 +406,7 @@ String doWordWrap(
   );
 
   var wrap = wrapString ?? environment.newLine;
-  return const LineSplitter()
-      .convert(value)
-      .expand<String>(wrapper.wrap)
-      .join(wrap);
+  return const LineSplitter().convert(value).expand<String>(wrapper.wrap).join(wrap);
 }
 
 /// Count the words in that string.
@@ -566,12 +559,10 @@ Object? Function(Object? object) _prepareMap(
 
       if (named.isNotEmpty) {
         var first = named.keys.first;
-        throw ArgumentError.value(
-            named[first], first, 'Unexpected keyword argument.');
+        throw ArgumentError.value(named[first], first, 'Unexpected keyword argument.');
       }
 
-      return makeAttributeGetter(context.environment, attribute,
-          defaultValue: defaultValue);
+      return makeAttributeGetter(context.environment, attribute, defaultValue: defaultValue);
     }
 
     if (named.remove('item') case Object item?) {
@@ -579,12 +570,10 @@ Object? Function(Object? object) _prepareMap(
 
       if (named.isNotEmpty) {
         var first = named.keys.first;
-        throw ArgumentError.value(
-            named[first], first, 'Unexpected keyword argument.');
+        throw ArgumentError.value(named[first], first, 'Unexpected keyword argument.');
       }
 
-      return makeItemGetter(context.environment, item,
-          defaultValue: defaultValue);
+      return makeItemGetter(context.environment, item, defaultValue: defaultValue, attribute: null);
     }
   }
 
@@ -631,14 +620,14 @@ Iterable<Object?> doMap(
 ///
 /// `foo | attr('bar')` works like `foo.bar`.
 Object? doAttribute(Environment environment, Object? value, String attribute) {
-  return environment.getAttribute(attribute, value);
+  return environment.getAttribute(attribute, value, node: environment);
 }
 
 /// Get an item of an object.
 ///
 /// `foo | item('bar')` works like `foo['bar']`.
 Object? doItem(Environment environment, Object? value, Object item) {
-  return environment.getItem(item, value);
+  return environment.getItem(item, value, node: environment);
 }
 
 /// Serialize an object to a string of JSON, and mark it safe to render in

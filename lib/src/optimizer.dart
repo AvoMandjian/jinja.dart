@@ -45,7 +45,7 @@ class Optimizer implements Visitor<Context, Node> {
 
     if (value case Constant constant) {
       return Constant(
-        value: context.attribute(node.attribute, constant.value),
+        value: context.attribute(node.attribute, constant.value, node),
       );
     }
 
@@ -87,10 +87,7 @@ class Optimizer implements Visitor<Context, Node> {
 
     if (values.every((value) => value is Constant)) {
       return Constant(
-        value: values
-            .cast<Constant>()
-            .map<Object?>((constant) => constant.value)
-            .join(),
+        value: values.cast<Constant>().map<Object?>((constant) => constant.value).join(),
       );
     }
 
@@ -178,7 +175,7 @@ class Optimizer implements Visitor<Context, Node> {
     var value = node.value;
 
     if (key is Constant && value is Constant) {
-      return Constant(value: context.item(key.value, value.value));
+      return Constant(value: context.item(key.value, value.value, node));
     }
 
     return node.copyWith(key: key, value: value);
@@ -217,8 +214,7 @@ class Optimizer implements Visitor<Context, Node> {
     if (left is Constant && right is Constant) {
       return Constant(
         value: switch (node.operator) {
-          ScalarOperator.power =>
-            math.pow(left.value as num, right.value as num),
+          ScalarOperator.power => math.pow(left.value as num, right.value as num),
           // ignore: avoid_dynamic_calls
           ScalarOperator.module => (left.value as dynamic) % right.value,
           ScalarOperator.floorDivision =>

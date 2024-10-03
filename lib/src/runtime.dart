@@ -94,12 +94,12 @@ base class Context {
     return environment.undefined(name, template);
   }
 
-  Object? attribute(String name, Object? value) {
-    return environment.getAttribute(name, value);
+  Object? attribute(String name, Object? value, Object? node) {
+    return environment.getAttribute(name, value, node: node);
   }
 
-  Object? item(Object? name, Object? value) {
-    return environment.getItem(name, value);
+  Object? item(Object? name, Object? value, Object? node) {
+    return environment.getItem(name, value, node: node);
   }
 
   Object? filter(
@@ -318,8 +318,7 @@ final class CyclerIterator implements Iterator<Object?> {
 }
 
 base class Namespace {
-  Namespace([Map<String, Object?>? data])
-      : context = <String, Object?>{...?data};
+  Namespace([Map<String, Object?>? data]) : context = <String, Object?>{...?data};
 
   final Map<String, Object?> context;
 

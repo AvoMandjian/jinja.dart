@@ -29,18 +29,17 @@ typedef ContextFinalizer = Object? Function(Context context, Object? value);
 /// {@macro jinja.finalizer}
 ///
 /// Takes [Environment] as first argument.
-typedef EnvironmentFinalizer = Object? Function(
-    Environment environment, Object? value);
+typedef EnvironmentFinalizer = Object? Function(Environment environment, Object? value);
 
 /// A function that can be used to get object atribute.
 ///
 /// Used by `object.attribute` expression.
-typedef AttributeGetter = Object? Function(String attribute, Object? object);
+typedef AttributeGetter = Object? Function(String attribute, Object? object, {Object? node});
 
 /// A function that can be used to get object item.
 ///
 /// Used by `object['item']` expression.
-typedef ItemGetter = Object? Function(Object? key, Object? object);
+typedef ItemGetter = Object? Function(Object? key, Object? object, {Object? node});
 
 /// A function that returns a value or throws an error if the variable is not
 /// found.
@@ -285,8 +284,7 @@ base class Environment {
 
     if (pass == PassArgument.context) {
       if (context == null) {
-        throw TemplateRuntimeError(
-            'Attempted to invoke context function without context.');
+        throw TemplateRuntimeError('Attempted to invoke context function without context.');
       }
 
       positional = <Object?>[context, ...positional];
@@ -397,8 +395,7 @@ base class Environment {
   /// If the template does not exist a [TemplatesNotFound] exception is thrown.
   Template selectTemplate(List<Object?> names) {
     if (names.isEmpty) {
-      throw TemplatesNotFound(
-          message: 'Tried to select from an empty list of templates.');
+      throw TemplatesNotFound(message: 'Tried to select from an empty list of templates.');
     }
 
     for (var template in names) {
@@ -466,11 +463,11 @@ base class Environment {
       return itemGetter;
     }
 
-    Object? getter(String attribute, Object? object) {
+    Object? getter(String attribute, Object? object, {Object? node}) {
       try {
-        return attributeGetter(attribute, object);
+        return attributeGetter(attribute, object, node: node);
       } on NoSuchMethodError {
-        return itemGetter(attribute, object);
+        return itemGetter(attribute, object, node: node);
       }
     }
 

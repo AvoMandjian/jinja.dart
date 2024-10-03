@@ -9,11 +9,9 @@ enum AssignContext {
 final class Name extends Expression {
   const Name({required this.name, this.context = AssignContext.load});
 
-  const Name.store({required String name})
-      : this(name: name, context: AssignContext.store);
+  const Name.store({required String name}) : this(name: name, context: AssignContext.store);
 
-  const Name.parameter({required String name})
-      : this(name: name, context: AssignContext.parameter);
+  const Name.parameter({required String name}) : this(name: name, context: AssignContext.parameter);
 
   final String name;
 
@@ -285,8 +283,7 @@ final class Condition extends Expression {
       'class': 'Condition',
       'test': test.toJson(),
       'trueValue': trueValue.toJson(),
-      if (falseValue case Expression falseValue?)
-        'falseValue': falseValue.toJson(),
+      if (falseValue case Expression falseValue?) 'falseValue': falseValue.toJson(),
     };
   }
 }
