@@ -450,7 +450,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
     if (iterable == null) {
       throw Exception(
-          'Trying to access an undefined list: "${(node.iterable as Name).name}", in a for loop: it may be {% for $targets in ${(node.iterable as Name).name} %} in the jinja script');
+          'Trying to access an undefined list: "${(node.iterable as Name).name}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Name).name} %} in the jinja script');
     }
 
     String render(Object? iterable, [int depth = 0]) {
