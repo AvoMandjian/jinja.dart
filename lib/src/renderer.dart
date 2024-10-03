@@ -125,8 +125,7 @@ base class StringSinkRenderContext extends RenderContext {
   }
 }
 
-base class StringSinkRenderer
-    extends Visitor<StringSinkRenderContext, Object?> {
+base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> {
   const StringSinkRenderer();
 
   Map<String, Object?> getDataForTargets(Object? targets, Object? current) {
@@ -139,19 +138,15 @@ base class StringSinkRenderer
       var values = list(current);
 
       if (values.length < names.length) {
-        throw StateError(
-            'Not enough values to unpack (expected ${names.length}, '
+        throw StateError('Not enough values to unpack (expected ${names.length}, '
             'got ${values.length}).');
       }
 
       if (values.length > names.length) {
-        throw StateError(
-            'Too many values to unpack (expected ${names.length}).');
+        throw StateError('Too many values to unpack (expected ${names.length}).');
       }
 
-      return <String, Object?>{
-        for (var i = 0; i < names.length; i++) names[i]: values[i]
-      };
+      return <String, Object?>{for (var i = 0; i < names.length; i++) names[i]: values[i]};
     }
 
     // TODO(renderer): add error message
@@ -215,9 +210,7 @@ base class StringSinkRenderer
 
   @override
   List<Object?> visitArray(Array node, StringSinkRenderContext context) {
-    return <Object?>[
-      for (var value in node.values) value.accept(this, context)
-    ];
+    return <Object?>[for (var value in node.values) value.accept(this, context)];
   }
 
   @override
@@ -235,13 +228,10 @@ base class StringSinkRenderer
 
   @override
   Parameters visitCalling(Calling node, StringSinkRenderContext context) {
-    var positional = <Object?>[
-      for (var argument in node.arguments) argument.accept(this, context)
-    ];
+    var positional = <Object?>[for (var argument in node.arguments) argument.accept(this, context)];
 
     var named = <Symbol, Object?>{
-      for (var (:key, :value) in node.keywords)
-        Symbol(key): value.accept(this, context)
+      for (var (:key, :value) in node.keywords) Symbol(key): value.accept(this, context)
     };
 
     return (positional, named);
@@ -303,8 +293,7 @@ base class StringSinkRenderer
   @override
   Map<Object?, Object?> visitDict(Dict node, StringSinkRenderContext context) {
     return <Object?, Object?>{
-      for (var (:key, :value) in node.pairs)
-        key.accept(this, context): value.accept(this, context)
+      for (var (:key, :value) in node.pairs) key.accept(this, context): value.accept(this, context)
     };
   }
 
@@ -326,10 +315,8 @@ base class StringSinkRenderer
     var left = node.left.accept(this, context);
 
     return switch (node.operator) {
-      LogicalOperator.and =>
-        boolean(left) ? node.right.accept(this, context) : left,
-      LogicalOperator.or =>
-        boolean(left) ? left : node.right.accept(this, context),
+      LogicalOperator.and => boolean(left) ? node.right.accept(this, context) : left,
+      LogicalOperator.or => boolean(left) ? left : node.right.accept(this, context),
     };
   }
 
@@ -379,9 +366,7 @@ base class StringSinkRenderer
 
   @override
   List<Object?> visitTuple(Tuple node, StringSinkRenderContext context) {
-    return <Object?>[
-      for (var value in node.values) value.accept(this, context)
-    ];
+    return <Object?>[for (var value in node.values) value.accept(this, context)];
   }
 
   @override
@@ -439,8 +424,7 @@ base class StringSinkRenderer
     } else {
       if (node.required) {
         if (blocks.length == 1) {
-          throw TemplateRuntimeError(
-              "Required block '${node.name}' not found.");
+          throw TemplateRuntimeError("Required block '${node.name}' not found.");
         }
       }
 
@@ -520,7 +504,8 @@ base class StringSinkRenderer
     var iterable = node.iterable.accept(this, context);
 
     if (iterable == null) {
-      throw ArgumentError.notNull('iterable');
+      throw Exception(
+          'Trying to access an undefined list: "${(node.iterable as Name).name}", in a for loop: it may be {% for $targets in ${(node.iterable as Name).name} %} in the jinja script');
     }
 
     String render(Object? iterable, [int depth = 0]) {
@@ -737,13 +722,9 @@ base class StringSinkRenderer
 
   @override
   void visitWith(With node, StringSinkRenderContext context) {
-    var targets = <Object?>[
-      for (var target in node.targets) target.accept(this, context)
-    ];
+    var targets = <Object?>[for (var target in node.targets) target.accept(this, context)];
 
-    var values = <Object?>[
-      for (var value in node.values) value.accept(this, context)
-    ];
+    var values = <Object?>[for (var value in node.values) value.accept(this, context)];
 
     var data = getDataForTargets(targets, values);
     var newContext = context.derived(data: data);
