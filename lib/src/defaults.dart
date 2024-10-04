@@ -35,6 +35,10 @@ Object? getItem(
             'Jinja script contains {{.$item}}, but the provided "object" is null. No object in the Jinja data contains {{.$item}}.');
       }
     }
+    if (node is Attribute) {
+      throw Exception(
+          'Trying to access "$item" in an undefined object: "${(node.value as Name).name}" from the jinja data, it may be {{${(node.value as Name).name}.$item}} in the jinja script');
+    }
     throw Exception(
         'Attempted to access {{$item}} in the provided "object" {{$object}}, which may not be an object. Flutter Exception: ${e.toString()}');
   }
