@@ -197,7 +197,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   Object? visitCall(Call node, StringSinkRenderContext context) {
     var function = node.value.accept(this, context);
     var (positional, named) = node.calling.accept(this, context) as Parameters;
-    return context.call(function, positional, named);
+    return context.call(function, node, positional, named);
   }
 
   @override

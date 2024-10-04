@@ -1,4 +1,5 @@
 import 'package:jinja/src/environment.dart';
+import 'package:jinja/src/nodes.dart';
 
 typedef ContextCallback = void Function(Context context);
 
@@ -23,7 +24,8 @@ base class Context {
   final Map<String, Object?> context;
 
   Object? call(
-    dynamic object, [
+    dynamic object,
+    Object? node, [
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
   ]) {
@@ -34,6 +36,13 @@ base class Context {
     } else {
       // TODO(dynamic): dynamic invocation
       // ignore: avoid_dynamic_calls
+      if (object == null) {
+        if (node is Call) {
+          throw Exception(
+              'the function ${((node.value as Attribute).value as Name).name} is null at $positional');
+        }
+        throw Exception('object is null at $positional');
+      }
       function = object.call as Function;
     }
 
