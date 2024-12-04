@@ -451,10 +451,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     if (iterable == null) {
       if (node.iterable is Name) {
         throw Exception(
-            'Trying to access an undefined list: "${(node.iterable as Name).name}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Name).name} %} in the jinja script');
+            'Trying to access an undefined list: "${(node.iterable as Name).name}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Name).name} %} in one of the jinja script: (${context.blocks.keys.toList().join(',')})');
       } else if (node.iterable is Attribute) {
         throw Exception(
-            'Trying to access an undefined list: "${(node.iterable as Attribute).attribute}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Attribute).attribute} %} in the jinja script');
+            'Trying to access an undefined list: "${(node.iterable as Attribute).attribute}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Attribute).attribute} %} in one of the jinja script: (${context.blocks.keys.toList().join(',')})');
       }
     }
 
