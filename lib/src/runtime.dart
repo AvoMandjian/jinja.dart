@@ -38,8 +38,12 @@ base class Context {
       // ignore: avoid_dynamic_calls
       if (object == null) {
         if (node is Call) {
-          throw Exception(
-              'the function ${((node.value as Attribute).value as Name).name} is null at $positional');
+          if (node.value is Attribute) {
+            throw Exception(
+                'the function ${((node.value as Attribute).value as Name).name} is null at $positional');
+          } else {
+            throw Exception('the function ${node.value.toString()} is null at $positional');
+          }
         }
         throw Exception('object is null at $positional');
       }
