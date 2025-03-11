@@ -24,12 +24,22 @@ Object? getItem(
   try {
     // TODO(dynamic): dynamic invocation
     // ignore: avoid_dynamic_calls
-    return object[item];
+    if (object != null && item != null) {
+      return object[item];
+    } else {
+      throw Exception(
+          'Trying to access {{"$item"}} in an undefined object: {{"$object"}} from the jinja data, it may be {{"$node"}} in the jinja script');
+    }
   } catch (e) {
     if (object == null) {
       if (node is Attribute) {
-        throw Exception(
-            'Trying to access "$item" in an undefined object: "${(node.value as Name).name}" from the jinja data, it may be {{${(node.value as Name).name}.$item}} in the jinja script');
+        if (node.value is Name) {
+          throw Exception(
+              'Trying to access "$item" in an undefined object: "${(node.value as Name).name}" from the jinja data, it may be {{${(node.value as Name).name}.$item}} in the jinja script');
+        } else {
+          throw Exception(
+              'Trying to access "$item" in an undefined object: "${node.value}" from the jinja data, it may be {{${(node.value as Name).name}.$item}} in the jinja script');
+        }
       } else {
         throw Exception(
             'Jinja script contains {{.$item}}, but the provided "object" is null. No object in the Jinja data contains {{.$item}}.');
