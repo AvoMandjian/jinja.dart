@@ -38,7 +38,7 @@ Object? getItem(
               'Trying to access "$item" in an undefined object: "${(node.value as Name).name}" from the jinja data, it may be {{${(node.value as Name).name}.$item}} in the jinja script');
         } else {
           throw Exception(
-              'Trying to access "$item" in an undefined object: "${node.value}" from the jinja data, it may be {{${(node.value as Name).name}.$item}} in the jinja script');
+              'Trying to access "$item" in an undefined object: "${node.value}" from the jinja data, it may be {{${node.value}.$item}} in the jinja script');
         }
       } else {
         throw Exception(
