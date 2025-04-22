@@ -695,6 +695,20 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   }
 
   @override
+  void visitTryCatch(TryCatch node, StringSinkRenderContext context) {
+    try {
+      node.body.accept(this, context);
+    } catch (error) {
+      if (node.exception case var exception?) {
+        var taget = exception.accept(this, context);
+        context.assignTargets(taget, error);
+      }
+
+      node.catchBody.accept(this, context);
+    }
+  }
+
+  @override
   void visitWith(With node, StringSinkRenderContext context) {
     var targets = <Object?>[for (var target in node.targets) target.accept(this, context)];
 
@@ -703,5 +717,18 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     var data = getDataForTargets(targets, values);
     var newContext = context.derived(data: data);
     node.body.accept(this, newContext);
+  }
+
+  @override
+  Object? visitSlice(Slice node, StringSinkRenderContext context) {
+    var value = node.value.accept(this, context);
+    var start = node.start?.accept(this, context) ?? 0;
+    var stop = node.stop?.accept(this, context);
+
+    if (value is List && start is int && stop is int?) {
+      return value.sublist(start, stop);
+    }
+
+    throw TemplateRuntimeError('Invalid slice operation.');
   }
 }

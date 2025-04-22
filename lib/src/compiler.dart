@@ -448,11 +448,29 @@ class RuntimeCompiler implements Visitor<void, Node> {
   }
 
   @override
+  Node visitTryCatch(TryCatch node, void context) {
+    return node.copyWith(
+      // TODO(compiler): skip bad nodes.
+      body: visitNode(node.body, context),
+      exception: visitNode(node.exception, context),
+      catchBody: visitNode(node.catchBody, context),
+    );
+  }
+
+  @override
   With visitWith(With node, void context) {
     return node.copyWith(
       targets: visitNodes(node.targets, context),
       values: visitNodes(node.values, context),
       body: visitNode(node.body, context),
+    );
+  }
+
+  @override
+  Node visitSlice(Slice node, void context) {
+    return node.copyWith(
+      start: visitNode<Expression?>(node.start, context),
+      stop: visitNode<Expression?>(node.stop, context),
     );
   }
 }

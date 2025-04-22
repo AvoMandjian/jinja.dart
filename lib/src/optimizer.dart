@@ -413,11 +413,29 @@ class Optimizer implements Visitor<Context, Node> {
   }
 
   @override
+  Node visitTryCatch(TryCatch node, Context context) {
+    return node.copyWith(
+      // TODO(optimizer): skip bad nodes.
+      body: visitNode<Node>(node.body, context),
+      exception: visitNode<Expression?>(node.exception, context),
+      catchBody: visitNode<Node>(node.catchBody, context),
+    );
+  }
+
+  @override
   Node visitWith(With node, Context context) {
     return node.copyWith(
       targets: visitNodes<Expression>(node.targets, context),
       values: visitNodes<Expression>(node.values, context),
       body: visitNode<Node>(node.body, context),
+    );
+  }
+
+  @override
+  Node visitSlice(Slice node, Context context) {
+    return node.copyWith(
+      start: visitNode<Expression?>(node.start, context),
+      stop: visitNode<Expression?>(node.stop, context),
     );
   }
 }

@@ -77,7 +77,13 @@ abstract class Visitor<C, R> {
 
   R visitTemplateNode(TemplateNode node, C context);
 
+  R visitTryCatch(TryCatch node, C context);
+
   R visitWith(With node, C context);
+
+  R visitSlice(Slice node, C context) {
+    throw UnimplementedError();
+  }
 }
 
 class ThrowingVisitor<C, R> implements Visitor<C, R> {
@@ -263,7 +269,17 @@ class ThrowingVisitor<C, R> implements Visitor<C, R> {
   }
 
   @override
+  R visitTryCatch(TryCatch node, C context) {
+    throw UnimplementedError();
+  }
+
+  @override
   R visitWith(With node, C context) {
+    throw UnimplementedError();
+  }
+
+  @override
+  R visitSlice(Slice node, C context) {
     throw UnimplementedError();
   }
 }
