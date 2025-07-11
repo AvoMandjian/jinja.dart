@@ -26,7 +26,7 @@ final class Parser {
 
   Extends? extendsNode;
 
-  Never fail(String message, [int? line, int? column]) {
+  Never fail(String message, {required int? line, required int? column}) {
     throw TemplateSyntaxError(
       message,
       line: line,
@@ -42,6 +42,7 @@ final class Parser {
     String? name,
     List<List<(String, String?)>> endTokensStack, [
     int? line,
+    int? column,
   ]) {
     var expected = <String>[];
     String? currentlyLooking;
@@ -81,17 +82,17 @@ final class Parser {
           "The innermost block that needs to be closed is '${tagStack.last}'.");
     }
 
-    fail(messages.join(' '), line);
+    fail(messages.join(' '), line: line, column: column);
   }
 
-  Never failUnknownTag(String name, [int? line]) {
-    failUnknownTagEof(name, endTokensStack, line);
+  Never failUnknownTag(String name, [int? line, int? column]) {
+    failUnknownTagEof(name, endTokensStack, line, column);
   }
 
-  Never failEof(List<(String, String?)> endTokens, [int? line]) {
+  Never failEof(List<(String, String?)> endTokens, [int? line, int? column]) {
     var stack = endTokensStack.toList();
     stack.add(endTokens);
-    failUnknownTagEof(null, stack, line);
+    failUnknownTagEof(null, stack, line, column);
   }
 
   bool isTupleEnd(
@@ -110,7 +111,7 @@ final class Parser {
     var token = reader.current;
 
     if (!token.test('name')) {
-      fail('Tag name expected', token.line);
+      fail('Tag name expected', line: token.line, column: token.column);
     }
 
     tagStack.add(token.value);
@@ -164,7 +165,7 @@ final class Parser {
         default:
           tagStack.removeLast();
           popTag = false;
-          failUnknownTag(token.value, token.line);
+          failUnknownTag(token.value, token.line, token.column);
       }
     } finally {
       if (popTag) {
@@ -184,7 +185,7 @@ final class Parser {
     var nodes = subParse(reader, endTokens: endTokens);
 
     if (reader.current.test('eof')) {
-      failEof(endTokens);
+      failEof(endTokens, reader.current.line, reader.current.column);
     }
 
     if (dropNeedle) {
@@ -232,7 +233,8 @@ final class Parser {
     var target = parseAssignTarget(reader, extraEndRules: endIn);
 
     if (target case Name(name: 'loop')) {
-      fail("Can't assign to special loop variable in for-loop target.");
+      fail("Can't assign to special loop variable in for-loop target.",
+          line: reader.current.line, column: reader.current.column);
     }
 
     reader.expect('name', 'in');
@@ -337,13 +339,15 @@ final class Parser {
     var name = reader.expect('name');
 
     if (!blocks.add(name.value)) {
-      fail("Block '${name.value}' defined twice.", reader.current.line);
+      fail("Block '${name.value}' defined twice.",
+          line: reader.current.line, column: reader.current.column);
     }
 
     var scoped = reader.skipIf('name', 'scoped');
 
     if (reader.current.test('sub')) {
-      fail('Use an underscore instead.', reader.current.line);
+      fail('Use an underscore instead.',
+          line: reader.current.line, column: reader.current.column);
     }
 
     var required = reader.skipIf('name', 'required');
@@ -351,14 +355,15 @@ final class Parser {
 
     if (required && (body is! Data || !body.isLeaf)) {
       fail('Required blocks can only contain comments or whitespace.',
-          token.line);
+          line: token.line, column: token.column);
     }
 
     var maybeName = reader.current;
 
     if (maybeName.test('name')) {
       if (maybeName.value != name.value) {
-        fail("'${name.value}' expected, got ${maybeName.value}.");
+        fail("'${name.value}' expected, got ${maybeName.value}.",
+            line: maybeName.line, column: maybeName.column);
       }
 
       reader.next();
@@ -376,7 +381,7 @@ final class Parser {
     var token = reader.expect('name', 'extends');
 
     if (extendsNode != null) {
-      fail('Extended multiple times.', token.line);
+      fail('Extended multiple times.', line: token.line, column: token.column);
     }
 
     var template = parseExpression(reader);
@@ -472,11 +477,16 @@ final class Parser {
         }
 
         var token = reader.current;
-        var target = parseAssignName(reader);
+        var target = parseAssignTarget(reader, withTuple: false);
+
+        if (target is! Name) {
+          fail("Can't assign to $target.",
+              line: token.line, column: token.column);
+        }
 
         if (target.name.startsWith('_')) {
           fail('Names starting with an underline can not be imported.',
-              token.line);
+              line: token.line, column: token.column);
         }
 
         if (reader.skipIf('name', 'as')) {
@@ -520,7 +530,8 @@ final class Parser {
       if (reader.skipIf('assign')) {
         defaults.add(parseExpression(reader));
       } else if (defaults.isNotEmpty) {
-        fail('Non-default argument follows default argument.');
+        fail('Non-default argument follows default argument.',
+            line: reader.current.line, column: reader.current.column);
       }
 
       names.add(name);
@@ -558,13 +569,13 @@ final class Parser {
     var call = parseExpression(reader);
 
     if (call is! Call) {
-      fail('Expected call.', token.line);
+      fail('Expected call.', line: token.line, column: token.column);
     }
 
     var name = call.value;
 
     if (name is! Name) {
-      fail('Expected call macro name.', token.line);
+      fail('Expected call macro name.', line: token.line, column: token.column);
     }
 
     var body = parseStatements(reader, endCall, true);
@@ -663,7 +674,7 @@ final class Parser {
     var name = parsePrimary(reader);
 
     if (name is! Name) {
-      fail("Can't assign to $name.", line);
+      fail("Can't assign to $name.", line: line, column: reader.current.column);
     }
 
     return name.copyWith(context: AssignContext.store);
@@ -701,7 +712,7 @@ final class Parser {
       );
     }
 
-    fail("Can't assign to $target.", line);
+    fail("Can't assign to $target.", line: line, column: reader.current.column);
   }
 
   Do parseDo(TokenReader reader) {
@@ -726,7 +737,7 @@ final class Parser {
       name = parseAssignTarget(reader, withTuple: false);
 
       if (name is! Name) {
-        fail("Can't assign to $name.", token.line);
+        fail("Can't assign to $name.", line: token.line, column: token.column);
       }
     }
 
@@ -1039,7 +1050,8 @@ final class Parser {
         break;
 
       default:
-        fail('Unexpected ${describeToken(current)}.', current.line);
+        fail('Unexpected ${describeToken(current)}.',
+            line: current.line, column: current.column);
     }
 
     return expression;
@@ -1091,7 +1103,7 @@ final class Parser {
       if (!explicitParentheses) {
         var current = reader.current;
         fail('Expected an expression, got ${describeToken(current)}.',
-            current.line);
+            line: current.line, column: current.column);
       }
     }
 
@@ -1189,7 +1201,8 @@ final class Parser {
       }
 
       if (!attributeToken.test('integer')) {
-        fail('Expected name or number.', attributeToken.line);
+        fail('Expected name or number.',
+            line: attributeToken.line, column: attributeToken.column);
       }
 
       var key = Constant(value: int.parse(attributeToken.value));
@@ -1217,7 +1230,8 @@ final class Parser {
       }
     }
 
-    fail('Expected subscript expression.', token.line);
+    fail('Expected subscript expression.',
+        line: token.line, column: token.column);
   }
 
   Calling parseCalling(TokenReader reader) {
@@ -1228,7 +1242,8 @@ final class Parser {
 
     void ensure(bool ensure) {
       if (!ensure) {
-        fail('Invalid syntax for function call expression.', token.line);
+        fail('Invalid syntax for function call expression.',
+            line: token.line, column: token.column);
       }
     }
 
@@ -1348,7 +1363,8 @@ final class Parser {
       calling = calling.copyWith(arguments: arguments);
     } else if (current.testAny(allow) && !current.testAny(deny)) {
       if (current.test('name', 'is')) {
-        fail('You cannot chain multiple tests with is.');
+        fail('You cannot chain multiple tests with is.',
+            line: reader.current.line, column: reader.current.column);
       }
 
       var argument = parsePostfix(reader, parsePrimary(reader));

@@ -10,7 +10,7 @@ Map<String, dynamic> dataToPassToJinja = {
 
 void main() {
   var loader = MapLoader({
-    'first_script__1__00': '{% if variable_1 %}{{variable_1}}',
+    'first_script__1__00': '{{ foo|hello }}',
   });
   var env = Environment(
     globals: <String, Object?>{
