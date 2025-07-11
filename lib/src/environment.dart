@@ -336,12 +336,13 @@ base class Environment {
   ///
   /// This can be useful for debugging or to extract information from templates.
   Node scan(Iterable<Token> tokens, {String? path}) {
-    return Parser(this, path: path).scan(tokens);
+    // No template source available for scan, pass empty string for context.
+    return Parser(this, '', path: path).scan(tokens);
   }
 
   /// Parse the source code and return the AST node.
   Node parse(String source, {String? path}) {
-    return Parser(this, path: path).parse(source);
+    return Parser(this, source, path: path).parse(source);
   }
 
   /// Load a template from a source string without using [loader].

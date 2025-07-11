@@ -42,11 +42,13 @@ base class Context {
             throw Exception(
                 'the function ${((node.value as Attribute).value as Name).name} is null at $positional');
           } else {
-            throw Exception('the function ${node.value.toString()} is null at $positional');
+            throw Exception(
+                'the function ${node.value.toString()} is null at $positional');
           }
         }
         throw Exception('object is null at $positional');
       }
+      // ignore: avoid_dynamic_calls
       function = object.call as Function;
     }
 
@@ -331,7 +333,8 @@ final class CyclerIterator implements Iterator<Object?> {
 }
 
 base class Namespace {
-  Namespace([Map<String, Object?>? data]) : context = <String, Object?>{...?data};
+  Namespace([Map<String, Object?>? data])
+      : context = <String, Object?>{...?data};
 
   final Map<String, Object?> context;
 

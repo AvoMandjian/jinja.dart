@@ -95,16 +95,18 @@ abstract final class Token {
     'tilde': '~',
   };
 
-  const factory Token(int line, String type, String value) = ValueToken;
+  const factory Token(int line, int column, String type, String value) =
+      ValueToken;
 
-  const factory Token.simple(int line, String type) = SimpleToken;
+  const factory Token.simple(int line, int column, String type) = SimpleToken;
 
   @override
   int get hashCode {
-    return type.hashCode & line & value.hashCode;
+    return type.hashCode ^ line ^ column ^ value.hashCode;
   }
 
   int get line;
+  int get column;
 
   int get length;
 
@@ -121,14 +123,38 @@ abstract final class Token {
     return other is Token &&
         type == other.type &&
         line == other.line &&
+        column == other.column &&
         value == other.value;
   }
 
-  Token change({int line, String type, String value});
+  Token change({int? line, int? column, String? type, String? value});
 
   bool test(String type, [String? value]);
 
   bool testAny(Iterable<(String, String?)> expressions);
+}
+
+/// Helper to extract a context snippet with a caret for error display.
+String errorContextSnippet(String source, int line, int column,
+    {int contextLines = 1}) {
+  var lines = source.split('\n');
+  var buffer = StringBuffer();
+  if (lines.isEmpty) {
+    return '';
+  }
+  // Clamp line and column to valid ranges
+  var safeLine = line.clamp(1, lines.length);
+  var start = (safeLine - contextLines - 1).clamp(0, lines.length - 1);
+  var end = (safeLine + contextLines - 1).clamp(0, lines.length - 1);
+  for (int i = start; i <= end; i++) {
+    buffer.writeln('${i + 1}: ${lines[i]}');
+    if (i == safeLine - 1 && column > 0) {
+      var caretPos = column - 1;
+      var safeCaret = caretPos.clamp(0, lines[i].length);
+      buffer.writeln('    ${' ' * safeCaret}^');
+    }
+  }
+  return buffer.toString();
 }
 
 abstract final class BaseToken implements Token {
@@ -140,15 +166,16 @@ abstract final class BaseToken implements Token {
   }
 
   @override
-  Token change({int? line, String? type, String? value}) {
+  Token change({int? line, int? column, String? type, String? value}) {
     line ??= this.line;
+    column ??= this.column;
     value ??= this.value;
 
     if (type != null && Token.common.containsKey(type)) {
-      return Token.simple(line, type);
+      return Token.simple(line, column, type);
     }
 
-    return Token(line, type ?? this.type, value);
+    return Token(line, column, type ?? this.type, value);
   }
 
   @override
@@ -173,10 +200,13 @@ abstract final class BaseToken implements Token {
 }
 
 final class SimpleToken extends BaseToken {
-  const SimpleToken(this.line, this.type);
+  const SimpleToken(this.line, this.column, this.type);
 
   @override
   final int line;
+
+  @override
+  final int column;
 
   @override
   final String type;
@@ -188,10 +218,13 @@ final class SimpleToken extends BaseToken {
 }
 
 final class ValueToken extends BaseToken {
-  const ValueToken(this.line, this.type, this.value);
+  const ValueToken(this.line, this.column, this.type, this.value);
 
   @override
   final int line;
+
+  @override
+  final int column;
 
   @override
   final String type;

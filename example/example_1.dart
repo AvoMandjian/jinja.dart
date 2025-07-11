@@ -4,11 +4,13 @@ import 'package:intl/intl.dart';
 import 'package:jinja/jinja.dart';
 import 'package:json_path/json_path.dart';
 
-Map<String, dynamic> dataToPassToJinja = {'variable_1': 'the output is encoded to base64'};
+Map<String, dynamic> dataToPassToJinja = {
+  'variable_1': 'the output is encoded to base64'
+};
 
 void main() {
   var loader = MapLoader({
-    'first_script__1__00': '{{variable_1 | b64encode}}',
+    'first_script__1__00': '{% if variable_1 %}{{variable_1}}',
   });
   var env = Environment(
     globals: <String, Object?>{

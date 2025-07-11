@@ -23,8 +23,8 @@ Object? getItem(
 }) {
   try {
     // TODO(dynamic): dynamic invocation
-    // ignore: avoid_dynamic_calls
     if (object != null && item != null) {
+      // ignore: avoid_dynamic_calls
       return object[item];
     } else {
       throw Exception(

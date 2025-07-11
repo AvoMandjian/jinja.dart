@@ -65,13 +65,19 @@ class TemplatesNotFound extends TemplateNotFound {
 /// Raised to tell the user that there is a problem with the template.
 class TemplateSyntaxError extends TemplateError {
   /// Creates a new [TemplateSyntaxError].
-  TemplateSyntaxError(super.message, {this.path, this.line});
+  TemplateSyntaxError(super.message, {this.path, this.line, this.column, this.contextSnippet});
 
   /// The path to the template that caused the error.
   final String? path;
 
   /// The line in the template that caused the error.
   final int? line;
+
+  /// The column in the template that caused the error.
+  final int? column;
+
+  /// Optional snippet of template source with caret.
+  final String? contextSnippet;
 
   @override
   String toString() {
@@ -90,10 +96,22 @@ class TemplateSyntaxError extends TemplateError {
         ..write(line);
     }
 
+    if (column case var column?) {
+      buffer
+        ..write(', column ')
+        ..write(column);
+    }
+
     if (message case var message?) {
       buffer
         ..write(': ')
         ..write(message);
+    }
+
+    if (contextSnippet case var snippet?) {
+      buffer
+        ..write('\n')
+        ..write(snippet);
     }
 
     return buffer.toString();

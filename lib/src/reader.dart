@@ -5,7 +5,7 @@ final class TokenReader {
   TokenReader(Iterable<Token> tokens)
       : iterator = tokens.iterator,
         pushed = <Token>[] {
-    current = const Token.simple(0, 'initial');
+    current = const Token.simple(0, 1, 'initial');
     next();
   }
 
@@ -66,16 +66,18 @@ final class TokenReader {
   }
 
   void eof() {
-    current = Token.simple(current.line + current.length, 'eof');
+    current = Token.simple(current.line + current.length, 1, 'eof');
   }
 
   Token expect(String type, [String? value]) {
     if (!current.test(type, value)) {
       if (current.type == 'eof') {
-        throw TemplateSyntaxError('Unexpected end of template, expected $type');
+        throw TemplateSyntaxError('Unexpected end of template, expected $type',
+            line: current.line, column: current.column);
       }
 
-      throw TemplateSyntaxError('Expected token $type, got ${current.value}');
+      throw TemplateSyntaxError('Expected token $type, got ${current.value}',
+          line: current.line, column: current.column);
     }
 
     return next();

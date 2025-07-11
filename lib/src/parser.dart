@@ -6,12 +6,15 @@ import 'package:jinja/src/reader.dart';
 import 'package:textwrap/textwrap.dart';
 
 final class Parser {
-  Parser(this.environment, {this.path})
+  Parser(this.environment, this.templateSource, {this.path})
       : endTokensStack = <List<(String, String?)>>[],
         tagStack = <String>[],
         blocks = <String>{};
 
   final Environment environment;
+
+  /// The full template source for context snippets.
+  final String templateSource;
 
   final String? path;
 
@@ -23,8 +26,16 @@ final class Parser {
 
   Extends? extendsNode;
 
-  Never fail(String message, [int? line]) {
-    throw TemplateSyntaxError(message, line: line, path: path);
+  Never fail(String message, [int? line, int? column]) {
+    throw TemplateSyntaxError(
+      message,
+      line: line,
+      column: column,
+      path: path,
+      contextSnippet: (line != null && column != null)
+          ? errorContextSnippet(templateSource, line, column)
+          : null,
+    );
   }
 
   Never failUnknownTagEof(

@@ -72,7 +72,8 @@ final class SingleTokenRule extends Rule {
 }
 
 final class MultiTokenRule extends Rule {
-  MultiTokenRule(super.regExp, this.tokens, [super.newState]) : optionalLStrip = false;
+  MultiTokenRule(super.regExp, this.tokens, [super.newState])
+      : optionalLStrip = false;
 
   MultiTokenRule.optionalLStrip(super.regExp, this.tokens, [super.newState])
       : optionalLStrip = true;
@@ -87,13 +88,13 @@ final class Lexer {
   static final RegExp leftStripUnlessRe = RegExp('[^ \\t]');
   static final RegExp whitespaceRe = RegExp(r'\s+');
   static final RegExp nameRe = RegExp('[a-zA-Z\$_][a-zA-Z0-9\$_]*');
-  static final RegExp stringRe =
-      RegExp('(\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'|"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)")');
+  static final RegExp stringRe = RegExp(
+      '(\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'|"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)")');
   static final RegExp integerRe = RegExp('(0[xX](_?[\\da-fA-F])+|\\d(_?\\d)*)');
-  static final RegExp floatRe =
-      RegExp('(?<!\\.)(\\d+_)*\\d+((\\.(\\d+_)*\\d+)?[eE][+\\-]?(\\d+_)*\\d+|\\.(\\d+_)*\\d+)');
-  static final RegExp operatorRe =
-      RegExp('\\+|-|\\/\\/|\\/|\\*\\*|\\*|%|~|\\[|\\]|\\(|\\)|{|}|==|!=|<=|>=|=|<|>|\\.|:|\\||,|;');
+  static final RegExp floatRe = RegExp(
+      '(?<!\\.)(\\d+_)*\\d+((\\.(\\d+_)*\\d+)?[eE][+\\-]?(\\d+_)*\\d+|\\.(\\d+_)*\\d+)');
+  static final RegExp operatorRe = RegExp(
+      '\\+|-|\\/\\/|\\/|\\*\\*|\\*|%|~|\\[|\\]|\\(|\\)|{|}|==|!=|<=|>=|=|<|>|\\.|:|\\||,|;');
 
   /// Cached [Lexer]'s
   static final Expando<Lexer> lexers = Expando<Lexer>();
@@ -117,7 +118,8 @@ final class Lexer {
 
     var blockStartRe = RegExp.escape(environment.blockStart);
     var blockEndRe = RegExp.escape(environment.blockEnd);
-    var blockEnd = RegExp('(?:\\+$blockEndRe|-$blockEndRe\\s*|$blockEndRe$blockSuffixRe)');
+    var blockEnd =
+        RegExp('(?:\\+$blockEndRe|-$blockEndRe\\s*|$blockEndRe$blockSuffixRe)');
 
     var tagRules = <Rule>[
       SingleTokenRule(whitespaceRe, 'whitespace'),
@@ -140,8 +142,8 @@ final class Lexer {
 
     rootTagRules.sort((a, b) => b.$2.length.compareTo(a.$2.length));
 
-    var rawStart =
-        RegExp('(?<raw_start>$blockStartRe(-|\\+|)\\s*raw\\s*(?:-$blockEndRe\\s*|$blockEndRe))');
+    var rawStart = RegExp(
+        '(?<raw_start>$blockStartRe(-|\\+|)\\s*raw\\s*(?:-$blockEndRe\\s*|$blockEndRe))');
     var rawEnd = RegExp(
         '(.*?)((?:$blockStartRe(-|\\+|))\\s*endraw\\s*'
         '(?:\\+$blockEndRe|-$blockEndRe\\s*|$blockEndRe$blockSuffixRe))',
@@ -252,7 +254,11 @@ final class Lexer {
   }
 
   List<Token> scan(StringScanner scanner, [String? state]) {
-    const endTokens = <String>['variable_end', 'block_end', 'linestatement_end'];
+    const endTokens = <String>[
+      'variable_end',
+      'block_end',
+      'linestatement_end'
+    ];
 
     var stack = <String>['root'];
     var balancingStack = <String>[];
@@ -311,9 +317,13 @@ final class Lexer {
                 (!match.groupNames.contains('variable_start') ||
                     match.namedGroup('variable_start') == null)) {
               var lastPosition = text.lastIndexOf('\n') + 1;
+              if (text.isEmpty) {
+                lastPosition = 0;
+              }
 
               if (lastPosition > 0 || lineStarting) {
-                var index = text.substring(lastPosition).indexOf(leftStripUnlessRe);
+                var index =
+                    text.substring(lastPosition).indexOf(leftStripUnlessRe);
 
                 if (index == -1) {
                   groups[0] = groups[0]!.substring(0, lastPosition);
@@ -335,7 +345,12 @@ final class Lexer {
                 var group = match.namedGroup(name);
 
                 if (group != null) {
-                  tokens.add(Token(line, name, group));
+                  var lastNewline = scanner.string.lastIndexOf(
+                      '\n', match.start == 0 ? 0 : match.start - 1);
+                  var column = lastNewline == -1
+                      ? match.start + 1
+                      : match.start - lastNewline;
+                  tokens.add(Token(line, column, name, group));
                   notFound = false;
 
                   for (var char in group.split('')) {
@@ -354,7 +369,12 @@ final class Lexer {
             } else {
               if (groups[i] case var data?) {
                 if (data.isNotEmpty || !ignoreIfEmpty.contains(token)) {
-                  tokens.add(Token(line, token, data));
+                  var lastNewline = scanner.string.lastIndexOf(
+                      '\n', match.start == 0 ? 0 : match.start - 1);
+                  var column = lastNewline == -1
+                      ? match.start + 1
+                      : match.start - lastNewline;
+                  tokens.add(Token(line, column, token, data));
                 }
 
                 for (var char in data.split('')) {
@@ -366,7 +386,12 @@ final class Lexer {
                 line += newLinesStripped;
                 newLinesStripped = 0;
               } else {
-                tokens.add(Token.simple(line, token));
+                var lastNewline = scanner.string
+                    .lastIndexOf('\n', match.start == 0 ? 0 : match.start - 1);
+                var column = lastNewline == -1
+                    ? match.start + 1
+                    : match.start - lastNewline;
+                tokens.add(Token.simple(line, column, token));
               }
             }
           }
@@ -394,16 +419,26 @@ final class Lexer {
               var expected = balancingStack.removeLast();
 
               if (data != expected) {
-                throw TemplateSyntaxError("Unexpected '$data', expected '$expected'");
+                throw TemplateSyntaxError(
+                    "Unexpected '$data', expected '$expected'");
               }
             }
           }
 
           if (data == null) {
-            tokens.add(Token.simple(line, token));
+            var lastNewline = scanner.string
+                .lastIndexOf('\n', match.start == 0 ? 0 : match.start - 1);
+            var column =
+                lastNewline == -1 ? match.start + 1 : match.start - lastNewline;
+            tokens.add(Token.simple(line, column, token));
           } else {
             if (data.isNotEmpty || !ignoreIfEmpty.contains(token)) {
-              tokens.add(Token(line, token, data));
+              var lastNewline = scanner.string
+                  .lastIndexOf('\n', match.start == 0 ? 0 : match.start - 1);
+              var column = lastNewline == -1
+                  ? match.start + 1
+                  : match.start - lastNewline;
+              tokens.add(Token(line, column, token, data));
             }
 
             for (var char in data.split('')) {
@@ -484,13 +519,13 @@ final class Lexer {
       } else if (token.test('integer') || token.test('float')) {
         yield token.change(value: token.value.replaceAll('_', ''));
       } else if (token.test('operator')) {
-        yield Token.simple(token.line, operators[token.value]!);
+        yield Token.simple(token.line, token.column, operators[token.value]!);
       } else {
         yield token;
       }
     }
 
-    yield Token.simple(source.length, 'eof');
+    yield Token.simple(source.length, 1, 'eof');
   }
 
   static List<String> split(Pattern pattern, String text) {
