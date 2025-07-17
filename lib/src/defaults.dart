@@ -20,6 +20,7 @@ Object? getItem(
   Object? item,
   dynamic object, {
   Object? node,
+  Node? nodeCaller,
 }) {
   try {
     // TODO(dynamic): dynamic invocation
@@ -28,7 +29,7 @@ Object? getItem(
       return object[item];
     } else {
       throw Exception(
-          'Trying to access {{"$item"}} in an undefined object: {{"$object"}} from the jinja data, it may be {{"$node"}} in the jinja script');
+          'Trying to access {{"$item"}} in an undefined object: {{"$object"}} from the jinja data, it may be {{"$node"}} in the jinja script at');
     }
   } catch (e) {
     if (object == null) {
@@ -41,13 +42,12 @@ Object? getItem(
               'Trying to access "$item" in an undefined object: "${node.value}" from the jinja data, it may be {{${node.value}.$item}} in the jinja script');
         }
       } else {
-        throw Exception(
-            'Jinja script contains {{.$item}}, but the provided "object" is null. No object in the Jinja data contains {{.$item}}.');
+        throw Exception('Jinja script contains {{.$item}}, but the provided "object" is null. No object in the Jinja data contains {{.$item}}.');
       }
     }
     if (node is Attribute) {
       throw Exception(
-          'Trying to access "$item" in an undefined object: "${(node.value as Name).name}" from the jinja data, it may be {{${(node.value as Name).name}.$item}} in the jinja script');
+          'Trying to access "$item" in an undefined object: "${(node.value as Name).name}" from the jinja data (key: $object), it may be {{${(node.value as Name).name}.$item}} in the jinja script');
     }
     throw Exception(
         'Attempted to access {{$item}} in the provided "object" {{$object}}, which may not be an object. Flutter Exception: ${e.toString()}');

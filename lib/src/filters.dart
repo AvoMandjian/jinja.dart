@@ -582,9 +582,7 @@ Object? Function(Object? object) _prepareMap(
     var name = positional.first as String;
     positional = positional.sublist(1);
 
-    var symbols = <Symbol, Object?>{
-      for (var MapEntry(:key, :value) in named.entries) Symbol(key): value
-    };
+    var symbols = <Symbol, Object?>{for (var MapEntry(:key, :value) in named.entries) Symbol(key): value};
 
     Object? getter(Object? object) {
       return context.filter(name, <Object?>[object, ...positional], symbols);

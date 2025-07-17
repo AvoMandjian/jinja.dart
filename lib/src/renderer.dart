@@ -140,6 +140,13 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
       for (; index < length; index += 1) {
         var key = node.positional[index].accept(this, context) as String;
+        if (index <= positional.length) {
+          throw TemplateRuntimeError('''Error at macro ${node.name},
+            expected arguments count: $length
+            given arguments count: ${positional.length}
+            given arguments: ${positional.toString()},
+            ''');
+        }
         derived.set(key, positional[index]);
       }
 
