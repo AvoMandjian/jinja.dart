@@ -208,7 +208,10 @@ abstract final class MacroCall extends Statement {
     this.positional = const <Expression>[],
     this.named = const <(Expression, Expression)>[],
     required this.body,
+    required this.name,
   });
+
+  final String name;
 
   final bool varargs;
 
@@ -254,7 +257,7 @@ abstract final class MacroCall extends Statement {
 
 final class Macro extends MacroCall {
   const Macro({
-    required this.name,
+    required super.name,
     super.varargs,
     super.kwargs,
     this.caller = false,
@@ -262,8 +265,6 @@ final class Macro extends MacroCall {
     super.named,
     required super.body,
   });
-
-  final String name;
 
   final bool caller;
 
@@ -323,6 +324,7 @@ final class CallBlock extends MacroCall {
     super.positional,
     super.named,
     required super.body,
+    required super.name,
   });
 
   final Call call;
@@ -344,6 +346,7 @@ final class CallBlock extends MacroCall {
       positional: positional ?? this.positional,
       named: named ?? this.named,
       body: body ?? this.body,
+      name: name,
     );
   }
 

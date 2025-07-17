@@ -44,7 +44,7 @@ abstract base class RenderContext extends Context {
 
       value[target.item] = current;
     } else {
-      throw TypeError();
+      throw TemplateRuntimeError('Invalid target. ${target.toString()}, current: ${current.toString()}');
     }
   }
 
@@ -146,7 +146,11 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       if (node.varargs) {
         derived.set('varargs', positional.sublist(index));
       } else if (index < positional.length) {
-        throw TypeError();
+        throw TemplateRuntimeError('''Error at macro ${node.name},
+            expected arguments count: $index
+            given arguments count: ${positional.length}
+            given arguments: ${positional.toString()},
+            ''');
       }
 
       var remaining = named.keys.toSet();
@@ -170,7 +174,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
           for (var key in remaining) key: named[key],
         });
       } else if (remaining.isNotEmpty) {
-        throw TypeError();
+        throw TemplateRuntimeError('remaining.isNotEmpty');
       }
 
       node.body.accept(this, derived);
@@ -204,9 +208,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   Parameters visitCalling(Calling node, StringSinkRenderContext context) {
     var positional = <Object?>[for (var argument in node.arguments) argument.accept(this, context)];
 
-    var named = <Symbol, Object?>{
-      for (var (:key, :value) in node.keywords) Symbol(key): value.accept(this, context)
-    };
+    var named = <Symbol, Object?>{for (var (:key, :value) in node.keywords) Symbol(key): value.accept(this, context)};
 
     return (positional, named);
   }
@@ -266,9 +268,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   Map<Object?, Object?> visitDict(Dict node, StringSinkRenderContext context) {
-    return <Object?, Object?>{
-      for (var (:key, :value) in node.pairs) key.accept(this, context): value.accept(this, context)
-    };
+    return <Object?, Object?>{for (var (:key, :value) in node.pairs) key.accept(this, context): value.accept(this, context)};
   }
 
   @override

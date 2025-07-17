@@ -600,6 +600,7 @@ final class Parser {
       positional: positional,
       named: named,
       body: body,
+      name: name.name,
     );
   }
 
