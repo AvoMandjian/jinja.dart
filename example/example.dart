@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 import 'package:jinja/jinja.dart';
+import 'package:jinja/src/debug/debug_controller.dart';
+import 'package:jinja/src/debug/debug_template.dart';
 
 Map<String, dynamic> dataToPassToJinja = {
   'subcategory_title': 'Su',
@@ -81,9 +83,24 @@ void main() {
   {% include "first_script__1__00" %}
 {% endblock first_script__1__00 %}
 ''');
-  String responseFromJinja = templateOfJinja.render(dataToPassToJinja);
+  var debugController = DebugController()
+    ..addLineBreakpoint(3)
+    ..enabled = true;
 
-  print(responseFromJinja);
+  debugController.onBreakpoint = (info) async {
+    // print('Variables: ${info.variables}');
+    print('Output: ${info.lineNumber}');
+    return DebugAction.continueExecution;
+  };
+
+  templateOfJinja
+      .renderDebug(
+        dataToPassToJinja,
+        debugController: debugController,
+      )
+      .then(
+        (value) => print('\n\nRESULT OF THE RENDER: \n\n$value'),
+      );
 }
 
 // ignore_for_file: avoid_print
