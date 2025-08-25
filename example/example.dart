@@ -3,6 +3,9 @@ import 'package:jinja/jinja.dart';
 
 Map<String, dynamic> dataToPassToJinja = {
   'subcategory_title': 'Su',
+  'subcategory_title_2': 'Su 2',
+  'subcategory_title_3': 'Su 3',
+  'subcategory_title_4': 'Su 4',
 };
 
 void main() {
@@ -16,7 +19,12 @@ void main() {
       },
     },
     loader: MapLoader({
-      'first_script__1__00': '<p>First Script</p><p>{{subcategory_title | sub_string(0,3)}}</p>',
+      'first_script__1__00': '''
+<p>First Script</p><p>{{subcategory_title}}</p>
+<p>Second Script</p><p>{{subcategory_title_2}}</p>
+<p>Third Script</p><p>{{subcategory_title_3}}</p>
+<p>Fourth Script</p><p>{{subcategory_title_4}}</p>
+''',
     }),
     leftStripBlocks: true,
     trimBlocks: true,
