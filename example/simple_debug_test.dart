@@ -18,11 +18,11 @@ Hello {{ name }}!
   debugController.enabled = true;
 
   // Add breakpoints for specific node types
-  // debugController.addNodeBreakpoint('Interpolation');
+  debugController.addNodeBreakpoint('Interpolation');
   // debugController.addNodeBreakpoint('For');
 
-  // Add breakpoints for specific lines
-  debugController.addLineBreakpoint(2);
+  // Note: Line breakpoints are not yet accurately mapped to source lines
+  // debugController.addLineBreakpoint(2);
 
   var breakpointCount = 0;
 
