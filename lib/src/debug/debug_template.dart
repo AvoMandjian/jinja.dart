@@ -1,9 +1,10 @@
 import 'dart:async';
+
+import 'package:jinja/src/debug/async_debug_renderer.dart';
 import 'package:jinja/src/debug/debug_controller.dart';
 import 'package:jinja/src/debug/debug_renderer.dart';
 import 'package:jinja/src/environment.dart';
 import 'package:jinja/src/nodes.dart';
-import 'package:jinja/src/renderer.dart';
 
 /// Extension to add debug capabilities to Template
 extension DebugTemplate on Template {
@@ -14,9 +15,7 @@ extension DebugTemplate on Template {
     String? templateSource,
   }) async {
     var buffer = StringBuffer();
-    await renderDebugTo(buffer, data, 
-      debugController: debugController,
-      templateSource: templateSource);
+    await renderDebugTo(buffer, data, debugController: debugController, templateSource: templateSource);
     return buffer.toString();
   }
 
@@ -48,15 +47,15 @@ extension DebugTemplate on Template {
           parent: globals,
           data: data,
         );
-        
+
         // If template source provided (for restart with new template)
         if (templateSource != null) {
-          final newTemplate = environment.fromString(templateSource);
+          var newTemplate = environment.fromString(templateSource);
           await _renderBodyAsync(newTemplate.body, context);
         } else {
           await _renderBodyAsync(body, context);
         }
-        
+
         // Successfully completed
         break;
       } on RestartException {
@@ -69,18 +68,18 @@ extension DebugTemplate on Template {
       }
     }
   }
-  
+
   /// Async rendering to handle breakpoints
   Future<void> _renderBodyAsync(
     TemplateNode node,
     DebugRenderContext context,
   ) async {
     const renderer = DebugRenderer();
-    
+
     // We need to make the visitor pattern async-aware
     // For now, we'll use a synchronous approach with periodic checks
     node.accept(renderer, context);
-    
+
     // Check if we should stop
     if (context.shouldStop) {
       throw StopException();

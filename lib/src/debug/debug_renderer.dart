@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:jinja/src/debug/debug_controller.dart';
-import 'package:jinja/src/environment.dart';
 import 'package:jinja/src/nodes.dart';
 import 'package:jinja/src/renderer.dart';
-import 'package:jinja/src/runtime.dart';
 
 /// Debug version of StringSinkRenderContext that tracks execution
 base class DebugRenderContext extends StringSinkRenderContext {

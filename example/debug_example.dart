@@ -43,9 +43,14 @@ void main() async {
   debugController.enabled = true;
 
   // Add some breakpoints
-  debugController.addNodeBreakpoint('For');
-  debugController.addNodeBreakpoint('Interpolation');
-  debugController.addNodeBreakpoint('Assign');
+  // debugController.addNodeBreakpoint('For');
+  // debugController.addNodeBreakpoint('Interpolation');
+  // debugController.addNodeBreakpoint('Assign');
+
+  // Add line breakpoints
+  debugController.addLineBreakpoint(2);
+  debugController.addLineBreakpoint(4);
+  debugController.addLineBreakpoint(8);
 
   // Variable to track current template (for restart with changes)
   String currentTemplateSource = templateSource;
@@ -70,53 +75,54 @@ void main() async {
     print('─' * 40);
 
     // Ask user what to do
-    print('\nWhat would you like to do?');
-    print('  [c] Continue');
-    print('  [s] Stop');
-    print('  [r] Restart (you can edit template first)');
-    print('  [d] Disable this breakpoint type');
-    print('  [a] Disable all breakpoints and continue');
+    // print('\nWhat would you like to do?');
+    // print('  [c] Continue');
+    // print('  [s] Stop');
+    // print('  [r] Restart (you can edit template first)');
+    // print('  [d] Disable this breakpoint type');
+    // print('  [a] Disable all breakpoints and continue');
 
-    stdout.write('Your choice: ');
-    var choice = stdin.readLineSync()?.toLowerCase() ?? 'c';
+    // stdout.write('Your choice: ');
+    // var choice = stdin.readLineSync()?.toLowerCase() ?? 'c';
 
-    switch (choice) {
-      case 's':
-        print('Stopping execution...');
-        return DebugAction.stop;
+    // switch (choice) {
+    //   case 's':
+    //     print('Stopping execution...');
+    //     return DebugAction.stop;
 
-      case 'r':
-        print('\nWould you like to modify the template before restart? (y/n): ');
-        var modify = stdin.readLineSync()?.toLowerCase() == 'y';
+    //   case 'r':
+    //     print('\nWould you like to modify the template before restart? (y/n): ');
+    //     var modify = stdin.readLineSync()?.toLowerCase() == 'y';
 
-        if (modify) {
-          print('Enter new template (type END on a new line to finish):');
-          var lines = <String>[];
-          String? line;
-          while ((line = stdin.readLineSync()) != 'END') {
-            if (line != null) lines.add(line);
-          }
-          currentTemplateSource = lines.join('\n');
-          print('Template updated!');
-        }
+    //     if (modify) {
+    //       print('Enter new template (type END on a new line to finish):');
+    //       var lines = <String>[];
+    //       String? line;
+    //       while ((line = stdin.readLineSync()) != 'END') {
+    //         if (line != null) lines.add(line);
+    //       }
+    //       currentTemplateSource = lines.join('\n');
+    //       print('Template updated!');
+    //     }
 
-        print('Restarting with ${modify ? "new" : "current"} template...');
-        return DebugAction.restart;
+    //     print('Restarting with ${modify ? "new" : "current"} template...');
+    //     return DebugAction.restart;
 
-      case 'd':
-        debugController.removeNodeBreakpoint(info.nodeType);
-        print('Disabled breakpoint for ${info.nodeType}');
-        return DebugAction.continueExecution;
+    //   case 'd':
+    //     debugController.removeNodeBreakpoint(info.nodeType);
+    //     print('Disabled breakpoint for ${info.nodeType}');
+    //     return DebugAction.continueExecution;
 
-      case 'a':
-        debugController.enabled = false;
-        print('All breakpoints disabled');
-        return DebugAction.continueExecution;
+    //   case 'a':
+    //     debugController.enabled = false;
+    //     print('All breakpoints disabled');
+    //     return DebugAction.continueExecution;
 
-      case 'c':
-      default:
-        return DebugAction.continueExecution;
-    }
+    //   case 'c':
+    //   default:
+    //     return DebugAction.continueExecution;
+    // }
+    return DebugAction.continueExecution;
   };
 
   print('Starting Jinja Debug Example');
