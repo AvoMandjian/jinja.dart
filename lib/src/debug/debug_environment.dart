@@ -58,8 +58,8 @@ extension DebugTemplateExtension on Template {
         );
 
         // Render with async debug renderer
-        const renderer = AsyncDebugRenderer();
-        await templateToRender.body.accept(renderer, context);
+        final debugRenderer = AsyncDebugRenderer();
+        await templateToRender.body.accept(debugRenderer, context);
 
         // Successfully completed
         break;

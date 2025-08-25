@@ -85,6 +85,16 @@ class DebugController {
     if (!_enabled) return false;
     return _breakpointNodeTypes.contains(nodeType) || _breakpointLines.contains(lineNumber);
   }
+  
+  /// Check if there's a line breakpoint at the given line
+  bool hasLineBreakpoint(int lineNumber) {
+    return _breakpointLines.contains(lineNumber);
+  }
+  
+  /// Check if there's a node breakpoint for the given type
+  bool hasNodeBreakpoint(String nodeType) {
+    return _breakpointNodeTypes.contains(nodeType);
+  }
 
   /// Handle a breakpoint hit
   Future<DebugAction> handleBreakpoint(BreakpointInfo info) async {

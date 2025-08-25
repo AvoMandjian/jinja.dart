@@ -10,17 +10,48 @@ import 'package:jinja/src/visitor.dart';
 
 /// Async version of the renderer for debugging
 class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
-  const AsyncDebugRenderer();
+  AsyncDebugRenderer();
+
+  /// Set to track which lines have already triggered breakpoints during this render
+  final Set<int> _linesHitThisRender = {};
 
   final StringSinkRenderer _baseRenderer = const StringSinkRenderer();
+  
+  /// Clear line tracking for a specific line range (used for loop iterations)
+  void _clearLineTrackingRange(int? startLine, int? endLine) {
+    if (startLine == null || endLine == null) return;
+    _linesHitThisRender.removeWhere((line) => line >= startLine && line <= endLine);
+  }
 
-  Future<void> _checkBreakpoint(Node node, DebugRenderContext context, String nodeType, {String? nodeName, dynamic nodeData}) async {
-    if (context.debugController.shouldBreak(nodeType, context.currentLine)) {
+  Future<void> _checkBreakpoint(
+    Node node,
+    DebugRenderContext context,
+    String nodeType, {
+    String? nodeName,
+    Object? nodeData,
+  }) async {
+    if (!context.debugController.enabled) return;
+
+    // Use actual source line from node if available, otherwise use context line
+    int currentLine = node.line ?? context.currentLine;
+
+    // Check if we should break for node type
+    bool shouldBreakForNode = context.debugController.hasNodeBreakpoint(nodeType);
+    
+    // Check if we should break for line (and haven't already hit this line)
+    bool shouldBreakForLine = context.debugController.hasLineBreakpoint(currentLine) && 
+                              !_linesHitThisRender.contains(currentLine);
+    
+    if (shouldBreakForNode || shouldBreakForLine) {
+      // Mark this line as hit if it's a line breakpoint
+      if (shouldBreakForLine) {
+        _linesHitThisRender.add(currentLine);
+      }
       var info = BreakpointInfo(
         nodeType: nodeType,
         variables: context.getAllVariables(),
         outputSoFar: context.outputSoFar,
-        lineNumber: context.currentLine,
+        lineNumber: currentLine,
         nodeName: nodeName,
         nodeData: nodeData,
       );
@@ -257,6 +288,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     }
 
     for (var value in values) {
+      // Clear line tracking for loop body to allow breakpoints to trigger on each iteration
+      _clearLineTrackingRange(node.body.line, node.line);
+      
       var data = _baseRenderer.getDataForTargets(targets, value);
       var forContext = context.derived(data: data);
       await node.body.accept(this, forContext);

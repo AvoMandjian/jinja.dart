@@ -1405,15 +1405,16 @@ final class Parser {
 
         switch (token.type) {
           case 'data':
-            nodes.add(Data(data: token.value));
+            nodes.add(Data(data: token.value, line: token.line, column: token.column));
 
             reader.next();
             break;
 
           case 'variable_start':
+            var startToken = token;
             reader.next();
 
-            nodes.add(Interpolation(value: parseTuple(reader)));
+            nodes.add(Interpolation(value: parseTuple(reader), line: startToken.line, column: startToken.column));
 
             reader.expect('variable_end');
             break;

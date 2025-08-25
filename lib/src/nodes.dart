@@ -4,7 +4,10 @@ part 'nodes/expressions.dart';
 part 'nodes/statements.dart';
 
 abstract base class Node {
-  const Node();
+  const Node({this.line, this.column});
+
+  final int? line;
+  final int? column;
 
   R accept<C, R>(Visitor<C, R> visitor, C context);
 
@@ -16,7 +19,7 @@ abstract base class Node {
 }
 
 final class Data extends Node {
-  const Data({this.data = ''});
+  const Data({this.data = '', super.line, super.column});
 
   final String data;
 
@@ -52,7 +55,7 @@ final class Data extends Node {
 }
 
 abstract base class Expression extends Node {
-  const Expression();
+  const Expression({super.line, super.column});
 
   @override
   Map<String, Object?> toJson() {
@@ -63,7 +66,7 @@ abstract base class Expression extends Node {
 }
 
 abstract base class Statement extends Node {
-  const Statement();
+  const Statement({super.line, super.column});
 }
 
 final class Slice extends Expression {
@@ -110,7 +113,7 @@ final class Slice extends Expression {
 }
 
 final class Interpolation extends Node {
-  const Interpolation({required this.value});
+  const Interpolation({required this.value, super.line, super.column});
 
   final Expression value;
 
@@ -121,7 +124,11 @@ final class Interpolation extends Node {
 
   @override
   Interpolation copyWith({Expression? value}) {
-    return Interpolation(value: value ?? this.value);
+    return Interpolation(
+      value: value ?? this.value,
+      line: line,
+      column: column,
+    );
   }
 
   @override

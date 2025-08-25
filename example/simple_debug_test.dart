@@ -6,40 +6,46 @@ import 'package:jinja/debug.dart';
 void main() async {
   var env = Environment();
 
-  var template = env.fromString('''
-{% set name = "World" %}
+  var templateSource = '''{% set name = "World" %}
 Hello {{ name }}!
 {% for i in range(3) %}
   Item {{ i }}
-{% endfor %}
-''');
+{% endfor %}''';
+  
+  print('Template source:');
+  var lines = templateSource.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    print('Line ${i + 1}: ${lines[i]}');
+  }
+  print('');
+  
+  var template = env.fromString(templateSource);
 
   var debugController = DebugController();
   debugController.enabled = true;
 
   // Add breakpoints for specific node types
-  debugController.addNodeBreakpoint('Interpolation');
-  // debugController.addNodeBreakpoint('For');
-
-  // Note: Line breakpoints are not yet accurately mapped to source lines
-  // debugController.addLineBreakpoint(2);
+  // debugController.addNodeBreakpoint('Interpolation');
+  // // debugController.addNodeBreakpoint('For');
 
   var breakpointCount = 0;
 
-  // Set up breakpoint handler
+  // Set up debug controller with breakpoint handler
   debugController.onBreakpoint = (info) async {
     breakpointCount++;
     print('\n--- Breakpoint #$breakpointCount ---');
+    print('Line: ${info.lineNumber}');
     print('Type: ${info.nodeType}');
     print('Variables: ${info.variables}');
     print('Output so far: "${info.outputSoFar}"');
-
-    // Automatically continue after showing info
+    
+    // Continue execution
     return DebugAction.continueExecution;
   };
-
-  // Add range function to environment
-  env.globals['range'] = (int n) => List.generate(n, (i) => i);
+  
+  // Enable line breakpoints on line 2 and line 4
+  debugController.addLineBreakpoint(2);  // Hello {{ name }} line
+  debugController.addLineBreakpoint(4);  // Item {{ i }} line
 
   print('Starting debug render...\n');
 
