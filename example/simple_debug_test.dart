@@ -10,7 +10,8 @@ void main() async {
 Hello {{ name }}!
 {% for i in range(3) %}
   Item {{ i }}
-{% endfor %}''';
+{% endfor %}
+''';
 
   print('Template source:');
   var lines = templateSource.split('\n');

@@ -16,6 +16,32 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   final StringSinkRenderer _baseRenderer = const StringSinkRenderer();
 
+  /// Helper method to get the line range of a node and all its children
+  (int?, int?) _getNodeLineRange(Node node) {
+    int? minLine = node.line;
+    int? maxLine = node.line;
+
+    // Recursively find all line numbers in the node tree
+    void findLines(Node n) {
+      if (n.line != null) {
+        if (minLine == null || n.line! < minLine!) {
+          minLine = n.line;
+        }
+        if (maxLine == null || n.line! > maxLine!) {
+          maxLine = n.line;
+        }
+      }
+
+      // Check all child nodes
+      for (var child in n.findAll<Node>()) {
+        findLines(child);
+      }
+    }
+
+    findLines(node);
+    return (minLine, maxLine);
+  }
+
   Future<void> _checkBreakpoint(
     Node node,
     DebugRenderContext context,
@@ -279,10 +305,15 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
       return;
     }
 
+    // Get the line range of the loop body dynamically
+    var (minLine, maxLine) = _getNodeLineRange(node.body);
+
     for (var value in values) {
       // Clear line tracking for loop body to allow breakpoints to trigger on each iteration
-      // Simply clear lines 3-5 for this specific template (will need better solution later)
-      _linesHitThisRender.removeWhere((line) => line >= 3 && line <= 5);
+      // Use dynamically determined line range from the AST
+      if (minLine != null && maxLine != null) {
+        _linesHitThisRender.removeWhere((line) => line >= minLine && line <= maxLine);
+      }
 
       var data = _baseRenderer.getDataForTargets(targets, value);
       var forContext = context.derived(data: data);
