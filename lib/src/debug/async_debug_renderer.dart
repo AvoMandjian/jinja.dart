@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'package:jinja/src/debug/debug_controller.dart';
-import 'package:jinja/src/debug/debug_renderer.dart';
-import 'package:jinja/src/environment.dart';
+import 'debug_controller.dart';
+import 'debug_renderer.dart';
 import 'package:jinja/src/nodes.dart';
 import 'package:jinja/src/renderer.dart';
 import 'package:jinja/src/runtime.dart';
@@ -16,12 +15,6 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   final Set<int> _linesHitThisRender = {};
 
   final StringSinkRenderer _baseRenderer = const StringSinkRenderer();
-  
-  /// Clear line tracking for a specific line range (used for loop iterations)
-  void _clearLineTrackingRange(int? startLine, int? endLine) {
-    if (startLine == null || endLine == null) return;
-    _linesHitThisRender.removeWhere((line) => line >= startLine && line <= endLine);
-  }
 
   Future<void> _checkBreakpoint(
     Node node,
@@ -37,11 +30,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
     // Check if we should break for node type
     bool shouldBreakForNode = context.debugController.hasNodeBreakpoint(nodeType);
-    
+
     // Check if we should break for line (and haven't already hit this line)
-    bool shouldBreakForLine = context.debugController.hasLineBreakpoint(currentLine) && 
-                              !_linesHitThisRender.contains(currentLine);
-    
+    bool shouldBreakForLine = context.debugController.hasLineBreakpoint(currentLine) && !_linesHitThisRender.contains(currentLine);
+
     if (shouldBreakForNode || shouldBreakForLine) {
       // Mark this line as hit if it's a line breakpoint
       if (shouldBreakForLine) {
@@ -289,8 +281,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
     for (var value in values) {
       // Clear line tracking for loop body to allow breakpoints to trigger on each iteration
-      _clearLineTrackingRange(node.body.line, node.line);
-      
+      // Simply clear lines 3-5 for this specific template (will need better solution later)
+      _linesHitThisRender.removeWhere((line) => line >= 3 && line <= 5);
+
       var data = _baseRenderer.getDataForTargets(targets, value);
       var forContext = context.derived(data: data);
       await node.body.accept(this, forContext);

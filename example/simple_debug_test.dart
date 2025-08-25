@@ -11,14 +11,14 @@ Hello {{ name }}!
 {% for i in range(3) %}
   Item {{ i }}
 {% endfor %}''';
-  
+
   print('Template source:');
   var lines = templateSource.split('\n');
   for (var i = 0; i < lines.length; i++) {
     print('Line ${i + 1}: ${lines[i]}');
   }
   print('');
-  
+
   var template = env.fromString(templateSource);
 
   var debugController = DebugController();
@@ -38,14 +38,14 @@ Hello {{ name }}!
     print('Type: ${info.nodeType}');
     print('Variables: ${info.variables}');
     print('Output so far: "${info.outputSoFar}"');
-    
+
     // Continue execution
     return DebugAction.continueExecution;
   };
-  
+
   // Enable line breakpoints on line 2 and line 4
-  debugController.addLineBreakpoint(2);  // Hello {{ name }} line
-  debugController.addLineBreakpoint(4);  // Item {{ i }} line
+  debugController.addLineBreakpoint(2); // Hello {{ name }} line
+  debugController.addLineBreakpoint(4); // Item {{ i }} line
 
   print('Starting debug render...\n');
 
