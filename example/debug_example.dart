@@ -54,7 +54,7 @@ void main() async {
   debugController.onBreakpoint = (info) async {
     print('\n${"=" * 60}');
     print('BREAKPOINT HIT!');
-    print('${"=" * 60}');
+    print('=' * 60);
     print('Node Type: ${info.nodeType}');
     print('Line: ${info.lineNumber}');
     if (info.nodeName != null) {
@@ -65,9 +65,9 @@ void main() async {
       print('  $key: $value');
     });
     print('\nOutput so far:');
-    print('${"─" * 40}');
+    print('─' * 40);
     print(info.outputSoFar);
-    print('${"─" * 40}');
+    print('─' * 40);
 
     // Ask user what to do
     print('\nWhat would you like to do?');
@@ -76,7 +76,7 @@ void main() async {
     print('  [r] Restart (you can edit template first)');
     print('  [d] Disable this breakpoint type');
     print('  [a] Disable all breakpoints and continue');
-    
+
     stdout.write('Your choice: ');
     var choice = stdin.readLineSync()?.toLowerCase() ?? 'c';
 
@@ -84,11 +84,11 @@ void main() async {
       case 's':
         print('Stopping execution...');
         return DebugAction.stop;
-      
+
       case 'r':
         print('\nWould you like to modify the template before restart? (y/n): ');
         var modify = stdin.readLineSync()?.toLowerCase() == 'y';
-        
+
         if (modify) {
           print('Enter new template (type END on a new line to finish):');
           var lines = <String>[];
@@ -99,20 +99,20 @@ void main() async {
           currentTemplateSource = lines.join('\n');
           print('Template updated!');
         }
-        
+
         print('Restarting with ${modify ? "new" : "current"} template...');
         return DebugAction.restart;
-      
+
       case 'd':
         debugController.removeNodeBreakpoint(info.nodeType);
         print('Disabled breakpoint for ${info.nodeType}');
         return DebugAction.continueExecution;
-      
+
       case 'a':
         debugController.enabled = false;
         print('All breakpoints disabled');
         return DebugAction.continueExecution;
-      
+
       case 'c':
       default:
         return DebugAction.continueExecution;
@@ -120,31 +120,31 @@ void main() async {
   };
 
   print('Starting Jinja Debug Example');
-  print('${"=" * 60}');
+  print('=' * 60);
   print('Template:');
   print(templateSource);
-  print('${"=" * 60}');
+  print('=' * 60);
   print('Data:');
   data.forEach((key, value) {
     print('  $key: $value');
   });
-  print('${"=" * 60}');
+  print('=' * 60);
   print('Breakpoints set for: For, Interpolation, Assign');
   print('Starting rendering...\n');
 
   try {
     // Render with debug support
     var result = await env.fromString(currentTemplateSource).renderDebug(
-      data: data,
-      debugController: debugController,
-      getUpdatedTemplate: () => currentTemplateSource,
-    );
+          data: data,
+          debugController: debugController,
+          getUpdatedTemplate: () => currentTemplateSource,
+        );
 
     print('\n${"=" * 60}');
     print('FINAL RESULT:');
-    print('${"=" * 60}');
+    print('=' * 60);
     print(result);
-    print('${"=" * 60}');
+    print('=' * 60);
 
     // Show debug history
     if (debugController.history.isNotEmpty) {

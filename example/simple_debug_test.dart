@@ -16,13 +16,16 @@ Hello {{ name }}!
 
   var debugController = DebugController();
   debugController.enabled = true;
-  
+
   // Add breakpoints for specific node types
-  debugController.addNodeBreakpoint('Interpolation');
-  debugController.addNodeBreakpoint('For');
+  // debugController.addNodeBreakpoint('Interpolation');
+  // debugController.addNodeBreakpoint('For');
+
+  // Add breakpoints for specific lines
+  debugController.addLineBreakpoint(2);
 
   var breakpointCount = 0;
-  
+
   // Set up breakpoint handler
   debugController.onBreakpoint = (info) async {
     breakpointCount++;
@@ -30,7 +33,7 @@ Hello {{ name }}!
     print('Type: ${info.nodeType}');
     print('Variables: ${info.variables}');
     print('Output so far: "${info.outputSoFar}"');
-    
+
     // Automatically continue after showing info
     return DebugAction.continueExecution;
   };
@@ -39,7 +42,7 @@ Hello {{ name }}!
   env.globals['range'] = (int n) => List.generate(n, (i) => i);
 
   print('Starting debug render...\n');
-  
+
   var result = await template.renderDebug(
     data: {},
     debugController: debugController,
