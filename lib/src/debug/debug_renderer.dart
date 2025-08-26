@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:jinja/src/debug/debug_controller.dart';
 import 'package:jinja/src/nodes.dart';
 import 'package:jinja/src/renderer.dart';
+import 'package:jinja/src/runtime.dart';
 
 /// Debug version of StringSinkRenderContext that tracks execution
 base class DebugRenderContext extends StringSinkRenderContext {
@@ -69,9 +70,21 @@ base class DebugRenderContext extends StringSinkRenderContext {
   /// Get all current variables in scope
   Map<String, Object?> getAllVariables() {
     var allVars = <String, Object?>{};
-    allVars.addAll(parent);
+    // allVars.addAll(parent);
     allVars.addAll(context);
-    return allVars;
+    Map<String, dynamic> allVarsToSend = {};
+    for (var element in allVars.entries) {
+      if (element.value is Namespace) {
+        for (var element in (element.value as Namespace).context.entries.toList()) {
+          allVarsToSend[element.key] = element.value;
+        }
+      } else if (element.value is Function) {
+        continue;
+      } else {
+        allVarsToSend[element.key] = element.value;
+      }
+    }
+    return allVarsToSend;
   }
 }
 

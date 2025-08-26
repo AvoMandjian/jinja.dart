@@ -65,17 +65,8 @@ Future<void> testLoop(String testName, String templateSource, Map<String, Object
   debugController.enabled = true;
 
   // Add line breakpoints for lines with interpolations
-  for (int i = 1; i <= 10; i++) {
-    if (templateSource.contains('Line $i:') && templateSource.contains('{{')) {
-      var lines = templateSource.split('\n');
-      for (int j = 0; j < lines.length; j++) {
-        if (lines[j].startsWith('Line $i:') && lines[j].contains('{{')) {
-          debugController.addLineBreakpoint(i);
-          break;
-        }
-      }
-    }
-  }
+  debugController.addLineBreakpoint(1);
+  debugController.addLineBreakpoint(4);
 
   int breakpointCount = 0;
   debugController.onBreakpoint = (info) async {

@@ -6,19 +6,12 @@ import 'package:jinja/debug.dart';
 void main() async {
   var env = Environment();
 
-  var templateSource = '''{% set name = "World" %}
-Hello {{ name }}!
-{% for i in range(3) %}
-  Item {{ i }}
-{% endfor %}
+  var templateSource = '''
+<p>First Script</p><p>{{subcategory_title}}</p>
+<p>Second Script</p><p>{{subcategory_title_2}}</p>
+<p>Third Script</p><p>{{subcategory_title_3}}</p>
+<p>Fourth Script</p><p>{{subcategory_title_4}}</p>
 ''';
-
-  print('Template source:');
-  var lines = templateSource.split('\n');
-  for (var i = 0; i < lines.length; i++) {
-    print('Line ${i + 1}: ${lines[i]}');
-  }
-  print('');
 
   var template = env.fromString(templateSource);
 
@@ -45,13 +38,17 @@ Hello {{ name }}!
   };
 
   // Enable line breakpoints on line 2 and line 4
-  debugController.addLineBreakpoint(2); // Hello {{ name }} line
-  debugController.addLineBreakpoint(4); // Item {{ i }} line
+  debugController.addLineBreakpoint(2);
 
   print('Starting debug render...\n');
 
   var result = await template.renderDebug(
-    data: {},
+    data: {
+      'subcategory_title': 'Subcategory Title',
+      'subcategory_title_2': 'Subcategory Title 2',
+      'subcategory_title_3': 'Subcategory Title 3',
+      'subcategory_title_4': 'Subcategory Title 4',
+    },
     debugController: debugController,
   );
 
