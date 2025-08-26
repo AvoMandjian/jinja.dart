@@ -1,11 +1,13 @@
 import 'dart:async';
-import 'debug_controller.dart';
-import 'debug_renderer.dart';
+
 import 'package:jinja/src/nodes.dart';
 import 'package:jinja/src/renderer.dart';
 import 'package:jinja/src/runtime.dart';
 import 'package:jinja/src/utils.dart';
 import 'package:jinja/src/visitor.dart';
+
+import 'debug_controller.dart';
+import 'debug_renderer.dart';
 
 /// Async version of the renderer for debugging
 class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
@@ -236,7 +238,13 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   @override
   Future<void> visitAssign(Assign node, DebugRenderContext context) async {
     context.incrementLine();
-    await _checkBreakpoint(node, context, 'Assign', nodeName: node.target.toString());
+    String nodeName = '';
+    if (node.target is Name) {
+      nodeName = (node.target as Name).name;
+    } else {
+      nodeName = node.target.toString();
+    }
+    await _checkBreakpoint(node, context, 'Assign', nodeName: nodeName);
     var target = await node.target.accept(this, context);
     var values = await node.value.accept(this, context);
     context.assignTargets(target, values);
@@ -288,7 +296,13 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   @override
   Future<void> visitFor(For node, DebugRenderContext context) async {
     context.incrementLine();
-    await _checkBreakpoint(node, context, 'For', nodeName: node.target.toString());
+    String nodeName;
+    if (node.target is Name) {
+      nodeName = (node.target as Name).name;
+    } else {
+      nodeName = node.target.toString();
+    }
+    await _checkBreakpoint(node, context, 'For', nodeName: nodeName);
 
     var targets = await node.target.accept(this, context);
     var iterable = await node.iterable.accept(this, context);

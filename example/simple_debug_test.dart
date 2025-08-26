@@ -1,16 +1,14 @@
-import 'dart:async';
-import 'package:jinja/jinja.dart';
 import 'package:jinja/debug.dart';
+import 'package:jinja/jinja.dart';
 
 /// Simple programmatic example of debug functionality
 void main() async {
   var env = Environment();
 
   var templateSource = '''
-<p>First Script</p><p>{{subcategory_title}}</p>
-<p>Second Script</p><p>{{subcategory_title_2}}</p>
-<p>Third Script</p><p>{{subcategory_title_3}}</p>
-<p>Fourth Script</p><p>{{subcategory_title_4}}</p>
+{% for VARIABLE_1 in dealership.inventory %}
+{{dealership.inventory |tojson}}
+{% endfor %}
 ''';
 
   var template = env.fromString(templateSource);
@@ -38,16 +36,37 @@ void main() async {
   };
 
   // Enable line breakpoints on line 2 and line 4
+  debugController.addLineBreakpoint(1);
   debugController.addLineBreakpoint(2);
+  debugController.addLineBreakpoint(3);
 
   print('Starting debug render...\n');
 
   var result = await template.renderDebug(
     data: {
-      'subcategory_title': 'Subcategory Title',
-      'subcategory_title_2': 'Subcategory Title 2',
-      'subcategory_title_3': 'Subcategory Title 3',
-      'subcategory_title_4': 'Subcategory Title 4',
+      'dealership': {
+        'name': 'AutoWorld',
+        'location': {'city': 'Gyumri', 'country': 'Armenia'},
+        'inventory': [
+          {
+            'id': 1,
+            'make': 'Toyota',
+            'model': 'Camry',
+            'year': 2021,
+            'features': ['Bluetooth', 'Backup Camera', 'Cruise Control'],
+            'specs': {'engine': '2.5L', 'transmission': 'Automatic', 'fuelType': 'Gasoline'}
+          },
+          {
+            'id': 2,
+            'make': 'Tesla',
+            'model': 'Model 3',
+            'year': 2023,
+            'features': ['Autopilot', 'Electric', 'Touchscreen'],
+            'specs': {'engine': 'Electric', 'transmission': 'Single-speed', 'fuelType': 'Electric'}
+          }
+        ],
+        'openHours': {'mon-fri': '9:00-18:00', 'sat': '10:00-15:00', 'sun': 'Closed'}
+      }
     },
     debugController: debugController,
   );
