@@ -65,8 +65,8 @@ Future<void> testLoop(String testName, String templateSource, Map<String, Object
   debugController.enabled = true;
 
   // Add line breakpoints for lines with interpolations
-  debugController.addLineBreakpoint(1);
-  debugController.addLineBreakpoint(4);
+  debugController.addBreakpoint(line: 1);
+  debugController.addBreakpoint(line: 4);
 
   int breakpointCount = 0;
   debugController.onBreakpoint = (info) async {

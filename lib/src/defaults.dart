@@ -1,4 +1,4 @@
-import 'package:jinja/src/nodes.dart';
+import 'package:jinja/src/exceptions.dart';
 import 'package:jinja/src/runtime.dart';
 import 'package:jinja/src/utils.dart';
 
@@ -16,42 +16,85 @@ Object finalize(Context context, Object? value) {
   return value ?? '';
 }
 
-Object? getItem(
-  Object? item,
-  dynamic object, {
-  Object? node,
-  Node? nodeCaller,
-}) {
-  try {
-    // TODO(dynamic): dynamic invocation
-    if (object != null && item != null) {
-      // ignore: avoid_dynamic_calls
-      return object[item];
-    } else {
-      throw Exception(
-          'Trying to access {{"$item"}} in an undefined object: {{"$object"}} from the jinja data, it may be {{"$node"}} in the jinja script at');
-    }
-  } catch (e) {
-    if (object == null) {
-      if (node is Attribute) {
-        if (node.value is Name) {
-          throw Exception(
-              'Trying to access "$item" in an undefined object: "${(node.value as Name).name}" from the jinja data, it may be {{${(node.value as Name).name}.$item}} in the jinja script');
-        } else {
-          throw Exception(
-              'Trying to access "$item" in an undefined object: "${node.value}" from the jinja data, it may be {{${node.value}.$item}} in the jinja script');
-        }
-      } else {
-        throw Exception('Jinja script contains {{.$item}}, but the provided "object" is null. No object in the Jinja data contains {{.$item}}.');
-      }
-    }
-    if (node is Attribute) {
-      throw Exception(
-          'Trying to access "$item" in an undefined object: "${(node.value as Name).name}" from the jinja data (key: $object), it may be {{${(node.value as Name).name}.$item}} in the jinja script');
-    }
-    throw Exception(
-        'Attempted to access {{$item}} in the provided "object" {{$object}}, which may not be an object. Flutter Exception: ${e.toString()}');
+/// Default attribute getter used for `.` access.
+///
+/// Handles `Map`, `List` methods, `LoopContext`, and `Namespace` objects.
+Object? getAttribute(String attribute, Object? object, {Object? node}) {
+  if (object == null) {
+    throw UndefinedError('Cannot access attribute `$attribute` on a null object.');
   }
+
+  if (object is Map) {
+    return object[attribute];
+  }
+
+  if (object is List) {
+    switch (attribute) {
+      case 'add':
+        return object.add;
+    }
+  }
+
+  if (object is LoopContext) {
+    return object[attribute];
+  }
+
+  if (object is Namespace) {
+    return object[attribute];
+  }
+
+  // For other object types, attribute access is not supported by default
+  // in the reflection-free model. Returning null is a safe fallback.
+  return null;
+}
+
+/// Default item getter used for `[]` access.
+///
+/// Handles `Map`, `List`, `MapEntry`, `LoopContext`, and `Namespace` objects.
+Object? getItem(Object? key, Object? object, {Object? node}) {
+  if (object == null) {
+    throw UndefinedError('Cannot access item `$key` on a null object.');
+  }
+
+  if (object is Map) {
+    if (object.containsKey(key)) {
+      return object[key];
+    }
+    throw UndefinedError('Map does not contain key `$key`.');
+  }
+
+  if (object is List) {
+    if (key is int) {
+      if (key >= 0 && key < object.length) {
+        return object[key];
+      }
+      throw UndefinedError(
+          'Index `$key` is out of bounds for list of length `${object.length}`.');
+    }
+    throw TemplateRuntimeError(
+        'List index must be an integer, but got `${key.runtimeType}`.');
+  }
+
+  if (object is MapEntry) {
+    if (key == 0) {
+      return object.key;
+    }
+    if (key == 1) {
+      return object.value;
+    }
+    throw UndefinedError('MapEntry index must be 0 or 1.');
+  }
+
+  if (object is LoopContext) {
+    return object[key as String];
+  }
+
+  if (object is Namespace) {
+    return object[key as String];
+  }
+
+  throw TemplateRuntimeError(
+      'Cannot access item on object of type `${object.runtimeType}`.');
 }
 
 Object? undefined(String name, [String? template]) {

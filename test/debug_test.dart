@@ -1,0 +1,72 @@
+import 'package:jinja/jinja.dart';
+import 'package:jinja/src/debug/debug_controller.dart';
+import 'package:jinja/src/debug/debug_template.dart';
+import 'package:test/test.dart';
+
+void main() {
+  group('DebugController', () {
+    test('add and remove breakpoint', () {
+      var controller = DebugController();
+      var bp = controller.addBreakpoint(line: 10);
+      expect(controller.getBreakpoints(10), contains(bp));
+      controller.removeBreakpoint(bp);
+      expect(controller.getBreakpoints(10), isEmpty);
+    });
+  });
+
+  group('DebugRenderer', () {
+    late Environment env;
+    late DebugController controller;
+
+    setUp(() {
+      env = Environment();
+      controller = DebugController()..enabled = true;
+    });
+
+    test('simple line breakpoint', () async {
+      var template = env.fromString('Hello\n{{ name }}');
+      var bp = controller.addBreakpoint(line: 2);
+      var hit = false;
+
+      controller.onBreakpoint = (info) {
+        hit = true;
+        expect(info.lineNumber, bp.line);
+        expect(info.variables['name'], 'World');
+        return Future.value(DebugAction.continueExecution);
+      };
+
+      await template.renderDebug({'name': 'World'}, debugController: controller);
+      expect(hit, isTrue);
+    });
+
+    test('conditional breakpoint (hit)', () async {
+      var template = env.fromString('{% for i in [1, 2, 3] %}\n{{ i }}\n{% endfor %}');
+      var bp = controller.addBreakpoint(line: 2, condition: 'i == 2');
+      var hitCount = 0;
+
+      controller.onBreakpoint = (info) {
+        hitCount++;
+        expect(info.lineNumber, bp.line);
+        expect(info.variables['i'], 2);
+        return Future.value(DebugAction.continueExecution);
+      };
+
+      await template.renderDebug({'i': 0}, debugController: controller);
+      expect(hitCount, 1);
+    });
+
+    test('conditional breakpoint (miss)', () async {
+      var template = env.fromString('{% for i in [1, 2, 3] %}\n{{ i }}\n{% endfor %}');
+      controller.addBreakpoint(line: 2, condition: 'i == 4');
+      var hit = false;
+
+      controller.onBreakpoint = (info) {
+        hit = true;
+        return Future.value(DebugAction.continueExecution);
+      };
+
+      await template.renderDebug({'i': 0}, debugController: controller);
+      expect(hit, isFalse);
+    });
+  });
+}

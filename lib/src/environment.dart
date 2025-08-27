@@ -13,6 +13,9 @@ import 'package:jinja/src/runtime.dart';
 import 'package:jinja/src/utils.dart';
 import 'package:meta/meta.dart';
 
+export 'package:jinja/src/loaders.dart' show FileSystemLoader, Loader;
+export 'package:jinja/src/exceptions.dart' show TemplateError;
+
 /// {@template jinja.finalizer}
 /// A function that can be used to process the result of a variable
 /// expression before it is output.
@@ -98,7 +101,7 @@ base class Environment {
     List<Node Function(Node)>? modifiers,
     Map<String, Template>? templates,
     Random? random,
-    AttributeGetter? getAttribute,
+    this.getAttribute = defaults.getAttribute,
     this.getItem = defaults.getItem,
     this.undefined = defaults.undefined,
   })  : finalize = wrapFinalizer(finalize),
@@ -107,10 +110,8 @@ base class Environment {
         tests = <String, Function>{...defaults.tests},
         modifiers = <Node Function(Node)>[],
         templates = <String, Template>{},
-        random = random ?? Random(),
-        getAttribute = wrapGetAttribute(getAttribute, getItem) {
+        random = random ?? Random() {
     if (newLine != '\r' && newLine != '\n' && newLine != '\r\n') {
-      // TODO(environment): add error message
       throw ArgumentError.value(newLine, 'newLine');
     }
 
@@ -454,26 +455,6 @@ base class Environment {
     throw TypeError();
   }
 
-  /// @nodoc
-  @protected
-  static AttributeGetter wrapGetAttribute(
-    AttributeGetter? attributeGetter,
-    ItemGetter itemGetter,
-  ) {
-    if (attributeGetter == null) {
-      return itemGetter;
-    }
-
-    Object? getter(String attribute, Object? object, {Object? node}) {
-      try {
-        return attributeGetter(attribute, object, node: node);
-      } on NoSuchMethodError {
-        return itemGetter(attribute, object, node: node);
-      }
-    }
-
-    return getter;
-  }
 }
 
 /// {@template jinja.Template}
@@ -506,7 +487,7 @@ base class Template {
     Map<String, Function>? tests,
     List<Node Function(Node)>? modifiers,
     Random? random,
-    AttributeGetter? getAttribute,
+    AttributeGetter getAttribute = defaults.getAttribute,
     ItemGetter getItem = defaults.getItem,
     UndefinedCallback undefined = defaults.undefined,
   }) {

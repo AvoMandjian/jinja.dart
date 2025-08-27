@@ -1,5 +1,9 @@
 import 'dart:async';
 
+import 'dart:async';
+
+import 'dart:async';
+
 import 'package:jinja/src/debug/async_debug_renderer.dart';
 import 'package:jinja/src/debug/debug_controller.dart';
 import 'package:jinja/src/debug/debug_renderer.dart';
@@ -35,37 +39,16 @@ extension DebugTemplate on Template {
       data: data,
     );
 
-    // Keep trying to render until successful or stopped
-    while (true) {
-      try {
-        // Reset context for restart
-        context = DebugRenderContext(
-          environment,
-          sink,
-          debugController: debugController,
-          template: path,
-          parent: globals,
-          data: data,
-        );
-
-        // If template source provided (for restart with new template)
-        if (templateSource != null) {
-          var newTemplate = environment.fromString(templateSource);
-          await _renderBodyAsync(newTemplate.body, context);
-        } else {
-          await _renderBodyAsync(body, context);
-        }
-
-        // Successfully completed
-        break;
-      } on RestartException {
-        // Clear the buffer and restart
-        if (sink is StringBuffer) {
-          sink.clear();
-        }
-        debugController.reset();
-        // Continue the loop to restart
+    try {
+      // If template source provided (for restart with new template)
+      if (templateSource != null) {
+        var newTemplate = environment.fromString(templateSource);
+        await _renderBodyAsync(newTemplate.body, context);
+      } else {
+        await _renderBodyAsync(body, context);
       }
+    } on StopException {
+      // Stop execution
     }
   }
 
@@ -74,11 +57,8 @@ extension DebugTemplate on Template {
     TemplateNode node,
     DebugRenderContext context,
   ) async {
-    const renderer = DebugRenderer();
-
-    // We need to make the visitor pattern async-aware
-    // For now, we'll use a synchronous approach with periodic checks
-    node.accept(renderer, context);
+    final renderer = AsyncDebugRenderer();
+    await node.accept(renderer, context);
 
     // Check if we should stop
     if (context.shouldStop) {

@@ -83,9 +83,9 @@ void main() {
   {% include "first_script__1__00" %}
 {% endblock first_script__1__00 %}
 ''');
-  var debugController = DebugController()
-    ..addLineBreakpoint(3)
-    ..enabled = true;
+  var debugController = DebugController();
+  debugController.addBreakpoint(line: 3);
+  debugController.enabled = true;
 
   debugController.onBreakpoint = (info) async {
     // print('Variables: ${info.variables}');

@@ -36,6 +36,7 @@ final class For extends Statement {
     this.recursive = false,
     required this.body,
     this.orElse,
+    this.endLine,
   });
 
   final Expression target;
@@ -50,6 +51,8 @@ final class For extends Statement {
 
   final Node? orElse;
 
+  final int? endLine;
+
   @override
   R accept<C, R>(Visitor<C, R> visitor, C context) {
     return visitor.visitFor(this, context);
@@ -63,6 +66,7 @@ final class For extends Statement {
     bool? recursive,
     Node? body,
     Node? orElse,
+    int? endLine,
   }) {
     return For(
       target: target ?? this.target,
@@ -71,6 +75,7 @@ final class For extends Statement {
       recursive: recursive ?? this.recursive,
       body: body ?? this.body,
       orElse: orElse ?? this.orElse,
+      endLine: endLine ?? this.endLine,
     );
   }
 

@@ -11,6 +11,8 @@ base class DebugRenderContext extends StringSinkRenderContext {
   final StringBuffer _outputBuffer = StringBuffer();
   int _currentLine = 0;
   bool _shouldStop = false;
+  int _depth = 0;
+  DebugAction _stepAction = DebugAction.continueExecution;
 
   DebugRenderContext(
     super.environment,
@@ -29,14 +31,7 @@ base class DebugRenderContext extends StringSinkRenderContext {
     Map<String, Object?>? data,
     bool withContext = true,
   }) {
-    Map<String, Object?> parent;
-
-    if (withContext) {
-      parent = <String, Object?>{...this.parent, ...context};
-    } else {
-      parent = this.parent;
-    }
-
+    var parent = withContext ? {...this.parent, ...context} : this.parent;
     return DebugRenderContext(
       environment,
       sink ?? this.sink,
@@ -45,7 +40,7 @@ base class DebugRenderContext extends StringSinkRenderContext {
       blocks: blocks,
       parent: parent,
       data: data,
-    );
+    ).._depth = _depth;
   }
 
   @override
@@ -56,33 +51,27 @@ base class DebugRenderContext extends StringSinkRenderContext {
 
   String get outputSoFar => _outputBuffer.toString();
 
-  void stopExecution() {
-    _shouldStop = true;
-  }
-
+  void stopExecution() => _shouldStop = true;
   bool get shouldStop => _shouldStop;
 
-  void incrementLine() {
-    _currentLine++;
-  }
-
+  void setLine(int line) => _currentLine = line;
   int get currentLine => _currentLine;
 
-  /// Get all current variables in scope
+  void stepIn() => _depth++;
+  void stepOut() => _depth--;
+  int get depth => _depth;
+
+  void setStepAction(DebugAction action) => _stepAction = action;
+  DebugAction get stepAction => _stepAction;
+
   Map<String, Object?> getAllVariables() {
-    var allVars = <String, Object?>{};
-    // allVars.addAll(parent);
-    allVars.addAll(context);
-    Map<String, dynamic> allVarsToSend = {};
-    for (var element in allVars.entries) {
-      if (element.value is Namespace) {
-        for (var element in (element.value as Namespace).context.entries.toList()) {
-          allVarsToSend[element.key] = element.value;
-        }
-      } else if (element.value is Function) {
-        continue;
-      } else {
-        allVarsToSend[element.key] = element.value;
+    var allVars = <String, Object?>{...parent, ...context};
+    var allVarsToSend = <String, dynamic>{};
+    for (var entry in allVars.entries) {
+      if (entry.value is Namespace) {
+        allVarsToSend.addAll((entry.value as Namespace).context);
+      } else if (entry.value is! Function) {
+        allVarsToSend[entry.key] = entry.value;
       }
     }
     return allVarsToSend;
@@ -93,27 +82,47 @@ base class DebugRenderContext extends StringSinkRenderContext {
 base class DebugRenderer extends StringSinkRenderer {
   const DebugRenderer();
 
-  Future<bool> _checkBreakpoint(Node node, DebugRenderContext context, String nodeType, {String? nodeName, dynamic nodeData}) async {
-    if (context.debugController.shouldBreak(nodeType, context.currentLine)) {
-      var info = BreakpointInfo(
-        nodeType: nodeType,
-        variables: context.getAllVariables(),
-        outputSoFar: context.outputSoFar,
-        lineNumber: context.currentLine,
-        nodeName: nodeName,
-        nodeData: nodeData,
-      );
+  Future<bool> _checkBreakpoint(Node node, DebugRenderContext context) async {
+    if (node.line != null) {
+      context.setLine(node.line!);
+    }
 
-      var action = await context.debugController.handleBreakpoint(info);
+    var breakpoints = context.debugController.getBreakpoints(context.currentLine);
+    var stepBreak = context.stepAction == DebugAction.stepOver && context.depth <= 0 ||
+        context.stepAction == DebugAction.stepIn;
 
-      switch (action) {
-        case DebugAction.stop:
+    if (breakpoints.isNotEmpty || stepBreak) {
+      var shouldBreak = stepBreak;
+      if (!shouldBreak) {
+        for (var bp in breakpoints) {
+          if (bp.condition == null) {
+            shouldBreak = true;
+            break;
+          }
+          var expr = context.environment.parse(bp.condition!);
+          var result = expr.accept(this, context);
+          if (result is bool && result) {
+            shouldBreak = true;
+            break;
+          }
+        }
+      }
+
+      if (shouldBreak) {
+        var info = BreakpointInfo(
+          nodeType: node.runtimeType.toString(),
+          variables: context.getAllVariables(),
+          outputSoFar: context.outputSoFar,
+          lineNumber: context.currentLine,
+        );
+
+        var action = await context.debugController.handleBreakpoint(info);
+        context.setStepAction(action);
+
+        if (action == DebugAction.stop) {
           context.stopExecution();
           return false;
-        case DebugAction.restart:
-          throw RestartException();
-        case DebugAction.continueExecution:
-          return true;
+        }
       }
     }
     return true;
@@ -122,73 +131,78 @@ base class DebugRenderer extends StringSinkRenderer {
   @override
   void visitData(Data node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      var shouldContinue = _checkBreakpoint(node, context, 'Data', nodeData: node.data).then((value) => value);
-
-      // For simplicity in sync context, we'll use sync check
-      if (context.shouldStop) return;
+      _checkBreakpoint(node, context).then((shouldContinue) {
+        if (shouldContinue) {
+          super.visitData(node, context);
+        }
+      });
+    } else {
+      super.visitData(node, context);
     }
-    super.visitData(node, context);
   }
 
   @override
   void visitInterpolation(Interpolation node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      context.incrementLine();
-      var shouldContinue = _checkBreakpoint(node, context, 'Interpolation', nodeData: node.value).then((value) => value);
-
-      if (context.shouldStop) return;
+      _checkBreakpoint(node, context).then((shouldContinue) {
+        if (shouldContinue) {
+          super.visitInterpolation(node, context);
+        }
+      });
+    } else {
+      super.visitInterpolation(node, context);
     }
-    super.visitInterpolation(node, context);
   }
 
   @override
   void visitFor(For node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      context.incrementLine();
-      var shouldContinue =
-          _checkBreakpoint(node, context, 'For', nodeName: node.target.toString(), nodeData: node.iterable).then((value) => value);
-
-      if (context.shouldStop) return;
+      _checkBreakpoint(node, context).then((shouldContinue) {
+        if (shouldContinue) {
+          super.visitFor(node, context);
+        }
+      });
+    } else {
+      super.visitFor(node, context);
     }
-    super.visitFor(node, context);
   }
 
   @override
   void visitIf(If node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      context.incrementLine();
-      var shouldContinue = _checkBreakpoint(node, context, 'If', nodeData: node.test).then((value) => value);
-
-      if (context.shouldStop) return;
+      _checkBreakpoint(node, context).then((shouldContinue) {
+        if (shouldContinue) {
+          super.visitIf(node, context);
+        }
+      });
+    } else {
+      super.visitIf(node, context);
     }
-    super.visitIf(node, context);
   }
 
   @override
   void visitAssign(Assign node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      context.incrementLine();
-      var shouldContinue =
-          _checkBreakpoint(node, context, 'Assign', nodeName: node.target.toString(), nodeData: node.value).then((value) => value);
-
-      if (context.shouldStop) return;
+      _checkBreakpoint(node, context).then((shouldContinue) {
+        if (shouldContinue) {
+          super.visitAssign(node, context);
+        }
+      });
+    } else {
+      super.visitAssign(node, context);
     }
-    super.visitAssign(node, context);
   }
 
   @override
   void visitBlock(Block node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      context.incrementLine();
-      var shouldContinue = _checkBreakpoint(node, context, 'Block', nodeName: node.name).then((value) => value);
-
-      if (context.shouldStop) return;
+      _checkBreakpoint(node, context).then((shouldContinue) {
+        if (shouldContinue) {
+          super.visitBlock(node, context);
+        }
+      });
+    } else {
+      super.visitBlock(node, context);
     }
-    super.visitBlock(node, context);
   }
-}
-
-/// Exception thrown when restart is requested
-class RestartException implements Exception {
-  const RestartException();
 }

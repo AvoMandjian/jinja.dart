@@ -2,7 +2,6 @@
 library;
 
 import 'package:jinja/jinja.dart';
-import 'package:jinja/reflection.dart';
 import 'package:jinja/src/runtime.dart';
 import 'package:test/test.dart';
 
@@ -32,14 +31,14 @@ void main() {
   group('Call with Environment', () {
     test('positional argument', () {
       var globals = {'test_func': passEnvironment(funcWithEnvironment)};
-      var env = Environment(getAttribute: getAttribute, globals: globals);
+      var env = Environment(globals: globals);
       var tmpl = env.fromString('{{ test_func("positional") }}');
       var data = {'bar': 42};
       expect(tmpl.render(data), '[positional] {default} env.commentStart = {#');
     });
     test('named argument', () {
       var globals = {'test_func': passEnvironment(funcWithEnvironment)};
-      var env = Environment(getAttribute: getAttribute, globals: globals);
+      var env = Environment(globals: globals);
       var tmpl = env.fromString('{{ test_func("positional", named="named") }}');
       var data = {'bar': 42};
       expect(tmpl.render(data), '[positional] {named} env.commentStart = {#');
@@ -49,7 +48,7 @@ void main() {
   group('Call with Context', () {
     test('named argument', () {
       var globals = {'test_func': passContext(funcWithContext)};
-      var env = Environment(getAttribute: getAttribute, globals: globals);
+      var env = Environment(globals: globals);
       var tmpl = env.fromString("{{ test_func(named='testing') }}");
       var data = {'bar': 42};
       expect(tmpl.render(data), 'testing42');
@@ -57,7 +56,7 @@ void main() {
 
     test('named argument missing', () {
       var globals = {'test_func': passContext(funcWithContext)};
-      var env = Environment(getAttribute: getAttribute, globals: globals);
+      var env = Environment(globals: globals);
       var tmpl = env.fromString('{{ test_func() }}');
       var data = {'bar': 42};
       expect(tmpl.render(data), 'default42');

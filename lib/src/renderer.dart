@@ -405,10 +405,9 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   @override
   void visitCallBlock(CallBlock node, StringSinkRenderContext context) {
     var function = node.call.value.accept(this, context) as MacroFunction;
-    var (arguments, _) = node.call.calling.accept(this, context) as Parameters;
-    var [positional as List, named as Map] = arguments;
-    named['caller'] = getMacroFunction(node, context);
-    context.write(context.call(function, <Object?>[positional, named]));
+    var (positional, named) = node.call.calling.accept(this, context) as Parameters;
+    named[#caller] = getMacroFunction(node, context);
+    context.write(context.call(function, node, positional, named));
   }
 
   @override

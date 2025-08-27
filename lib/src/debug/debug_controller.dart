@@ -1,18 +1,40 @@
 import 'dart:async';
 
-/// Debug action that can be taken when a breakpoint is hit
-enum DebugAction {
-  /// Continue execution
-  continueExecution,
+/// Represents a breakpoint in a template.
+class Breakpoint {
+  static int _idCounter = 0;
+  final int id;
+  final int line;
+  final String? condition;
 
-  /// Stop execution
-  stop,
+  Breakpoint({required this.line, this.condition}) : id = _idCounter++;
 
-  /// Restart from beginning with potentially new template
-  restart,
+  @override
+  bool operator ==(Object other) => identical(this, other) || other is Breakpoint && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
-/// Information about a breakpoint hit
+/// Debug action that can be taken when a breakpoint is hit.
+enum DebugAction {
+  /// Continue execution until the next breakpoint.
+  continueExecution,
+
+  /// Stop the execution of the template.
+  stop,
+
+  /// Step to the next line.
+  stepOver,
+
+  /// Step into the current node.
+  stepIn,
+
+  /// Step out of the current node.
+  stepOut,
+}
+
+/// Information about a breakpoint hit.
 class BreakpointInfo {
   final String nodeType;
   final Map<String, Object?> variables;
@@ -40,63 +62,46 @@ class BreakpointInfo {
       };
 }
 
-/// Controller for debugging Jinja templates
+/// Controller for debugging Jinja templates.
 class DebugController {
-  final Set<String> _breakpointNodeTypes = {};
-  final Set<int> _breakpointLines = {};
+  final Map<int, List<Breakpoint>> _breakpoints = {};
   final List<BreakpointInfo> _history = [];
 
-  /// Callback when a breakpoint is hit
+  /// Callback when a breakpoint is hit.
   Future<DebugAction> Function(BreakpointInfo info)? onBreakpoint;
 
-  /// Whether debugging is enabled
+  /// Whether debugging is enabled.
   bool _enabled = false;
   bool get enabled => _enabled;
   set enabled(bool value) => _enabled = value;
 
-  /// Add a breakpoint for a specific node type
-  void addNodeBreakpoint(String nodeType) {
-    _breakpointNodeTypes.add(nodeType);
+  /// Adds a breakpoint.
+  Breakpoint addBreakpoint({required int line, String? condition}) {
+    line = line - 1;
+    var breakpoint = Breakpoint(line: line, condition: condition);
+    _breakpoints.putIfAbsent(line, () => []).add(breakpoint);
+    return breakpoint;
   }
 
-  /// Remove a breakpoint for a specific node type
-  void removeNodeBreakpoint(String nodeType) {
-    _breakpointNodeTypes.remove(nodeType);
+  /// Removes a breakpoint.
+  void removeBreakpoint(Breakpoint breakpoint) {
+    _breakpoints[breakpoint.line]?.remove(breakpoint);
+    if (_breakpoints[breakpoint.line]?.isEmpty ?? false) {
+      _breakpoints.remove(breakpoint.line);
+    }
   }
 
-  /// Add a breakpoint at a specific line
-  void addLineBreakpoint(int line) {
-    _breakpointLines.add(line);
-  }
-
-  /// Remove a breakpoint at a specific line
-  void removeLineBreakpoint(int line) {
-    _breakpointLines.remove(line);
-  }
-
-  /// Clear all breakpoints
+  /// Clear all breakpoints.
   void clearBreakpoints() {
-    _breakpointNodeTypes.clear();
-    _breakpointLines.clear();
+    _breakpoints.clear();
   }
 
-  /// Check if we should break at this node
-  bool shouldBreak(String nodeType, int lineNumber) {
-    if (!_enabled) return false;
-    return _breakpointNodeTypes.contains(nodeType) || _breakpointLines.contains(lineNumber);
-  }
-  
-  /// Check if there's a line breakpoint at the given line
-  bool hasLineBreakpoint(int lineNumber) {
-    return _breakpointLines.contains(lineNumber);
-  }
-  
-  /// Check if there's a node breakpoint for the given type
-  bool hasNodeBreakpoint(String nodeType) {
-    return _breakpointNodeTypes.contains(nodeType);
+  /// Returns all breakpoints for a given line.
+  List<Breakpoint> getBreakpoints(int line) {
+    return _breakpoints[line] ?? [];
   }
 
-  /// Handle a breakpoint hit
+  /// Handle a breakpoint hit.
   Future<DebugAction> handleBreakpoint(BreakpointInfo info) async {
     _history.add(info);
 
@@ -108,15 +113,15 @@ class DebugController {
     return DebugAction.continueExecution;
   }
 
-  /// Get the history of breakpoint hits
+  /// Get the history of breakpoint hits.
   List<BreakpointInfo> get history => List.unmodifiable(_history);
 
-  /// Clear the history
+  /// Clear the history.
   void clearHistory() {
     _history.clear();
   }
 
-  /// Reset the controller
+  /// Reset the controller.
   void reset() {
     clearHistory();
   }

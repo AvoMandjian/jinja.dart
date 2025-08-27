@@ -8,6 +8,7 @@ import 'package:jinja/src/visitor.dart';
 
 import 'debug_controller.dart';
 import 'debug_renderer.dart';
+import 'evaluator.dart';
 
 /// Async version of the renderer for debugging
 class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
@@ -56,35 +57,52 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     // Use actual source line from node if available, otherwise use context line
     int currentLine = node.line ?? context.currentLine;
 
-    // Check if we should break for node type
-    bool shouldBreakForNode = context.debugController.hasNodeBreakpoint(nodeType);
+    var breakpoints = context.debugController.getBreakpoints(currentLine);
+    var stepBreak = context.stepAction == DebugAction.stepOver && context.depth <= 0 || context.stepAction == DebugAction.stepIn;
 
-    // Check if we should break for line (and haven't already hit this line)
-    bool shouldBreakForLine = context.debugController.hasLineBreakpoint(currentLine) && !_linesHitThisRender.contains(currentLine);
-
-    if (shouldBreakForNode || shouldBreakForLine) {
-      // Mark this line as hit if it's a line breakpoint
-      if (shouldBreakForLine) {
-        _linesHitThisRender.add(currentLine);
+    if ((breakpoints.isNotEmpty && !_linesHitThisRender.contains(currentLine)) || stepBreak) {
+      var shouldBreak = stepBreak;
+      if (!shouldBreak) {
+        for (var bp in breakpoints) {
+          if (bp.condition == null) {
+            shouldBreak = true;
+            break;
+          }
+          var expr = context.environment.parse(bp.condition!);
+          var result = expr.accept(const ExpressionEvaluator(), context);
+          if (result is bool && result) {
+            shouldBreak = true;
+            break;
+          }
+        }
       }
-      var info = BreakpointInfo(
-        nodeType: nodeType,
-        variables: context.getAllVariables(),
-        outputSoFar: context.outputSoFar,
-        lineNumber: currentLine,
-        nodeName: nodeName,
-        nodeData: nodeData,
-      );
 
-      var action = await context.debugController.handleBreakpoint(info);
+      if (shouldBreak) {
+        // Mark this line as hit if it's a line breakpoint
+        if (breakpoints.isNotEmpty) {
+          _linesHitThisRender.add(currentLine);
+        }
+        var info = BreakpointInfo(
+          nodeType: nodeType,
+          variables: context.getAllVariables(),
+          outputSoFar: context.outputSoFar,
+          lineNumber: currentLine,
+          nodeName: nodeName,
+          nodeData: nodeData,
+        );
 
-      switch (action) {
-        case DebugAction.stop:
-          throw StopException();
-        case DebugAction.restart:
-          throw RestartException();
-        case DebugAction.continueExecution:
-          break;
+        var action = await context.debugController.handleBreakpoint(info);
+        context.setStepAction(action);
+
+        switch (action) {
+          case DebugAction.stop:
+            throw StopException();
+          case DebugAction.continueExecution:
+          case DebugAction.stepOver:
+          case DebugAction.stepIn:
+          case DebugAction.stepOut:
+            break;
+        }
       }
     }
   }
@@ -237,7 +255,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitAssign(Assign node, DebugRenderContext context) async {
-    context.incrementLine();
+    if (node.line != null) {
+      context.setLine(node.line!);
+    }
     String nodeName = '';
     if (node.target is Name) {
       nodeName = (node.target as Name).name;
@@ -258,7 +278,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitBlock(Block node, DebugRenderContext context) async {
-    context.incrementLine();
+    if (node.line != null) {
+      context.setLine(node.line!);
+    }
     await _checkBreakpoint(node, context, 'Block', nodeName: node.name);
     _baseRenderer.visitBlock(node, context);
   }
@@ -295,7 +317,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitFor(For node, DebugRenderContext context) async {
-    context.incrementLine();
+    if (node.line != null) {
+      context.setLine(node.line!);
+    }
     String nodeName;
     if (node.target is Name) {
       nodeName = (node.target as Name).name;
@@ -319,16 +343,14 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
       return;
     }
 
-    // Get the line range of the loop body dynamically
-    var (minLine, maxLine) = _getNodeLineRange(node.body);
-
     for (var value in values) {
-      // Clear line tracking for loop body to allow breakpoints to trigger on each iteration
-      // Use dynamically determined line range from the AST
+      // When iterating, we clear the lines hit inside the loop body so that
+      // breakpoints can be triggered again for each iteration.
+      var (minLine, maxLine) = _getNodeLineRange(node.body);
       if (minLine != null && maxLine != null) {
-        _linesHitThisRender.removeWhere((line) => line >= minLine && line <= maxLine);
+        _linesHitThisRender
+            .removeWhere((line) => line >= minLine && line <= maxLine);
       }
-
       var data = _baseRenderer.getDataForTargets(targets, value);
       var forContext = context.derived(data: data);
       await node.body.accept(this, forContext);
@@ -343,7 +365,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitIf(If node, DebugRenderContext context) async {
-    context.incrementLine();
+    if (node.line != null) {
+      context.setLine(node.line!);
+    }
     await _checkBreakpoint(node, context, 'If');
 
     var testResult = await node.test.accept(this, context);
@@ -368,7 +392,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitInterpolation(Interpolation node, DebugRenderContext context) async {
-    context.incrementLine();
+    if (node.line != null) {
+      context.setLine(node.line!);
+    }
     await _checkBreakpoint(node, context, 'Interpolation');
     var value = await node.value.accept(this, context);
     var finalized = context.finalize(value);

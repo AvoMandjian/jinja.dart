@@ -249,9 +249,11 @@ final class Parser {
     var recursive = reader.skipIf('name', 'recursive');
     var body = parseStatements(reader, endForElse);
     Node? orElse;
+    var current = reader.next();
 
-    if (reader.next().test('name', 'else')) {
+    if (current.test('name', 'else')) {
       orElse = parseStatements(reader, endFor, true);
+      current = reader.current;
     }
 
     return For(
@@ -261,6 +263,7 @@ final class Parser {
       orElse: orElse,
       test: test,
       recursive: recursive,
+      endLine: current.line,
     );
   }
 

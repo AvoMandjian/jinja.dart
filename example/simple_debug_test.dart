@@ -6,19 +6,17 @@ void main() async {
   var env = Environment();
 
   var templateSource = '''
-{% for VARIABLE_1 in dealership.inventory %}
-{{dealership.inventory |tojson}}
+Hello 1
+{% for VARIABLE_1 in [1,2,3,4,5] %}
+  {{dealership.inventory |tojson}}
 {% endfor %}
+Hello 2
 ''';
 
   var template = env.fromString(templateSource);
 
   var debugController = DebugController();
   debugController.enabled = true;
-
-  // Add breakpoints for specific node types
-  // debugController.addNodeBreakpoint('Interpolation');
-  // // debugController.addNodeBreakpoint('For');
 
   var breakpointCount = 0;
 
@@ -36,9 +34,11 @@ void main() async {
   };
 
   // Enable line breakpoints on line 2 and line 4
-  debugController.addLineBreakpoint(1);
-  debugController.addLineBreakpoint(2);
-  debugController.addLineBreakpoint(3);
+  debugController.addBreakpoint(line: 1);
+  debugController.addBreakpoint(line: 2);
+  debugController.addBreakpoint(line: 3);
+  debugController.addBreakpoint(line: 4);
+  debugController.addBreakpoint(line: 5);
 
   print('Starting debug render...\n');
 

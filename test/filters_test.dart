@@ -4,7 +4,6 @@ library;
 import 'dart:math' show Random;
 
 import 'package:jinja/jinja.dart';
-import 'package:jinja/reflection.dart';
 import 'package:jinja/src/utils.dart';
 import 'package:test/test.dart';
 
@@ -33,7 +32,7 @@ bool noFilterNamedF(TemplateError error) {
 }
 
 void main() {
-  var env = Environment(getAttribute: getAttribute);
+  var env = Environment();
 
   group('Filter', () {
     var aNoFilterNamedF = throwsA(
@@ -121,8 +120,7 @@ void main() {
           'example</a> link</p>\n<p>to a webpage</p> '
           '<!-- <p>and some commented stuff</p> -->';
       var tmpl = env.fromString('{{ foo|striptags }}');
-      expect(tmpl.render({'foo': foo}),
-          equals('just a small example link to a webpage'));
+      expect(tmpl.render({'foo': foo}), equals('just a small example link to a webpage'));
     });
 
     test('filesizeformat', () {
@@ -217,7 +215,10 @@ void main() {
       var tmpl = env.fromString('{{ users|map(attribute="name")|join(", ") }}');
       expect(
           tmpl.render({
-            'users': [User('foo'), User('bar')]
+            'users': [
+              {'name': 'foo'},
+              {'name': 'bar'}
+            ]
           }),
           equals('foo, bar'));
     });
@@ -386,8 +387,7 @@ void main() {
     });
 
     test('sum attributes tuple', () {
-      var tmpl =
-          env.fromString('{{ values.entries|map("list")|map(item=1)|sum }}');
+      var tmpl = env.fromString('{{ values.entries|map("list")|map(item=1)|sum }}');
       expect(
           tmpl.render({
             'values': {'foo': 23, 'bar': 1, 'baz': 18}
@@ -423,8 +423,7 @@ void main() {
     // TODO: add groupby case test
 
     test('filtertag', () {
-      var tmpl = env.fromString(
-          '{% filter upper|replace("FOO", "foo") %}foobar{% endfilter %}');
+      var tmpl = env.fromString('{% filter upper|replace("FOO", "foo") %}foobar{% endfilter %}');
       expect(tmpl.render(), equals('fooBAR'));
     });
 
@@ -452,7 +451,11 @@ void main() {
 
     test('attribute map', () {
       var tmpl = env.fromString('{{ users|map(attribute="name")|join("|") }}');
-      var users = [User('john'), User('jane'), User('mike')];
+      var users = [
+        {'name': 'john'},
+        {'name': 'jane'},
+        {'name': 'mike'}
+      ];
       expect(tmpl.render({'users': users}), equals('john|jane|mike'));
     });
 
@@ -463,9 +466,9 @@ void main() {
 
     test('map attribute default', () {
       var users = [
-        FullName('john', 'lennon'),
-        FullName('jon', null),
-        FirstName('mike'),
+        {'first': 'john', 'last': 'lennon'},
+        {'first': 'jon', 'last': null},
+        {'first': 'mike'},
       ];
       var data = {'users': users};
 

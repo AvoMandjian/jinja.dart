@@ -42,15 +42,10 @@ void main() async {
   var debugController = DebugController();
   debugController.enabled = true;
 
-  // Add some breakpoints
-  // debugController.addNodeBreakpoint('For');
-  // debugController.addNodeBreakpoint('Interpolation');
-  // debugController.addNodeBreakpoint('Assign');
-
   // Add line breakpoints
-  debugController.addLineBreakpoint(2);
-  debugController.addLineBreakpoint(4);
-  debugController.addLineBreakpoint(8);
+  debugController.addBreakpoint(line: 2);
+  debugController.addBreakpoint(line: 4);
+  debugController.addBreakpoint(line: 8);
 
   // Variable to track current template (for restart with changes)
   String currentTemplateSource = templateSource;

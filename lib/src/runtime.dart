@@ -29,30 +29,26 @@ base class Context {
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
   ]) {
-    Function function;
-
     if (object is Function) {
-      function = object;
-    } else {
-      // TODO(dynamic): dynamic invocation
-      // ignore: avoid_dynamic_calls
-      if (object == null) {
-        if (node is Call) {
-          if (node.value is Attribute) {
-            throw Exception(
-                'the function ${((node.value as Attribute).value as Name).name} is null at $positional');
-          } else {
-            throw Exception(
-                'the function ${node.value.toString()} is null at $positional');
-          }
-        }
-        throw Exception('object is null at $positional');
-      }
-      // ignore: avoid_dynamic_calls
-      function = object.call as Function;
+      return environment.callCommon(object, positional, named, this);
     }
 
-    return environment.callCommon(function, positional, named, this);
+    if (object == null) {
+      if (node is Call) {
+        if (node.value is Attribute) {
+          throw Exception(
+              'The function ${((node.value as Attribute).value as Name).name} is null at $positional');
+        } else {
+          throw Exception(
+              'The function ${node.value.toString()} is null at $positional');
+        }
+      }
+      throw Exception('Object is null at $positional');
+    }
+
+    // Handle other callable objects if necessary, otherwise default to `call` method.
+    // For now, we assume if it's not a Function, it's a callable class instance.
+    return environment.callCommon(object.call as Function, positional, named, this);
   }
 
   Context derived({

@@ -88,7 +88,7 @@ Future<void> runDebugTest(String template, Map<String, Object?> data, List<int> 
   
   // Add line breakpoints
   for (var line in breakpointLines) {
-    debugController.addLineBreakpoint(line);
+    debugController.addBreakpoint(line: line);
     print('Added breakpoint at line $line');
   }
   

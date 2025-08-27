@@ -2,11 +2,10 @@
 library;
 
 import 'package:jinja/jinja.dart';
-import 'package:jinja/reflection.dart';
 import 'package:test/test.dart';
 
 void main() {
-  var env = Environment(getAttribute: getAttribute);
+  var env = Environment();
 
   group('Do', () {
     test('do', () {
