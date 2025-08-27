@@ -16,6 +16,12 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   /// Set to track which lines have already triggered breakpoints during this render
   final Set<int> _linesHitThisRender = {};
+  
+  /// Track if we're currently inside a for loop iteration
+  bool _inForIteration = false;
+  
+  /// Track the line number of the current for statement
+  int? _currentForLine;
 
   final StringSinkRenderer _baseRenderer = const StringSinkRenderer();
 
@@ -24,24 +30,21 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     int? minLine = node.line;
     int? maxLine = node.line;
 
-    // Recursively find all line numbers in the node tree
-    void findLines(Node n) {
-      if (n.line != null) {
-        if (minLine == null || n.line! < minLine!) {
-          minLine = n.line;
-        }
-        if (maxLine == null || n.line! > maxLine!) {
-          maxLine = n.line;
-        }
+    void update(int? line) {
+      if (line == null) return;
+      if (minLine == null || line < minLine!) {
+        minLine = line;
       }
-
-      // Check all child nodes
-      for (var child in n.findAll<Node>()) {
-        findLines(child);
+      if (maxLine == null || line > maxLine!) {
+        maxLine = line;
       }
     }
 
-    findLines(node);
+    update(node.line);
+    for (var child in node.findAll<Node>()) {
+      update(child.line);
+    }
+
     return (minLine, maxLine);
   }
 
@@ -51,6 +54,7 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     String nodeType, {
     String? nodeName,
     Object? nodeData,
+    String? currentOutput,
   }) async {
     if (!context.debugController.enabled) return;
 
@@ -79,10 +83,18 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
         if (breakpoints.isNotEmpty) {
           _linesHitThisRender.add(currentLine);
         }
+
+        var totalOutput = context.outputSoFar;
+        var current = currentOutput ?? '';
+        var soFar = (current.isNotEmpty && totalOutput.endsWith(current))
+            ? totalOutput.substring(0, totalOutput.length - current.length)
+            : totalOutput;
+
         var info = BreakpointInfo(
           nodeType: nodeType,
           variables: context.getAllVariables(),
-          outputSoFar: context.outputSoFar,
+          outputSoFar: soFar,
+          currentOutput: current,
           lineNumber: currentLine,
           nodeName: nodeName,
           nodeData: nodeData,
@@ -105,7 +117,7 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<Object?> visitAttribute(Attribute node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Attribute', nodeName: node.attribute);
+    // Don't check breakpoints on Attribute nodes - they're part of expression evaluation
     var value = await node.value.accept(this, context);
     return context.attribute(node.attribute, value, node);
   }
@@ -179,7 +191,8 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<Object?> visitFilter(Filter node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Filter', nodeName: node.name);
+    // Don't check breakpoints on Filter nodes - they're part of expression evaluation
+    // The breakpoint should be on the Interpolation node that uses this filter
     var params = await node.calling.accept(this, context) as Parameters;
     var (positional, named) = params;
     return context.filter(node.name, positional, named);
@@ -201,8 +214,12 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<Object?> visitName(Name node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Name', nodeName: node.name);
-    return _baseRenderer.visitName(node, context);
+    // Don't check breakpoints on Name nodes - they're part of expression evaluation
+    // Let the parent Interpolation node handle the breakpoint after output is written
+    return switch (node.context) {
+      AssignContext.load => context.resolve(node.name),
+      _ => node.name,
+    };
   }
 
   @override
@@ -279,8 +296,12 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitData(Data node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Data', nodeData: node.data);
     context.write(node.data);
+    // Skip breakpoint for Data nodes on the for statement line when inside iterations
+    // This prevents the whitespace after {% for %} from triggering on each iteration
+    if (!(_inForIteration && node.line == _currentForLine)) {
+      await _checkBreakpoint(node, context, 'Data', nodeData: node.data, currentOutput: node.data);
+    }
   }
 
   @override
@@ -329,17 +350,46 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
       return;
     }
 
-    for (var value in values) {
+    for (var i = 0; i < values.length; i++) {
+      var value = values[i];
       // When iterating, we clear the lines hit inside the loop body so that
       // breakpoints can be triggered again for each iteration.
-      var (minLine, maxLine) = _getNodeLineRange(node.body);
-      if (minLine != null && maxLine != null) {
-        _linesHitThisRender
-            .removeWhere((line) => line >= minLine && line <= maxLine);
+      // But we need to be careful not to clear lines that shouldn't be repeated
+      if (i > 0) {
+        // Only clear lines after the first iteration
+        var (minLine, maxLine) = _getNodeLineRange(node.body);
+        if (minLine != null && maxLine != null) {
+          _linesHitThisRender.removeWhere((line) {
+            // Never clear line 2 (the for statement line) from the hit list
+            // This prevents Data nodes on the for line from re-triggering
+            if (line == 2) return false;
+            // Only clear lines strictly within the loop body range
+            return line >= minLine && line <= maxLine;
+          });
+        }
       }
       var data = _baseRenderer.getDataForTargets(targets, value);
       var forContext = context.derived(data: data);
+
+      var outputBeforeIteration = context.outputSoFar;
       await node.body.accept(this, forContext);
+      var outputAfterIteration = context.outputSoFar;
+
+      if (outputAfterIteration.length > outputBeforeIteration.length) {
+        var currentOutput = outputAfterIteration.substring(outputBeforeIteration.length);
+        // This is a bit of a hack, but we need to manually trigger the breakpoint
+        // for the content generated inside the loop, as the nodes inside won't
+        // be aware that they are part of a loop's output.
+        var info = BreakpointInfo(
+          nodeType: 'ForLoopIteration',
+          variables: forContext.getAllVariables(),
+          outputSoFar: outputBeforeIteration,
+          currentOutput: currentOutput,
+          lineNumber: node.line ?? context.currentLine,
+          nodeName: nodeName,
+        );
+        await context.debugController.handleBreakpoint(info);
+      }
     }
   }
 
@@ -381,10 +431,30 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     if (node.line != null) {
       context.setLine(node.line!);
     }
-    await _checkBreakpoint(node, context, 'Interpolation');
     var value = await node.value.accept(this, context);
     var finalized = context.finalize(value);
+    var outputBefore = context.outputSoFar;
     context.write(finalized);
+    var currentOutput = finalized.toString();
+
+    // Check breakpoint after writing output so "Output so far" includes this interpolation
+    // Force the line number to match the current context line if node.line is null
+    var currentLine = node.line ?? context.currentLine;
+    var info = BreakpointInfo(
+      nodeType: 'Interpolation',
+      variables: context.getAllVariables(),
+      outputSoFar: outputBefore,
+      currentOutput: currentOutput,
+      lineNumber: currentLine,
+      nodeName: null,
+      nodeData: finalized.toString(),
+    );
+
+    var breakpoints = context.debugController.getBreakpoints(currentLine);
+    if (breakpoints.isNotEmpty && !_linesHitThisRender.contains(currentLine)) {
+      _linesHitThisRender.add(currentLine);
+      await context.debugController.handleBreakpoint(info);
+    }
   }
 
   @override

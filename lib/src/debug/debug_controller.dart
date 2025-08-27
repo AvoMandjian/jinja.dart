@@ -16,12 +16,12 @@ class Breakpoint {
   int get hashCode => id.hashCode;
 }
 
-
 /// Information about a breakpoint hit.
 class BreakpointInfo {
   final String nodeType;
   final Map<String, Object?> variables;
   final String outputSoFar;
+  final String currentOutput;
   final int lineNumber;
   final String? nodeName;
   final dynamic nodeData;
@@ -30,6 +30,7 @@ class BreakpointInfo {
     required this.nodeType,
     required this.variables,
     required this.outputSoFar,
+    this.currentOutput = '',
     required this.lineNumber,
     this.nodeName,
     this.nodeData,
@@ -39,6 +40,7 @@ class BreakpointInfo {
         'nodeType': nodeType,
         'variables': variables,
         'outputSoFar': outputSoFar,
+        'currentOutput': currentOutput,
         'lineNumber': lineNumber,
         'nodeName': nodeName,
         'nodeData': nodeData?.toString(),
@@ -60,7 +62,6 @@ class DebugController {
 
   /// Adds a breakpoint.
   Breakpoint addBreakpoint({required int line, String? condition}) {
-    line = line - 1;
     var breakpoint = Breakpoint(line: line, condition: condition);
     _breakpoints.putIfAbsent(line, () => []).add(breakpoint);
     return breakpoint;

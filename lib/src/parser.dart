@@ -228,7 +228,8 @@ final class Parser {
       ('name', 'else'),
     ];
 
-    reader.expect('name', 'for');
+    var forToken = reader.expect('name', 'for');
+    var forLine = forToken.line;
 
     var target = parseAssignTarget(reader, extraEndRules: endIn);
 
@@ -264,6 +265,7 @@ final class Parser {
       test: test,
       recursive: recursive,
       endLine: current.line,
+      line: forLine,
     );
   }
 

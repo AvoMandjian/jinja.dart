@@ -5,13 +5,11 @@ import 'package:jinja/jinja.dart';
 void main() async {
   var env = Environment();
 
-  var templateSource = '''
-Hello 1
-{% for VARIABLE_1 in [1,2,3,4,5] %}
-  {{dealership.inventory |tojson}}
+  var templateSource = '''Hello 1
+{% for VARIABLE_1 in [1,2] %}
+  {{dealership.inventory | tojson}}
 {% endfor %}
-Hello 2
-''';
+Hello 2''';
 
   var template = env.fromString(templateSource);
 
@@ -28,20 +26,19 @@ Hello 2
     print('Type: ${info.nodeType}');
     print('Variables: ${info.variables}');
     print('Output so far: "${info.outputSoFar}"');
+    print('Current output: "${info.currentOutput}"');
 
     // Execution continues automatically after this handler completes.
   };
 
-  // Enable line breakpoints on line 2 and line 4
-  // debugController.addBreakpoint(line: 1);
-  // debugController.addBreakpoint(line: 2);
-  // debugController.addBreakpoint(line: 3);
-  debugController.addBreakpoint(line: 4);
-  // debugController.addBreakpoint(line: 5);
+  debugController.addBreakpoint(line: 1); // Before loop
+  debugController.addBreakpoint(line: 2); // For loop statement
+  debugController.addBreakpoint(line: 3); // Inside loop
+  debugController.addBreakpoint(line: 4); // After loop
 
   print('Starting debug render...\n');
 
-  var result = await template.renderDebug(
+  await template.renderDebug(
     data: {
       'dealership': {
         'name': 'AutoWorld',
@@ -70,7 +67,5 @@ Hello 2
     debugController: debugController,
   );
 
-  print('\n--- Final Result ---');
-  print(result);
   print('\nTotal breakpoints hit: $breakpointCount');
 }

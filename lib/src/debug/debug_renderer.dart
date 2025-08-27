@@ -8,7 +8,7 @@ import 'package:jinja/src/runtime.dart';
 /// Debug version of StringSinkRenderContext that tracks execution
 base class DebugRenderContext extends StringSinkRenderContext {
   final DebugController debugController;
-  final StringBuffer _outputBuffer = StringBuffer();
+  final StringBuffer _outputBuffer;
   int _currentLine = 0;
 
   DebugRenderContext(
@@ -19,7 +19,8 @@ base class DebugRenderContext extends StringSinkRenderContext {
     super.blocks,
     super.parent,
     super.data,
-  });
+    StringBuffer? outputBuffer,
+  }) : _outputBuffer = outputBuffer ?? StringBuffer();
 
   @override
   DebugRenderContext derived({
@@ -37,6 +38,7 @@ base class DebugRenderContext extends StringSinkRenderContext {
       blocks: blocks,
       parent: parent,
       data: data,
+      outputBuffer: _outputBuffer,
     );
   }
 

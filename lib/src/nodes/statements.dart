@@ -37,6 +37,7 @@ final class For extends Statement {
     required this.body,
     this.orElse,
     this.endLine,
+    super.line,
   });
 
   final Expression target;
