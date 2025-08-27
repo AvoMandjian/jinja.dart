@@ -388,7 +388,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
           lineNumber: node.line ?? context.currentLine,
           nodeName: nodeName,
         );
-        await context.debugController.handleBreakpoint(info);
+        if (context.debugController.breakOnLoopIteration) {
+          await context.debugController.handleBreakpoint(info);
+        }
       }
     }
   }

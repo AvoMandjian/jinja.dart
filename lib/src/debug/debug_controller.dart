@@ -60,6 +60,10 @@ class DebugController {
   bool get enabled => _enabled;
   set enabled(bool value) => _enabled = value;
 
+  /// Whether to break on each iteration of a for loop.
+  /// Defaults to false.
+  bool breakOnLoopIteration = false;
+
   /// Adds a breakpoint.
   Breakpoint addBreakpoint({required int line, String? condition}) {
     var breakpoint = Breakpoint(line: line, condition: condition);

@@ -31,10 +31,10 @@ Hello 2''';
     // Execution continues automatically after this handler completes.
   };
 
-  debugController.addBreakpoint(line: 1); // Before loop
-  debugController.addBreakpoint(line: 2); // For loop statement
-  debugController.addBreakpoint(line: 3); // Inside loop
-  debugController.addBreakpoint(line: 4); // After loop
+  // debugController.addBreakpoint(line: 1); // Before loop
+  // debugController.addBreakpoint(line: 2); // For loop statement
+  // debugController.addBreakpoint(line: 3); // Inside loop
+  // debugController.addBreakpoint(line: 4); // After loop
 
   print('Starting debug render...\n');
 
