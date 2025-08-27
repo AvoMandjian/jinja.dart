@@ -16,23 +16,6 @@ class Breakpoint {
   int get hashCode => id.hashCode;
 }
 
-/// Debug action that can be taken when a breakpoint is hit.
-enum DebugAction {
-  /// Continue execution until the next breakpoint.
-  continueExecution,
-
-  /// Stop the execution of the template.
-  stop,
-
-  /// Step to the next line.
-  stepOver,
-
-  /// Step into the current node.
-  stepIn,
-
-  /// Step out of the current node.
-  stepOut,
-}
 
 /// Information about a breakpoint hit.
 class BreakpointInfo {
@@ -68,7 +51,7 @@ class DebugController {
   final List<BreakpointInfo> _history = [];
 
   /// Callback when a breakpoint is hit.
-  Future<DebugAction> Function(BreakpointInfo info)? onBreakpoint;
+  Future<void> Function(BreakpointInfo info)? onBreakpoint;
 
   /// Whether debugging is enabled.
   bool _enabled = false;
@@ -102,15 +85,12 @@ class DebugController {
   }
 
   /// Handle a breakpoint hit.
-  Future<DebugAction> handleBreakpoint(BreakpointInfo info) async {
+  Future<void> handleBreakpoint(BreakpointInfo info) async {
     _history.add(info);
 
     if (onBreakpoint != null) {
-      return await onBreakpoint!(info);
+      await onBreakpoint!(info);
     }
-
-    // Default to continue if no handler
-    return DebugAction.continueExecution;
   }
 
   /// Get the history of breakpoint hits.

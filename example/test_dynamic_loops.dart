@@ -1,5 +1,4 @@
 import 'package:jinja/jinja.dart';
-import 'package:jinja/src/debug/debug_controller.dart';
 import 'package:jinja/src/debug/debug_template.dart';
 
 void main() async {
@@ -83,8 +82,6 @@ Future<void> testLoop(String testName, String templateSource, Map<String, Object
     if (loopVars.isNotEmpty) {
       print('  Loop variables: $loopVars');
     }
-
-    return DebugAction.continueExecution;
   };
 
   // Parse and render

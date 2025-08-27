@@ -30,9 +30,8 @@ extension DebugTemplateExtension on Template {
     required DebugController debugController,
     Function()? getUpdatedTemplate,
   }) async {
-    try {
-      // Get potentially updated template
-      Template templateToRender = this;
+    // Get potentially updated template
+    Template templateToRender = this;
       if (getUpdatedTemplate != null) {
         var updated = getUpdatedTemplate();
         if (updated is Template) {
@@ -55,9 +54,6 @@ extension DebugTemplateExtension on Template {
       // Render with async debug renderer
       final debugRenderer = AsyncDebugRenderer();
       await templateToRender.body.accept(debugRenderer, context);
-    } on StopException {
-      // Stop execution
-    }
   }
 }
 

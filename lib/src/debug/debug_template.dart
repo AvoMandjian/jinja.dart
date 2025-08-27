@@ -39,16 +39,12 @@ extension DebugTemplate on Template {
       data: data,
     );
 
-    try {
-      // If template source provided (for restart with new template)
-      if (templateSource != null) {
-        var newTemplate = environment.fromString(templateSource);
-        await _renderBodyAsync(newTemplate.body, context);
-      } else {
-        await _renderBodyAsync(body, context);
-      }
-    } on StopException {
-      // Stop execution
+    // If template source provided (for restart with new template)
+    if (templateSource != null) {
+      var newTemplate = environment.fromString(templateSource);
+      await _renderBodyAsync(newTemplate.body, context);
+    } else {
+      await _renderBodyAsync(body, context);
     }
   }
 
@@ -59,15 +55,5 @@ extension DebugTemplate on Template {
   ) async {
     final renderer = AsyncDebugRenderer();
     await node.accept(renderer, context);
-
-    // Check if we should stop
-    if (context.shouldStop) {
-      throw StopException();
-    }
   }
-}
-
-/// Exception thrown when execution should stop
-class StopException implements Exception {
-  const StopException();
 }

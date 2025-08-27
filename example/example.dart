@@ -1,6 +1,5 @@
 import 'package:intl/intl.dart';
 import 'package:jinja/jinja.dart';
-import 'package:jinja/src/debug/debug_controller.dart';
 import 'package:jinja/src/debug/debug_template.dart';
 
 Map<String, dynamic> dataToPassToJinja = {
@@ -90,7 +89,6 @@ void main() {
   debugController.onBreakpoint = (info) async {
     // print('Variables: ${info.variables}');
     print('Output: ${info.lineNumber}');
-    return DebugAction.continueExecution;
   };
 
   templateOfJinja

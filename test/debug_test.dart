@@ -1,5 +1,4 @@
 import 'package:jinja/jinja.dart';
-import 'package:jinja/src/debug/debug_controller.dart';
 import 'package:jinja/src/debug/debug_template.dart';
 import 'package:test/test.dart';
 
@@ -32,7 +31,7 @@ void main() {
         hit = true;
         expect(info.lineNumber, bp.line);
         expect(info.variables['name'], 'World');
-        return Future.value(DebugAction.continueExecution);
+        return Future.value(info);
       };
 
       await template.renderDebug({'name': 'World'}, debugController: controller);
@@ -48,7 +47,7 @@ void main() {
         hitCount++;
         expect(info.lineNumber, bp.line);
         expect(info.variables['i'], 2);
-        return Future.value(DebugAction.continueExecution);
+        return Future.value(info);
       };
 
       await template.renderDebug({'i': 0}, debugController: controller);
@@ -62,7 +61,7 @@ void main() {
 
       controller.onBreakpoint = (info) {
         hit = true;
-        return Future.value(DebugAction.continueExecution);
+        return Future.value(info);
       };
 
       await template.renderDebug({'i': 0}, debugController: controller);

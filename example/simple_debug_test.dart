@@ -29,16 +29,15 @@ Hello 2
     print('Variables: ${info.variables}');
     print('Output so far: "${info.outputSoFar}"');
 
-    // Continue execution
-    return DebugAction.continueExecution;
+    // Execution continues automatically after this handler completes.
   };
 
   // Enable line breakpoints on line 2 and line 4
-  debugController.addBreakpoint(line: 1);
-  debugController.addBreakpoint(line: 2);
-  debugController.addBreakpoint(line: 3);
+  // debugController.addBreakpoint(line: 1);
+  // debugController.addBreakpoint(line: 2);
+  // debugController.addBreakpoint(line: 3);
   debugController.addBreakpoint(line: 4);
-  debugController.addBreakpoint(line: 5);
+  // debugController.addBreakpoint(line: 5);
 
   print('Starting debug render...\n');
 

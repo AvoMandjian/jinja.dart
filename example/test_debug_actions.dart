@@ -1,5 +1,4 @@
 import 'package:jinja/jinja.dart';
-import 'package:jinja/src/debug/debug_controller.dart';
 import 'package:jinja/src/debug/debug_template.dart';
 import 'package:test/test.dart';
 
@@ -20,7 +19,7 @@ void main() {
 
       controller.onBreakpoint = (info) {
         hit = true;
-        return Future.value(DebugAction.stop);
+        return Future.value(info);
       };
 
       var result = await template.renderDebug({'name': 'World'}, debugController: controller);
@@ -35,7 +34,7 @@ void main() {
 
       controller.onBreakpoint = (info) {
         steps.add(info.lineNumber);
-        return Future.value(DebugAction.stepOver);
+        return Future.value(info);
       };
 
       await template.renderDebug({'a': 1, 'b': 2, 'c': 3}, debugController: controller);
@@ -46,12 +45,10 @@ void main() {
       var template = env.fromString('{% for i in [1] %}\n{{ i }}\n{% endfor %}');
       controller.addBreakpoint(line: 1);
       var steps = <int>[];
-      var actions = [DebugAction.stepIn, DebugAction.stepOut, DebugAction.continueExecution];
-      var actionIndex = 0;
 
       controller.onBreakpoint = (info) {
         steps.add(info.lineNumber);
-        return Future.value(actions[actionIndex++]);
+        return Future.value(info);
       };
 
       await template.renderDebug({}, debugController: controller);

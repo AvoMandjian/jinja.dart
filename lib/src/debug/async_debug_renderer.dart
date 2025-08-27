@@ -58,22 +58,19 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     int currentLine = node.line ?? context.currentLine;
 
     var breakpoints = context.debugController.getBreakpoints(currentLine);
-    var stepBreak = context.stepAction == DebugAction.stepOver && context.depth <= 0 || context.stepAction == DebugAction.stepIn;
 
-    if ((breakpoints.isNotEmpty && !_linesHitThisRender.contains(currentLine)) || stepBreak) {
-      var shouldBreak = stepBreak;
-      if (!shouldBreak) {
-        for (var bp in breakpoints) {
-          if (bp.condition == null) {
-            shouldBreak = true;
-            break;
-          }
-          var expr = context.environment.parse(bp.condition!);
-          var result = expr.accept(const ExpressionEvaluator(), context);
-          if (result is bool && result) {
-            shouldBreak = true;
-            break;
-          }
+    if (breakpoints.isNotEmpty && !_linesHitThisRender.contains(currentLine)) {
+      var shouldBreak = false;
+      for (var bp in breakpoints) {
+        if (bp.condition == null) {
+          shouldBreak = true;
+          break;
+        }
+        var expr = context.environment.parse(bp.condition!);
+        var result = expr.accept(const ExpressionEvaluator(), context);
+        if (result is bool && result) {
+          shouldBreak = true;
+          break;
         }
       }
 
@@ -91,18 +88,7 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
           nodeData: nodeData,
         );
 
-        var action = await context.debugController.handleBreakpoint(info);
-        context.setStepAction(action);
-
-        switch (action) {
-          case DebugAction.stop:
-            throw StopException();
-          case DebugAction.continueExecution:
-          case DebugAction.stepOver:
-          case DebugAction.stepIn:
-          case DebugAction.stepOut:
-            break;
-        }
+        await context.debugController.handleBreakpoint(info);
       }
     }
   }
@@ -466,9 +452,4 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     await _checkBreakpoint(node, context, 'Slice');
     return _baseRenderer.visitSlice(node, context);
   }
-}
-
-/// Exception thrown when execution should stop
-class StopException implements Exception {
-  const StopException();
 }

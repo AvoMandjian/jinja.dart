@@ -1,7 +1,4 @@
-import 'dart:async';
-import 'dart:io';
 import 'package:jinja/jinja.dart';
-import 'package:jinja/src/debug/debug_controller.dart';
 import 'package:jinja/src/debug/debug_environment.dart';
 
 void main() async {
@@ -117,7 +114,6 @@ void main() async {
     //   default:
     //     return DebugAction.continueExecution;
     // }
-    return DebugAction.continueExecution;
   };
 
   print('Starting Jinja Debug Example');

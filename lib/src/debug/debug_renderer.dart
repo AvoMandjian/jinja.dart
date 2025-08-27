@@ -10,9 +10,6 @@ base class DebugRenderContext extends StringSinkRenderContext {
   final DebugController debugController;
   final StringBuffer _outputBuffer = StringBuffer();
   int _currentLine = 0;
-  bool _shouldStop = false;
-  int _depth = 0;
-  DebugAction _stepAction = DebugAction.continueExecution;
 
   DebugRenderContext(
     super.environment,
@@ -40,7 +37,7 @@ base class DebugRenderContext extends StringSinkRenderContext {
       blocks: blocks,
       parent: parent,
       data: data,
-    ).._depth = _depth;
+    );
   }
 
   @override
@@ -51,18 +48,8 @@ base class DebugRenderContext extends StringSinkRenderContext {
 
   String get outputSoFar => _outputBuffer.toString();
 
-  void stopExecution() => _shouldStop = true;
-  bool get shouldStop => _shouldStop;
-
   void setLine(int line) => _currentLine = line;
   int get currentLine => _currentLine;
-
-  void stepIn() => _depth++;
-  void stepOut() => _depth--;
-  int get depth => _depth;
-
-  void setStepAction(DebugAction action) => _stepAction = action;
-  DebugAction get stepAction => _stepAction;
 
   Map<String, Object?> getAllVariables() {
     var allVars = <String, Object?>{...parent, ...context};
@@ -82,29 +69,25 @@ base class DebugRenderContext extends StringSinkRenderContext {
 base class DebugRenderer extends StringSinkRenderer {
   const DebugRenderer();
 
-  Future<bool> _checkBreakpoint(Node node, DebugRenderContext context) async {
+  Future<void> _checkBreakpoint(Node node, DebugRenderContext context) async {
     if (node.line != null) {
       context.setLine(node.line!);
     }
 
     var breakpoints = context.debugController.getBreakpoints(context.currentLine);
-    var stepBreak = context.stepAction == DebugAction.stepOver && context.depth <= 0 ||
-        context.stepAction == DebugAction.stepIn;
 
-    if (breakpoints.isNotEmpty || stepBreak) {
-      var shouldBreak = stepBreak;
-      if (!shouldBreak) {
-        for (var bp in breakpoints) {
-          if (bp.condition == null) {
-            shouldBreak = true;
-            break;
-          }
-          var expr = context.environment.parse(bp.condition!);
-          var result = expr.accept(this, context);
-          if (result is bool && result) {
-            shouldBreak = true;
-            break;
-          }
+    if (breakpoints.isNotEmpty) {
+      var shouldBreak = false;
+      for (var bp in breakpoints) {
+        if (bp.condition == null) {
+          shouldBreak = true;
+          break;
+        }
+        var expr = context.environment.parse(bp.condition!);
+        var result = expr.accept(this, context);
+        if (result is bool && result) {
+          shouldBreak = true;
+          break;
         }
       }
 
@@ -116,25 +99,16 @@ base class DebugRenderer extends StringSinkRenderer {
           lineNumber: context.currentLine,
         );
 
-        var action = await context.debugController.handleBreakpoint(info);
-        context.setStepAction(action);
-
-        if (action == DebugAction.stop) {
-          context.stopExecution();
-          return false;
-        }
+        await context.debugController.handleBreakpoint(info);
       }
     }
-    return true;
   }
 
   @override
   void visitData(Data node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((shouldContinue) {
-        if (shouldContinue) {
-          super.visitData(node, context);
-        }
+      _checkBreakpoint(node, context).then((_) {
+        super.visitData(node, context);
       });
     } else {
       super.visitData(node, context);
@@ -144,10 +118,8 @@ base class DebugRenderer extends StringSinkRenderer {
   @override
   void visitInterpolation(Interpolation node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((shouldContinue) {
-        if (shouldContinue) {
-          super.visitInterpolation(node, context);
-        }
+      _checkBreakpoint(node, context).then((_) {
+        super.visitInterpolation(node, context);
       });
     } else {
       super.visitInterpolation(node, context);
@@ -157,10 +129,8 @@ base class DebugRenderer extends StringSinkRenderer {
   @override
   void visitFor(For node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((shouldContinue) {
-        if (shouldContinue) {
-          super.visitFor(node, context);
-        }
+      _checkBreakpoint(node, context).then((_) {
+        super.visitFor(node, context);
       });
     } else {
       super.visitFor(node, context);
@@ -170,10 +140,8 @@ base class DebugRenderer extends StringSinkRenderer {
   @override
   void visitIf(If node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((shouldContinue) {
-        if (shouldContinue) {
-          super.visitIf(node, context);
-        }
+      _checkBreakpoint(node, context).then((_) {
+        super.visitIf(node, context);
       });
     } else {
       super.visitIf(node, context);
@@ -183,10 +151,8 @@ base class DebugRenderer extends StringSinkRenderer {
   @override
   void visitAssign(Assign node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((shouldContinue) {
-        if (shouldContinue) {
-          super.visitAssign(node, context);
-        }
+      _checkBreakpoint(node, context).then((_) {
+        super.visitAssign(node, context);
       });
     } else {
       super.visitAssign(node, context);
@@ -196,10 +162,8 @@ base class DebugRenderer extends StringSinkRenderer {
   @override
   void visitBlock(Block node, StringSinkRenderContext context) {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((shouldContinue) {
-        if (shouldContinue) {
-          super.visitBlock(node, context);
-        }
+      _checkBreakpoint(node, context).then((_) {
+        super.visitBlock(node, context);
       });
     } else {
       super.visitBlock(node, context);
