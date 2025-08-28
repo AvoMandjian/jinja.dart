@@ -5,11 +5,11 @@ import 'package:jinja/jinja.dart';
 void main() async {
   var env = Environment();
 
-  var templateSource = '''Hello 1
-{% for VARIABLE_1 in [1,2] %}
-  {{dealership.inventory | tojson}}
+  var templateSource = '''
+{% for VARIABLE_1 in dealership.inventory %}
+{{dealership.inventory |tojson}}
 {% endfor %}
-Hello 2''';
+''';
 
   var template = env.fromString(templateSource);
 
@@ -31,10 +31,9 @@ Hello 2''';
     // Execution continues automatically after this handler completes.
   };
 
-  // debugController.addBreakpoint(line: 1); // Before loop
-  // debugController.addBreakpoint(line: 2); // For loop statement
-  // debugController.addBreakpoint(line: 3); // Inside loop
-  // debugController.addBreakpoint(line: 4); // After loop
+  debugController.addBreakpoint(line: 0);
+  debugController.addBreakpoint(line: 1);
+  debugController.addBreakpoint(line: 2);
 
   print('Starting debug render...\n');
 
