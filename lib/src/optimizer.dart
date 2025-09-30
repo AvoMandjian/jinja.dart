@@ -142,7 +142,7 @@ class Optimizer implements Visitor<Context, Node> {
         )
     ];
 
-    if (pairs.any((pair) => pair.key is Constant && pair.value is Constant)) {
+    if (pairs.every((pair) => pair.key is Constant && pair.value is Constant)) {
       var constantPairs = pairs.cast<({Constant key, Constant value})>();
 
       return Constant(

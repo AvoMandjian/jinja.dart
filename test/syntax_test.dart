@@ -291,6 +291,22 @@ void main() {
       expect(tmpl.render({'page': page}), equals('<ok>'));
     });
 
+    test('operator ??', () {
+      // Test ?? as equivalent to 'or'
+      var tmpl = env.fromString('{{ variable ?? "default" }}');
+      expect(tmpl.render(), equals('default'));
+      expect(tmpl.render({'variable': false}), equals('default'));
+      expect(tmpl.render({'variable': 0}), equals('default'));
+      expect(tmpl.render({'variable': ''}), equals('default'));
+      expect(tmpl.render({'variable': 'value'}), equals('value'));
+
+      // Test chaining
+      tmpl = env.fromString('{{ var1 ?? var2 ?? "final" }}');
+      expect(tmpl.render(), equals('final'));
+      expect(tmpl.render({'var2': 'second'}), equals('second'));
+      expect(tmpl.render({'var1': 'first'}), equals('first'));
+    });
+
     test('const', () {
       var tmpl = env.fromString('{{ true }}');
       expect(tmpl.render(), equals('true'));
@@ -334,6 +350,26 @@ void main() {
       expect(tmpl.render({'foo': foo}), equals('-42'));
       tmpl = env.fromString('{{ foo.bar }}');
       expect(tmpl.render({'foo': foo}), equals('42'));
+    });
+
+    test('mixed map literals', () {
+      // Test that maps with mixed constant and variable values work
+      var tmpl = env.fromString('{{ {"static": 42, "dynamic": variable} }}');
+      expect(tmpl.render({'variable': 'test'}),
+          equals('{static: 42, dynamic: test}'));
+
+      // Test with expressions
+      tmpl = env.fromString('{{ {"fixed": "value", "computed": x + y} }}');
+      expect(tmpl.render({'x': 10, 'y': 20}),
+          equals('{fixed: value, computed: 30}'));
+
+      // Test with nested access
+      tmpl = env.fromString('{{ {"key1": "literal", "key2": obj.prop} }}');
+      expect(
+          tmpl.render({
+            'obj': {'prop': 'nested'}
+          }),
+          equals('{key1: literal, key2: nested}'));
     });
   });
 }
