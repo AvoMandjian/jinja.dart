@@ -729,14 +729,15 @@ final class Parser {
       return parseCondition(reader);
     }
 
-    return parseOr(reader);
+    return parseTernary(reader);
   }
 
   Expression parseCondition(TokenReader reader, [bool withCondExpr = true]) {
-    var value = parseOr(reader);
+    var value = parseTernary(reader);
 
+    // Handle if-else syntax: trueValue if condition else falseValue
     while (reader.skipIf('name', 'if')) {
-      var condition = parseOr(reader);
+      var condition = parseTernary(reader);
 
       if (reader.skipIf('name', 'else')) {
         var orElse = parseCondition(reader);
@@ -753,10 +754,28 @@ final class Parser {
     return value;
   }
 
+  Expression parseTernary(TokenReader reader) {
+    var condition = parseOr(reader);
+
+    // Handle ternary operator: condition ? trueValue : falseValue
+    if (reader.skipIf('question', null)) {
+      var trueValue = parseTernary(reader);
+      reader.expect('colon', null);
+      var falseValue = parseTernary(reader);
+      return Condition(
+        test: condition,
+        trueValue: trueValue,
+        falseValue: falseValue,
+      );
+    }
+
+    return condition;
+  }
+
   Expression parseOr(TokenReader reader) {
     var left = parseAnd(reader);
 
-    while (reader.skipIf('name', 'or')) {
+    while (reader.skipIf('name', 'or') || reader.skipIf('nullcoalesce', null)) {
       var right = parseAnd(reader);
       left = Logical(operator: LogicalOperator.or, left: left, right: right);
     }

@@ -139,6 +139,12 @@ void main() {
     test('name', () {
       expect(env.fromString('{{ foo }}'), isA<Template>());
       expect(env.fromString('{{ _ }}'), isA<Template>());
+      // Test # as valid character in variable names
+      expect(env.fromString('{{ #var }}'), isA<Template>());
+      expect(env.fromString('{{ var# }}'), isA<Template>());
+      expect(env.fromString('{{ #var# }}'), isA<Template>());
+      expect(env.fromString('{{ foo#bar }}'), isA<Template>());
+      expect(env.fromString('{{ #_foo123# }}'), isA<Template>());
       var matcher = throwsA(isA<TemplateSyntaxError>());
       // invalid ascii start
       expect(() => env.fromString('{{ 1a }}'), matcher);

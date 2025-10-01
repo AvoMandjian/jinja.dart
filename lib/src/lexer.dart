@@ -31,6 +31,8 @@ const Map<String, String> operators = <String, String>{
   '>=': 'gteq',
   '|': 'pipe',
   '~': 'tilde',
+  '??': 'nullcoalesce',
+  '?': 'question',
 };
 
 const List<String> ignoredTokens = <String>[
@@ -87,14 +89,14 @@ final class Lexer {
   static final RegExp newLineRe = RegExp('(\r\n|\r|\n)');
   static final RegExp leftStripUnlessRe = RegExp('[^ \\t]');
   static final RegExp whitespaceRe = RegExp(r'\s+');
-  static final RegExp nameRe = RegExp('[a-zA-Z\$_][a-zA-Z0-9\$_]*');
+  static final RegExp nameRe = RegExp('[a-zA-Z\$_#@][a-zA-Z0-9\$_#@]*');
   static final RegExp stringRe = RegExp(
       '(\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'|"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)")');
   static final RegExp integerRe = RegExp('(0[xX](_?[\\da-fA-F])+|\\d(_?\\d)*)');
   static final RegExp floatRe = RegExp(
       '(?<!\\.)(\\d+_)*\\d+((\\.(\\d+_)*\\d+)?[eE][+\\-]?(\\d+_)*\\d+|\\.(\\d+_)*\\d+)');
   static final RegExp operatorRe = RegExp(
-      '\\+|-|\\/\\/|\\/|\\*\\*|\\*|%|~|\\[|\\]|\\(|\\)|{|}|==|!=|<=|>=|=|<|>|\\.|:|\\||,|;');
+      '\\+|-|\\/\\/|\\/|\\*\\*|\\*|%|~|\\[|\\]|\\(|\\)|{|}|==|!=|<=|>=|=|<|>|\\.|:|\\||,|;|\\?\\?|\\?');
 
   /// Cached [Lexer]'s
   static final Expando<Lexer> lexers = Expando<Lexer>();
@@ -332,10 +334,7 @@ final class Lexer {
           for (var i = 0; i < rule.tokens.length; i += 1) {
             var token = rule.tokens[i];
 
-            if (token.startsWith('@')) {
-              // TODO(lexer): update error
-              throw Exception();
-            } else if (token == '#group') {
+            if (token == '#group') {
               var notFound = true;
 
               for (var name in match.groupNames) {

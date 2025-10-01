@@ -1,4 +1,24 @@
-## 0.6.4 ([diff](https://github.com/ykmnkmi/jinja.dart/compare/1c0015b..main))
+## 0.6.5 ([diff](https://github.com/ykmnkmi/jinja.dart/compare/0.6.4..main))
+- Added:
+  - Expressions:
+    - Ternary operator (`condition ? trueValue : falseValue`) as alternative to if-else expressions
+      ```jinja
+      {{ user.isAdmin ? "Admin Panel" : "User Panel" }}
+      {{ score > 60 ? "Pass" : "Fail" }}
+      ```
+    - Null coalescing operator (`??`) equivalent to `or`
+      ```jinja
+      {{ variable ?? "default" }}
+      {{ var1 ?? var2 ?? "final" }}
+      ```
+  - Variable names now support `#` and `@` characters
+    ```jinja
+    {{ #var }}, {{ var# }}, {{ @variable }}
+    ```
+- Fixed:
+  - Optimizer bug in dict literal constant evaluation
+
+## 0.6.4 ([diff](https://github.com/ykmnkmi/jinja.dart/compare/1c0015b..0.6.4))
 - Refactoring.
 
 ## 0.6.3 ([diff](https://github.com/ykmnkmi/jinja.dart/compare/e686f50..1c0015b))
