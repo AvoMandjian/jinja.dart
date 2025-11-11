@@ -1,5 +1,5 @@
 /// Debug functionality for Jinja templates
-library jinja.debug;
+library;
 
 export 'src/debug/debug_controller.dart';
 export 'src/debug/debug_environment.dart';

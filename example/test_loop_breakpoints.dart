@@ -27,9 +27,9 @@ End''';
 
   await runDebugTest(template, {
     'range': (int start, [int? stop, int step = 1]) =>
-        stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step)
+        stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step),
   }, [
-    3
+    3,
   ]); // Breakpoint on line 3 (Item {{ i }})
 }
 
@@ -49,10 +49,10 @@ End''';
 
   await runDebugTest(template, {
     'range': (int start, [int? stop, int step = 1]) =>
-        stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step)
+        stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step),
   }, [
     3,
-    5
+    5,
   ]); // Breakpoints on lines 3 and 5
 }
 
@@ -75,7 +75,7 @@ Final: {{ total }}''';
   }, [
     4,
     5,
-    7
+    7,
   ]); // Breakpoints on Value, Running total, and Final
 }
 

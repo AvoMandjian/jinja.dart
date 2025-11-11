@@ -1,13 +1,14 @@
 import 'dart:math' as math;
 
-import 'package:jinja/src/environment.dart';
-import 'package:jinja/src/exceptions.dart';
-import 'package:jinja/src/nodes.dart';
-import 'package:jinja/src/runtime.dart';
-import 'package:jinja/src/tests.dart';
-import 'package:jinja/src/utils.dart';
-import 'package:jinja/src/visitor.dart';
 import 'package:meta/dart2js.dart';
+
+import 'environment.dart';
+import 'exceptions.dart';
+import 'nodes.dart';
+import 'runtime.dart';
+import 'tests.dart';
+import 'utils.dart';
+import 'visitor.dart';
 
 abstract base class RenderContext extends Context {
   RenderContext(
@@ -45,7 +46,8 @@ abstract base class RenderContext extends Context {
       value[target.item] = current;
     } else {
       throw TemplateRuntimeError(
-          'Invalid target. ${target.toString()}, current: ${current.toString()}');
+        'Invalid target. ${target.toString()}, current: ${current.toString()}',
+      );
     }
   }
 
@@ -144,8 +146,7 @@ base class AsyncRenderContext extends RenderContext {
   }
 }
 
-base class StringSinkRenderer
-    extends Visitor<StringSinkRenderContext, Object?> {
+base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> {
   const StringSinkRenderer();
 
   Map<String, Object?> getDataForTargets(Object? targets, Object? current) {
@@ -158,18 +159,18 @@ base class StringSinkRenderer
       var values = list(current);
 
       if (values.length < names.length) {
-        throw StateError(
-            'Not enough values to unpack (expected ${names.length}, '
+        throw StateError('Not enough values to unpack (expected ${names.length}, '
             'got ${values.length}).');
       }
 
       if (values.length > names.length) {
         throw StateError(
-            'Too many values to unpack (expected ${names.length}).');
+          'Too many values to unpack (expected ${names.length}).',
+        );
       }
 
       return <String, Object?>{
-        for (var i = 0; i < names.length; i++) names[i]: values[i]
+        for (var i = 0; i < names.length; i++) names[i]: values[i],
       };
     }
 
@@ -247,7 +248,7 @@ base class StringSinkRenderer
   @override
   List<Object?> visitArray(Array node, StringSinkRenderContext context) {
     return <Object?>[
-      for (var value in node.values) value.accept(this, context)
+      for (var value in node.values) value.accept(this, context),
     ];
   }
 
@@ -270,12 +271,11 @@ base class StringSinkRenderer
   @override
   Parameters visitCalling(Calling node, StringSinkRenderContext context) {
     var positional = <Object?>[
-      for (var argument in node.arguments) argument.accept(this, context)
+      for (var argument in node.arguments) argument.accept(this, context),
     ];
 
     var named = <Symbol, Object?>{
-      for (var (:key, :value) in node.keywords)
-        Symbol(key): value.accept(this, context)
+      for (var (:key, :value) in node.keywords) Symbol(key): value.accept(this, context),
     };
 
     return (positional, named);
@@ -337,15 +337,15 @@ base class StringSinkRenderer
   @override
   Map<Object?, Object?> visitDict(Dict node, StringSinkRenderContext context) {
     return <Object?, Object?>{
-      for (var (:key, :value) in node.pairs)
-        key.accept(this, context): value.accept(this, context)
+      for (var (:key, :value) in node.pairs) key.accept(this, context): value.accept(this, context),
     };
   }
 
   @override
-  Object? visitFilter(Filter node, StringSinkRenderContext context) {
+  Future<Object?> visitFilter(Filter node, StringSinkRenderContext context) async {
     var (positional, named) = node.calling.accept(this, context) as Parameters;
-    return context.filter(node.name, positional, named);
+    final res = await context.filter(node.name, positional, named);
+    return res;
   }
 
   @override
@@ -360,10 +360,8 @@ base class StringSinkRenderer
     var left = node.left.accept(this, context);
 
     return switch (node.operator) {
-      LogicalOperator.and =>
-        boolean(left) ? node.right.accept(this, context) : left,
-      LogicalOperator.or =>
-        boolean(left) ? left : node.right.accept(this, context),
+      LogicalOperator.and => boolean(left) ? node.right.accept(this, context) : left,
+      LogicalOperator.or => boolean(left) ? left : node.right.accept(this, context),
     };
   }
 
@@ -414,7 +412,7 @@ base class StringSinkRenderer
   @override
   List<Object?> visitTuple(Tuple node, StringSinkRenderContext context) {
     return <Object?>[
-      for (var value in node.values) value.accept(this, context)
+      for (var value in node.values) value.accept(this, context),
     ];
   }
 
@@ -472,8 +470,7 @@ base class StringSinkRenderer
   @override
   void visitCallBlock(CallBlock node, StringSinkRenderContext context) {
     var function = node.call.value.accept(this, context) as MacroFunction;
-    var (positional, named) =
-        node.call.calling.accept(this, context) as Parameters;
+    var (positional, named) = node.call.calling.accept(this, context) as Parameters;
     named[#caller] = getMacroFunction(node, context);
     context.write(context.call(function, node, positional, named));
   }
@@ -526,10 +523,12 @@ base class StringSinkRenderer
     if (iterable == null) {
       if (node.iterable is Name) {
         throw Exception(
-            'Trying to access an undefined list: "${(node.iterable as Name).name}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Name).name} %} in one of the jinja script: (${context.blocks.keys.toList().join(',')})');
+          'Trying to access an undefined list: "${(node.iterable as Name).name}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Name).name} %} in one of the jinja script: (${context.blocks.keys.toList().join(',')})',
+        );
       } else if (node.iterable is Attribute) {
         throw Exception(
-            'Trying to access an undefined list: "${(node.iterable as Attribute).attribute}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Attribute).attribute} %} in one of the jinja script: (${context.blocks.keys.toList().join(',')})');
+          'Trying to access an undefined list: "${(node.iterable as Attribute).attribute}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Attribute).attribute} %} in one of the jinja script: (${context.blocks.keys.toList().join(',')})',
+        );
       }
     }
 
@@ -607,7 +606,8 @@ base class StringSinkRenderer
 
         if (targetMacro == null) {
           throw TemplateRuntimeError(
-              "The '${template.path}' does not export the requested name.");
+            "The '${template.path}' does not export the requested name.",
+          );
         }
 
         MacroFunction function;
@@ -736,7 +736,8 @@ base class StringSinkRenderer
       if (block.required) {
         Never callback(Context context) {
           throw TemplateRuntimeError(
-              "Required block '${block.name}' not found.");
+            "Required block '${block.name}' not found.",
+          );
         }
 
         blocks.add(callback);
@@ -788,11 +789,11 @@ base class StringSinkRenderer
   @override
   void visitWith(With node, StringSinkRenderContext context) {
     var targets = <Object?>[
-      for (var target in node.targets) target.accept(this, context)
+      for (var target in node.targets) target.accept(this, context),
     ];
 
     var values = <Object?>[
-      for (var value in node.values) value.accept(this, context)
+      for (var value in node.values) value.accept(this, context),
     ];
 
     var data = getDataForTargets(targets, values);
@@ -877,7 +878,9 @@ class _AsyncCollectingSink implements StringSink {
     // Replace placeholders with resolved values
     for (int i = 0; i < resolvedValues.length; i++) {
       content = content.replaceAll(
-          '__FUTURE_${i}__', resolvedValues[i]?.toString() ?? 'null');
+        '__FUTURE_${i}__',
+        resolvedValues[i]?.toString() ?? 'null',
+      );
     }
 
     return content;
@@ -899,7 +902,7 @@ base class AsyncRenderer {
     var resolvedGlobals = <String, Object?>{};
     for (var entry in context.parent.entries) {
       if (entry.value is Future) {
-        resolvedGlobals[entry.key] = await entry.value;
+        resolvedGlobals[entry.key] = await (entry.value as Future);
       } else {
         resolvedGlobals[entry.key] = entry.value;
       }
@@ -909,7 +912,7 @@ base class AsyncRenderer {
     var resolvedData = <String, Object?>{};
     for (var entry in context.context.entries) {
       if (entry.value is Future) {
-        resolvedData[entry.key] = await entry.value;
+        resolvedData[entry.key] = await (entry.value as Future);
       } else {
         resolvedData[entry.key] = entry.value;
       }

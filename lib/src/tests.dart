@@ -1,4 +1,4 @@
-import 'package:jinja/src/environment.dart';
+import 'environment.dart';
 
 /// Return `true` if the variable is odd.
 bool isOdd(int value) {

@@ -1,6 +1,6 @@
-import 'package:jinja/src/nodes.dart';
-import 'package:jinja/src/renderer.dart';
-import 'package:jinja/src/visitor.dart';
+import '../nodes.dart';
+import '../renderer.dart';
+import '../visitor.dart';
 
 class ExpressionEvaluator extends Visitor<StringSinkRenderContext, Object?> {
   const ExpressionEvaluator();

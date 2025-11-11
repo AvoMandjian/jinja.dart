@@ -1,5 +1,5 @@
-import 'package:jinja/src/environment.dart';
-import 'package:jinja/src/exceptions.dart';
+import 'environment.dart';
+import 'exceptions.dart';
 
 /// {@template jinja.Loader}
 /// Base abstract class for all loaders.

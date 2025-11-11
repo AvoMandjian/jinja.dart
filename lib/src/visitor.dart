@@ -1,4 +1,4 @@
-import 'package:jinja/src/nodes.dart';
+import 'nodes.dart';
 
 abstract class Visitor<C, R> {
   const Visitor();

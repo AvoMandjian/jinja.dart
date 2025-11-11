@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:html_unescape/html_unescape.dart';
-import 'package:jinja/src/environment.dart';
-import 'package:jinja/src/runtime.dart';
+import 'environment.dart';
+import 'runtime.dart';
 import 'package:textwrap/utils.dart';
 
 final RegExp _tagsRe = RegExp('(<!--.*?-->|<[^>]*>)');
@@ -185,7 +185,7 @@ String stripTags(String value) {
   }
 
   return unescape(
-      RegExp(r'\s+').split(value.replaceAll(_tagsRe, '')).join(' '));
+      RegExp(r'\s+').split(value.replaceAll(_tagsRe, '')).join(' '),);
 }
 
 /// Sum two values.

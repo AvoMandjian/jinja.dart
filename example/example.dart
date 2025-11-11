@@ -9,7 +9,7 @@ Map<String, dynamic> dataToPassToJinja = {
   'subcategory_title_4': 'Su 4',
 };
 
-void main() {
+Future<void> main() async {
   var env = Environment(
     globals: <String, Object?>{
       'now': () {
@@ -91,7 +91,7 @@ void main() {
     print('Output: ${info.lineNumber}');
   };
 
-  templateOfJinja
+  await templateOfJinja
       .renderDebug(
         dataToPassToJinja,
         debugController: debugController,

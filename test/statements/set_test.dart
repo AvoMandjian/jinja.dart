@@ -23,34 +23,45 @@ void main() {
     test('block escaping', () {}, skip: 'Not supported.');
 
     test('set invalid', () {
-      expect(() => env.fromString('{% set foo["bar"] = 1 %}'),
-          throwsA(isA<TemplateSyntaxError>()));
+      expect(
+        () => env.fromString('{% set foo["bar"] = 1 %}'),
+        throwsA(isA<TemplateSyntaxError>()),
+      );
 
       var tmpl = env.fromString('{% set foo.bar = 1 %}');
       expect(
-          () => tmpl.render({'foo': emptyMap}),
-          throwsA(predicate<TemplateRuntimeError>(
-              (error) => error.message == 'Non-namespace object.')));
+        () => tmpl.render({'foo': emptyMap}),
+        throwsA(
+          predicate<TemplateRuntimeError>(
+            (error) => error.message == 'Non-namespace object.',
+          ),
+        ),
+      );
     });
 
     test('namespace redefined', () {
-      var tmpl =
-          env.fromString('{% set ns = namespace() %}{% set ns.bar = "hi" %}');
+      var tmpl = env.fromString('{% set ns = namespace() %}{% set ns.bar = "hi" %}');
       expect(
-          () => tmpl.render({'namespace': () => emptyMap}),
-          throwsA(predicate<TemplateRuntimeError>(
-              (error) => error.message == 'Non-namespace object.')));
+        () => tmpl.render({'namespace': () => emptyMap}),
+        throwsA(
+          predicate<TemplateRuntimeError>(
+            (error) => error.message == 'Non-namespace object.',
+          ),
+        ),
+      );
     });
 
     test('namespace', () {
       var tmpl = env.fromString(
-          '{% set ns = namespace() %}{% set ns.bar = "42" %}{{ ns.bar }}');
+        '{% set ns = namespace() %}{% set ns.bar = "42" %}{{ ns.bar }}',
+      );
       expect(tmpl.render(), equals('42'));
     });
 
     test('namespace block', () {
       var tmpl = env.fromString(
-          '{% set ns = namespace() %}{% set ns.bar %}42{% endset %}{{ ns.bar }}');
+        '{% set ns = namespace() %}{% set ns.bar %}42{% endset %}{{ ns.bar }}',
+      );
       expect(tmpl.render(), equals('42'));
     });
 
@@ -89,7 +100,8 @@ void main() {
 
     test('block filtered', () {
       var tmpl = env.fromString(
-          '{% set foo | trim | length | string %} 42    {% endset %}{{ foo }}');
+        '{% set foo | trim | length | string %} 42    {% endset %}{{ foo }}',
+      );
       expect(tmpl.render(), equals('2'));
     });
 

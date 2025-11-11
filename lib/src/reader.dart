@@ -1,5 +1,5 @@
-import 'package:jinja/src/exceptions.dart';
-import 'package:jinja/src/lexer.dart';
+import 'exceptions.dart';
+import 'lexer.dart';
 
 final class TokenReader {
   TokenReader(Iterable<Token> tokens)
@@ -73,11 +73,11 @@ final class TokenReader {
     if (!current.test(type, value)) {
       if (current.type == 'eof') {
         throw TemplateSyntaxError('Unexpected end of template, expected $type',
-            line: current.line, column: current.column);
+            line: current.line, column: current.column,);
       }
 
       throw TemplateSyntaxError('Expected token $type, got ${current.value}',
-          line: current.line, column: current.column);
+          line: current.line, column: current.column,);
     }
 
     return next();

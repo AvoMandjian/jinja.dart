@@ -15,7 +15,7 @@ void main() {
       var tmpl = env.getTemplate('justdict.html');
       expect(tmpl.render().trim(), equals('FOO'));
       expect(() => env.getTemplate('missing.html'),
-          throwsA(isA<TemplateNotFound>()));
+          throwsA(isA<TemplateNotFound>()),);
     });
   });
 }

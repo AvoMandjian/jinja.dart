@@ -1,20 +1,21 @@
 import 'dart:math' show Random;
 
-import 'package:jinja/src/compiler.dart';
-import 'package:jinja/src/defaults.dart' as defaults;
-import 'package:jinja/src/exceptions.dart';
-import 'package:jinja/src/lexer.dart';
-import 'package:jinja/src/loaders.dart';
-import 'package:jinja/src/nodes.dart';
-import 'package:jinja/src/optimizer.dart';
-import 'package:jinja/src/parser.dart';
-import 'package:jinja/src/renderer.dart';
-import 'package:jinja/src/runtime.dart';
-import 'package:jinja/src/utils.dart';
 import 'package:meta/meta.dart';
 
-export 'package:jinja/src/loaders.dart' show FileSystemLoader, Loader;
+import 'compiler.dart';
+import 'defaults.dart' as defaults;
+import 'exceptions.dart';
+import 'lexer.dart';
+import 'loaders.dart';
+import 'nodes.dart';
+import 'optimizer.dart';
+import 'parser.dart';
+import 'renderer.dart';
+import 'runtime.dart';
+import 'utils.dart';
+
 export 'package:jinja/src/exceptions.dart' show TemplateError;
+export 'package:jinja/src/loaders.dart' show Loader;
 
 /// {@template jinja.finalizer}
 /// A function that can be used to process the result of a variable
@@ -33,19 +34,27 @@ typedef ContextFinalizer = Object? Function(Context context, Object? value);
 ///
 /// Takes [Environment] as first argument.
 typedef EnvironmentFinalizer = Object? Function(
-    Environment environment, Object? value);
+  Environment environment,
+  Object? value,
+);
 
 /// A function that can be used to get object atribute.
 ///
 /// Used by `object.attribute` expression.
-typedef AttributeGetter = Object? Function(String attribute, Object? object,
-    {Object? node});
+typedef AttributeGetter = Object? Function(
+  String attribute,
+  Object? object, {
+  Object? node,
+});
 
 /// A function that can be used to get object item.
 ///
 /// Used by `object['item']` expression.
-typedef ItemGetter = Object? Function(Object? key, Object? object,
-    {Object? node});
+typedef ItemGetter = Object? Function(
+  Object? key,
+  Object? object, {
+  Object? node,
+});
 
 /// A function that returns a value or throws an error if the variable is not
 /// found.
@@ -289,7 +298,8 @@ base class Environment {
     if (pass == PassArgument.context) {
       if (context == null) {
         throw TemplateRuntimeError(
-            'Attempted to invoke context function without context.');
+          'Attempted to invoke context function without context.',
+        );
       }
 
       positional = <Object?>[context, ...positional];
@@ -310,7 +320,8 @@ base class Environment {
     Context? context,
   ]) async {
     if (filters[name] case var function?) {
-      return await callCommon(function, positional, named, context);
+      final res = await callCommon(function, positional, named, context);
+      return res;
     }
 
     throw TemplateRuntimeError("No filter named '$name'.");
@@ -403,7 +414,8 @@ base class Environment {
   Template selectTemplate(List<Object?> names) {
     if (names.isEmpty) {
       throw TemplatesNotFound(
-          message: 'Tried to select from an empty list of templates.');
+        message: 'Tried to select from an empty list of templates.',
+      );
     }
 
     for (var template in names) {
@@ -608,8 +620,10 @@ base class Template {
   ///
   /// All Future values in globals will be awaited before rendering.
   /// If no arguments are given the context will be empty.
-  Future<void> renderToAsync(StringSink sink,
-      [Map<String, Object?>? data]) async {
+  Future<void> renderToAsync(
+    StringSink sink, [
+    Map<String, Object?>? data,
+  ]) async {
     var context = AsyncRenderContext(
       environment,
       sink,

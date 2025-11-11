@@ -1,5 +1,5 @@
-import 'package:jinja/src/environment.dart';
-import 'package:jinja/src/exceptions.dart';
+import 'environment.dart';
+import 'exceptions.dart';
 import 'package:string_scanner/string_scanner.dart';
 
 part 'token.dart';
@@ -89,12 +89,12 @@ final class Lexer {
   static final RegExp whitespaceRe = RegExp(r'\s+');
   static final RegExp nameRe = RegExp('[a-zA-Z\$_][a-zA-Z0-9\$_]*');
   static final RegExp stringRe = RegExp(
-      '(\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'|"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)")');
+      '(\'([^\'\\\\]*(?:\\\\.[^\'\\\\]*)*)\'|"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)")',);
   static final RegExp integerRe = RegExp('(0[xX](_?[\\da-fA-F])+|\\d(_?\\d)*)');
   static final RegExp floatRe = RegExp(
-      '(?<!\\.)(\\d+_)*\\d+((\\.(\\d+_)*\\d+)?[eE][+\\-]?(\\d+_)*\\d+|\\.(\\d+_)*\\d+)');
+      '(?<!\\.)(\\d+_)*\\d+((\\.(\\d+_)*\\d+)?[eE][+\\-]?(\\d+_)*\\d+|\\.(\\d+_)*\\d+)',);
   static final RegExp operatorRe = RegExp(
-      '\\+|-|\\/\\/|\\/|\\*\\*|\\*|%|~|\\[|\\]|\\(|\\)|{|}|==|!=|<=|>=|=|<|>|\\.|:|\\||,|;');
+      '\\+|-|\\/\\/|\\/|\\*\\*|\\*|%|~|\\[|\\]|\\(|\\)|{|}|==|!=|<=|>=|=|<|>|\\.|:|\\||,|;',);
 
   /// Cached [Lexer]'s
   static final Expando<Lexer> lexers = Expando<Lexer>();
@@ -110,7 +110,7 @@ final class Lexer {
     var commentEndRe = RegExp.escape(environment.commentEnd);
     var commentEnd = RegExp(
         '(.*?)((?:\\+$commentEndRe|-$commentEndRe\\s*|$commentEndRe$blockSuffixRe))',
-        dotAll: true);
+        dotAll: true,);
 
     var variableStartRe = RegExp.escape(environment.variableStart);
     var variableEndRe = RegExp.escape(environment.variableEnd);
@@ -143,11 +143,11 @@ final class Lexer {
     rootTagRules.sort((a, b) => b.$2.length.compareTo(a.$2.length));
 
     var rawStart = RegExp(
-        '(?<raw_start>$blockStartRe(-|\\+|)\\s*raw\\s*(?:-$blockEndRe\\s*|$blockEndRe))');
+        '(?<raw_start>$blockStartRe(-|\\+|)\\s*raw\\s*(?:-$blockEndRe\\s*|$blockEndRe))',);
     var rawEnd = RegExp(
         '(.*?)((?:$blockStartRe(-|\\+|))\\s*endraw\\s*'
         '(?:\\+$blockEndRe|-$blockEndRe\\s*|$blockEndRe$blockSuffixRe))',
-        dotAll: true);
+        dotAll: true,);
 
     var rootParts = <String>[
       rawStart.pattern,
@@ -257,7 +257,7 @@ final class Lexer {
     const endTokens = <String>[
       'variable_end',
       'block_end',
-      'linestatement_end'
+      'linestatement_end',
     ];
 
     var stack = <String>['root'];
@@ -346,7 +346,7 @@ final class Lexer {
 
                 if (group != null) {
                   var lastNewline = scanner.string.lastIndexOf(
-                      '\n', match.start == 0 ? 0 : match.start - 1);
+                      '\n', match.start == 0 ? 0 : match.start - 1,);
                   var column = lastNewline == -1
                       ? match.start + 1
                       : match.start - lastNewline;
@@ -370,7 +370,7 @@ final class Lexer {
               if (groups[i] case var data?) {
                 if (data.isNotEmpty || !ignoreIfEmpty.contains(token)) {
                   var lastNewline = scanner.string.lastIndexOf(
-                      '\n', match.start == 0 ? 0 : match.start - 1);
+                      '\n', match.start == 0 ? 0 : match.start - 1,);
                   var column = lastNewline == -1
                       ? match.start + 1
                       : match.start - lastNewline;
@@ -420,7 +420,7 @@ final class Lexer {
 
               if (data != expected) {
                 throw TemplateSyntaxError(
-                    "Unexpected '$data', expected '$expected'");
+                    "Unexpected '$data', expected '$expected'",);
               }
             }
           }
@@ -459,7 +459,7 @@ final class Lexer {
         } else if (rule.newState == RuleState.group) {
           var names = <String>[
             for (var name in match.groupNames)
-              if (match.namedGroup(name) != null) name
+              if (match.namedGroup(name) != null) name,
           ];
 
           if (names.isEmpty) {
@@ -487,7 +487,7 @@ final class Lexer {
         var char = scanner.rest[0];
         var position = scanner.position;
         throw TemplateSyntaxError(
-            'Unexpected char $char in "${scanner.rest.split('}').first}" at $position');
+            'Unexpected char $char in "${scanner.rest.split('}').first}" at $position',);
       }
     }
   }

@@ -136,7 +136,7 @@ abstract final class Token {
 
 /// Helper to extract a context snippet with a caret for error display.
 String errorContextSnippet(String source, int line, int column,
-    {int contextLines = 1}) {
+    {int contextLines = 1,}) {
   var lines = source.split('\n');
   var buffer = StringBuffer();
   if (lines.isEmpty) {

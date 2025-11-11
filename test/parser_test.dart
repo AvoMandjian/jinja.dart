@@ -14,7 +14,7 @@ void main() {
           variableStart: '<?=',
           variableEnd: '?>',
           commentStart: '<!--',
-          commentEnd: '-->');
+          commentEnd: '-->',);
       var tmpl = env.fromString("<!-- I'm a comment -->"
           '<? for item in seq -?>\n    <?= item ?>\n<?- endfor ?>');
       expect(tmpl.render({'seq': range(5)}), equals('01234'));
@@ -27,7 +27,7 @@ void main() {
           variableStart: '<%=',
           variableEnd: '%>',
           commentStart: '<%#',
-          commentEnd: '%>');
+          commentEnd: '%>',);
       var tmpl = env.fromString("<%# I'm a comment %>"
           '<% for item in seq -%>\n    <%= item %><%- endfor %>');
       expect(tmpl.render({'seq': range(5)}), equals('01234'));
@@ -40,7 +40,7 @@ void main() {
           variableStart: '\${',
           variableEnd: '}',
           commentStart: '<!--#',
-          commentEnd: '-->');
+          commentEnd: '-->',);
       var tmpl = env.fromString("<!--# I'm a comment -->"
           '<!-- for item in seq --->    \${item}<!--- endfor -->');
       expect(tmpl.render({'seq': range(5)}), equals('01234'));
@@ -68,7 +68,7 @@ void main() {
           commentStart: '<%#',
           commentEnd: '%>',
           lineCommentPrefix: '##',
-          lineStatementPrefix: '%');
+          lineStatementPrefix: '%',);
       var sequence = range(5).toList();
       var tmpl = env.fromString('<%# regular comment %>\n% for item in seq:\n'
           '    \${item} ## the rest of the stuff\n% endfor');
@@ -90,7 +90,7 @@ void main() {
           commentStart: '/*',
           commentEnd: '*/',
           lineCommentPrefix: '#',
-          lineStatementPrefix: '##');
+          lineStatementPrefix: '##',);
       var tmpl = env.fromString("/* ignore me.\n   I'm a multiline comment */\n"
           '## for item in seq:\n* \${item}          '
           '# this is just extra stuff\n## endfor\n');
@@ -101,7 +101,7 @@ void main() {
           commentStart: '/*',
           commentEnd: '*/',
           lineCommentPrefix: '##',
-          lineStatementPrefix: '#');
+          lineStatementPrefix: '#',);
       tmpl = env.fromString("/* ignore me.\n   I'm a multiline comment */\n"
           '# for item in seq:\n* \${item}          '
           '## this is just extra stuff\n    '
@@ -116,7 +116,7 @@ void main() {
         expect(
             () => env.fromString(source),
             throwsA(predicate<TemplateSyntaxError>(
-                (error) => error.message == expekted)));
+                (error) => error.message == expekted,),),);
       }
 
       assertError(
@@ -141,7 +141,7 @@ void main() {
               "that needs to be closed is 'for'.");
       assertError('{% block foo-bar-baz %}', 'Use an underscore instead.');
       assertError(
-          '{% unknown_tag %}', "Encountered unknown tag 'unknown_tag'.");
+          '{% unknown_tag %}', "Encountered unknown tag 'unknown_tag'.",);
     });
 
     test('TemplateSyntaxError includes line, column, and context', () {
@@ -154,7 +154,7 @@ void main() {
         expect(e.line, isNotNull, reason: 'line should not be null');
         expect(e.column, isNotNull, reason: 'column should not be null');
         expect(e.contextSnippet, contains('^'),
-            reason: 'contextSnippet should contain caret');
+            reason: 'contextSnippet should contain caret',);
         // Optionally, check caret position matches line/column
         var snippetLines = e.contextSnippet?.split('\n') ?? [];
         if (snippetLines.isNotEmpty && e.line != null && e.column != null) {
@@ -165,7 +165,7 @@ void main() {
           var caretLineIdx =
               snippetLines.indexWhere((l) => l.trim().endsWith('^'));
           expect(caretLineIdx, greaterThan(0),
-              reason: 'caret line should be present');
+              reason: 'caret line should be present',);
           if (caretLineIdx > 0 && codeLine.isNotEmpty) {
             var caretLine = snippetLines[caretLineIdx];
             var expectedCaretPos = e.column ?? 1;
@@ -173,7 +173,7 @@ void main() {
             var codeStart = codeLineColon >= 0 ? codeLineColon + 2 : 0;
             var caretRelative = caretLine.indexOf('^') - codeStart;
             expect(caretRelative, expectedCaretPos,
-                reason: 'caret should point to the error column');
+                reason: 'caret should point to the error column',);
           }
         }
       }
@@ -224,7 +224,7 @@ void main() {
       String template = '{% for item in seq %}\n  {{ item }}';
       try {
         env.fromString(template).render({
-          'seq': [1, 2]
+          'seq': [1, 2],
         });
         fail('Expected TemplateSyntaxError');
       } on TemplateSyntaxError catch (e) {

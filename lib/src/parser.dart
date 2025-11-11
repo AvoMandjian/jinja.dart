@@ -1,8 +1,8 @@
-import 'package:jinja/src/environment.dart';
-import 'package:jinja/src/exceptions.dart';
-import 'package:jinja/src/lexer.dart';
-import 'package:jinja/src/nodes.dart';
-import 'package:jinja/src/reader.dart';
+import 'environment.dart';
+import 'exceptions.dart';
+import 'lexer.dart';
+import 'nodes.dart';
+import 'reader.dart';
 import 'package:textwrap/textwrap.dart';
 
 final class Parser {
@@ -70,16 +70,16 @@ final class Parser {
         messages
           ..add('You probably made a nesting mistake.')
           ..add(
-              'Jinja is expecting this tag, but currently looking for $currentlyLooking.');
+              'Jinja is expecting this tag, but currently looking for $currentlyLooking.',);
       } else {
         messages.add(
-            'Jinja was looking for the following tags: $currentlyLooking.');
+            'Jinja was looking for the following tags: $currentlyLooking.',);
       }
     }
 
     if (tagStack.isNotEmpty) {
       messages.add(
-          "The innermost block that needs to be closed is '${tagStack.last}'.");
+          "The innermost block that needs to be closed is '${tagStack.last}'.",);
     }
 
     fail(messages.join(' '), line: line, column: column);
@@ -193,7 +193,7 @@ final class Parser {
     }
 
     if (nodes.isEmpty) {
-      return Data(data: '');
+      return Data();
     }
 
     if (nodes.length == 1) {
@@ -235,7 +235,7 @@ final class Parser {
 
     if (target case Name(name: 'loop')) {
       fail("Can't assign to special loop variable in for-loop target.",
-          line: reader.current.line, column: reader.current.column);
+          line: reader.current.line, column: reader.current.column,);
     }
 
     reader.expect('name', 'in');
@@ -345,14 +345,14 @@ final class Parser {
 
     if (!blocks.add(name.value)) {
       fail("Block '${name.value}' defined twice.",
-          line: reader.current.line, column: reader.current.column);
+          line: reader.current.line, column: reader.current.column,);
     }
 
     var scoped = reader.skipIf('name', 'scoped');
 
     if (reader.current.test('sub')) {
       fail('Use an underscore instead.',
-          line: reader.current.line, column: reader.current.column);
+          line: reader.current.line, column: reader.current.column,);
     }
 
     var required = reader.skipIf('name', 'required');
@@ -360,7 +360,7 @@ final class Parser {
 
     if (required && (body is! Data || !body.isLeaf)) {
       fail('Required blocks can only contain comments or whitespace.',
-          line: token.line, column: token.column);
+          line: token.line, column: token.column,);
     }
 
     var maybeName = reader.current;
@@ -368,7 +368,7 @@ final class Parser {
     if (maybeName.test('name')) {
       if (maybeName.value != name.value) {
         fail("'${name.value}' expected, got ${maybeName.value}.",
-            line: maybeName.line, column: maybeName.column);
+            line: maybeName.line, column: maybeName.column,);
       }
 
       reader.next();
@@ -426,7 +426,7 @@ final class Parser {
       reader.skip(2);
     }
 
-    var withContext = parseImportContext(reader, true);
+    var withContext = parseImportContext(reader);
     return Include(
       template: template,
       ignoreMissing: ignoreMissing,
@@ -486,12 +486,12 @@ final class Parser {
 
         if (target is! Name) {
           fail("Can't assign to $target.",
-              line: token.line, column: token.column);
+              line: token.line, column: token.column,);
         }
 
         if (target.name.startsWith('_')) {
           fail('Names starting with an underline can not be imported.',
-              line: token.line, column: token.column);
+              line: token.line, column: token.column,);
         }
 
         if (reader.skipIf('name', 'as')) {
@@ -536,7 +536,7 @@ final class Parser {
         defaults.add(parseExpression(reader));
       } else if (defaults.isNotEmpty) {
         fail('Non-default argument follows default argument.',
-            line: reader.current.line, column: reader.current.column);
+            line: reader.current.line, column: reader.current.column,);
       }
 
       names.add(name);
@@ -821,7 +821,7 @@ final class Parser {
       ('lt', null),
       ('lteq', null),
       ('gt', null),
-      ('gteq', null)
+      ('gteq', null),
     ];
 
     var value = parseMath1(reader);
@@ -1057,7 +1057,7 @@ final class Parser {
 
       default:
         fail('Unexpected ${describeToken(current)}.',
-            line: current.line, column: current.column);
+            line: current.line, column: current.column,);
     }
 
     return expression;
@@ -1109,7 +1109,7 @@ final class Parser {
       if (!explicitParentheses) {
         var current = reader.current;
         fail('Expected an expression, got ${describeToken(current)}.',
-            line: current.line, column: current.column);
+            line: current.line, column: current.column,);
       }
     }
 
@@ -1208,7 +1208,7 @@ final class Parser {
 
       if (!attributeToken.test('integer')) {
         fail('Expected name or number.',
-            line: attributeToken.line, column: attributeToken.column);
+            line: attributeToken.line, column: attributeToken.column,);
       }
 
       var key = Constant(value: int.parse(attributeToken.value));
@@ -1224,7 +1224,7 @@ final class Parser {
       var key = parseExpression(reader);
       if (reader.nextIf('colon') != null) {
         if (reader.skipIf('rbracket')) {
-          return Slice(start: key, stop: null, value: value);
+          return Slice(start: key, value: value);
         } else {
           var stop = parseExpression(reader);
           reader.expect('rbracket');
@@ -1237,7 +1237,7 @@ final class Parser {
     }
 
     fail('Expected subscript expression.',
-        line: token.line, column: token.column);
+        line: token.line, column: token.column,);
   }
 
   Calling parseCalling(TokenReader reader) {
@@ -1249,7 +1249,7 @@ final class Parser {
     void ensure(bool ensure) {
       if (!ensure) {
         fail('Invalid syntax for function call expression.',
-            line: token.line, column: token.column);
+            line: token.line, column: token.column,);
       }
     }
 
@@ -1344,7 +1344,7 @@ final class Parser {
     const deny = <(String, String?)>[
       ('name', 'else'),
       ('name', 'or'),
-      ('name', 'and')
+      ('name', 'and'),
     ];
 
     reader.expect('name', 'is');
@@ -1370,7 +1370,7 @@ final class Parser {
     } else if (current.testAny(allow) && !current.testAny(deny)) {
       if (current.test('name', 'is')) {
         fail('You cannot chain multiple tests with is.',
-            line: reader.current.line, column: reader.current.column);
+            line: reader.current.line, column: reader.current.column,);
       }
 
       var argument = parsePostfix(reader, parsePrimary(reader));

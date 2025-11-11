@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:jinja/src/nodes.dart';
-import 'package:jinja/src/renderer.dart';
-import 'package:jinja/src/runtime.dart';
-import 'package:jinja/src/utils.dart';
-import 'package:jinja/src/visitor.dart';
+import '../nodes.dart';
+import '../renderer.dart';
+import '../runtime.dart';
+import '../utils.dart';
+import '../visitor.dart';
 
 import 'debug_controller.dart';
 import 'debug_renderer.dart';
@@ -18,7 +18,7 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   final Set<int> _linesHitThisRender = {};
   
   /// Track if we're currently inside a for loop iteration
-  bool _inForIteration = false;
+  final bool _inForIteration = false;
   
   /// Track the line number of the current for statement
   int? _currentForLine;
@@ -448,7 +448,6 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
       outputSoFar: outputBefore,
       currentOutput: currentOutput,
       lineNumber: currentLine,
-      nodeName: null,
       nodeData: finalized.toString(),
     );
 

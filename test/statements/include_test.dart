@@ -117,7 +117,7 @@ void main() {
       );
 
       var tmpl = env.fromString(
-          "{% set foobar = 42 %}{% from 'a' import x with context %}{{ x() }}");
+          "{% set foobar = 42 %}{% from 'a' import x with context %}{{ x() }}",);
       expect(tmpl.render(), equals('42'));
     });
   });

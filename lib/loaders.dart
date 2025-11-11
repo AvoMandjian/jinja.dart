@@ -3,9 +3,8 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:jinja/src/environment.dart';
-import 'package:jinja/src/exceptions.dart';
-import 'package:jinja/src/loaders.dart';
+import 'src/environment.dart';
+import 'src/exceptions.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' show extension, join, normalize, relative;
 
@@ -133,6 +132,6 @@ class FileSystemLoader extends Loader {
       );
     }
     return environment.fromString(getSource(path),
-        path: path, globals: globals);
+        path: path, globals: globals,);
   }
 }

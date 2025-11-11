@@ -32,18 +32,24 @@ void main() {
     });
 
     test('arguments defaults nonsense', () {
-      expect(() {
-        env.fromString('''
+      expect(
+        () {
+          env.fromString('''
 {% macro m(a, b=1, c) %}a={{ a }}, b={{ b }}, c={{ c }}{% endmacro %}''');
-      }, throwsA(isA<TemplateSyntaxError>()));
+        },
+        throwsA(isA<TemplateSyntaxError>()),
+      );
     });
 
     test('caller defaults nonsense', () {
-      expect(() {
-        env.fromString('''
+      expect(
+        () {
+          env.fromString('''
 {% macro a() %}{{ caller() }}{% endmacro %}
 {% call(x, y=1, z) a() %}{% endcall %}''');
-      }, throwsA(isA<TemplateSyntaxError>()));
+        },
+        throwsA(isA<TemplateSyntaxError>()),
+      );
     });
 
     test('varargs', () {

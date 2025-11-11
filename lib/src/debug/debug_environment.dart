@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:async';
-import 'package:jinja/src/debug/async_debug_renderer.dart';
-import 'package:jinja/src/debug/debug_controller.dart';
-import 'package:jinja/src/debug/debug_renderer.dart';
-import 'package:jinja/src/environment.dart';
+
+import '../environment.dart';
+import 'async_debug_renderer.dart';
+import 'debug_controller.dart';
+import 'debug_renderer.dart';
 
 /// Extension to add debug rendering to Template
 extension DebugTemplateExtension on Template {
@@ -32,28 +32,28 @@ extension DebugTemplateExtension on Template {
   }) async {
     // Get potentially updated template
     Template templateToRender = this;
-      if (getUpdatedTemplate != null) {
-        var updated = getUpdatedTemplate();
-        if (updated is Template) {
-          templateToRender = updated;
-        } else if (updated is String) {
-          templateToRender = environment.fromString(updated);
-        }
+    if (getUpdatedTemplate != null) {
+      var updated = getUpdatedTemplate();
+      if (updated is Template) {
+        templateToRender = updated;
+      } else if (updated is String) {
+        templateToRender = environment.fromString(updated);
       }
+    }
 
-      // Create debug context
-      var context = DebugRenderContext(
-        environment,
-        sink,
-        debugController: debugController,
-        template: path,
-        parent: globals,
-        data: data,
-      );
+    // Create debug context
+    var context = DebugRenderContext(
+      environment,
+      sink,
+      debugController: debugController,
+      template: path,
+      parent: globals,
+      data: data,
+    );
 
-      // Render with async debug renderer
-      final debugRenderer = AsyncDebugRenderer();
-      await templateToRender.body.accept(debugRenderer, context);
+    // Render with async debug renderer
+    final debugRenderer = AsyncDebugRenderer();
+    await templateToRender.body.accept(debugRenderer, context);
   }
 }
 

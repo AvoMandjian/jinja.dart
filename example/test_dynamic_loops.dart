@@ -12,7 +12,7 @@ void main() async {
 End''',
     {
       'range': (int start, [int? stop, int step = 1]) =>
-          stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step)
+          stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step),
     },
   );
 
@@ -29,7 +29,7 @@ End''',
 End''',
     {
       'range': (int start, [int? stop, int step = 1]) =>
-          stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step)
+          stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step),
     },
   );
 
@@ -44,7 +44,7 @@ End''',
 {% endfor %}
 Final: {{ total }}''',
     {
-      'items': [10, 20, 30]
+      'items': [10, 20, 30],
     },
   );
 }

@@ -1,5 +1,5 @@
-import 'package:jinja/src/environment.dart';
-import 'package:jinja/src/nodes.dart';
+import 'environment.dart';
+import 'nodes.dart';
 
 typedef ContextCallback = void Function(Context context);
 
@@ -30,7 +30,7 @@ base class Context {
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
   ]) async {
     if (object is Function) {
-      final res = await environment.callCommon(object, positional, named, this);
+      var res = await environment.callCommon(object, positional, named, this);
       // NOTE: This method is async, so when called from templates:
       // - Use template.renderAsync() for proper Future handling
       // - template.render() won't await this Future and will output 'Instance of Future<Object?>'
@@ -41,11 +41,9 @@ base class Context {
     if (object == null) {
       if (node is Call) {
         if (node.value is Attribute) {
-          throw Exception(
-              'The function ${((node.value as Attribute).value as Name).name} is null at $positional');
+          throw Exception('The function ${((node.value as Attribute).value as Name).name} is null at $positional');
         } else {
-          throw Exception(
-              'The function ${node.value.toString()} is null at $positional');
+          throw Exception('The function ${node.value.toString()} is null at $positional');
         }
       }
       throw Exception('Object is null at $positional');
@@ -53,8 +51,7 @@ base class Context {
 
     // Handle other callable objects if necessary, otherwise default to `call` method.
     // For now, we assume if it's not a Function, it's a callable class instance.
-    return await environment.callCommon(
-        object.call as Function, positional, named, this);
+    return environment.callCommon(object.call as Function, positional, named, this);
   }
 
   Context derived({
@@ -139,8 +136,9 @@ base class Context {
     String name, [
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
-  ]) {
-    return environment.callFilter(name, positional, named, this);
+  ]) async {
+    final res = await environment.callFilter(name, positional, named, this);
+    return res;
   }
 
   Future<bool> test(
@@ -351,8 +349,7 @@ final class CyclerIterator implements Iterator<Object?> {
 }
 
 base class Namespace {
-  Namespace([Map<String, Object?>? data])
-      : context = <String, Object?>{...?data};
+  Namespace([Map<String, Object?>? data]) : context = <String, Object?>{...?data};
 
   final Map<String, Object?> context;
 

@@ -45,10 +45,11 @@ void main() {
 
     test('filter calling', () {
       expect(
-          env.callFilter('sum', [
-            [1, 2, 3]
-          ]),
-          equals(6));
+        env.callFilter('sum', [
+          [1, 2, 3],
+        ]),
+        equals(6),
+      );
     });
 
     test('capitalize', () {
@@ -74,7 +75,7 @@ void main() {
 
     test('dictsort', () {
       var data = {
-        'foo': {'aa': 0, 'AB': 3, 'b': 1, 'c': 2}
+        'foo': {'aa': 0, 'AB': 3, 'b': 1, 'c': 2},
       };
       var tmpl = env.fromString('{{ foo|dictsort }}');
       expect(tmpl.render(data), equals('[[aa, 0], [AB, 3], [b, 1], [c, 2]]'));
@@ -214,13 +215,14 @@ void main() {
     test('join attribute', () {
       var tmpl = env.fromString('{{ users|map(attribute="name")|join(", ") }}');
       expect(
-          tmpl.render({
-            'users': [
-              {'name': 'foo'},
-              {'name': 'bar'}
-            ]
-          }),
-          equals('foo, bar'));
+        tmpl.render({
+          'users': [
+            {'name': 'foo'},
+            {'name': 'bar'},
+          ],
+        }),
+        equals('foo, bar'),
+      );
     });
 
     test('last', () {
@@ -357,42 +359,45 @@ void main() {
     test('sum attributes', () {
       var tmpl = env.fromString('{{ values|map(item="value")|sum }}');
       expect(
-          tmpl.render({
-            'values': [
-              {'value': 23},
-              {'value': 1},
-              {'value': 18},
-            ]
-          }),
-          equals('42'));
+        tmpl.render({
+          'values': [
+            {'value': 23},
+            {'value': 1},
+            {'value': 18},
+          ],
+        }),
+        equals('42'),
+      );
     });
 
     test('sum attributes nested', () {
       var tmpl = env.fromString('{{ values|map(attribute="real.value")|sum }}');
       expect(
-          tmpl.render({
-            'values': [
-              {
-                'real': {'value': 23}
-              },
-              {
-                'real': {'value': 1}
-              },
-              {
-                'real': {'value': 18}
-              },
-            ]
-          }),
-          equals('42'));
+        tmpl.render({
+          'values': [
+            {
+              'real': {'value': 23},
+            },
+            {
+              'real': {'value': 1},
+            },
+            {
+              'real': {'value': 18},
+            },
+          ],
+        }),
+        equals('42'),
+      );
     });
 
     test('sum attributes tuple', () {
       var tmpl = env.fromString('{{ values.entries|map("list")|map(item=1)|sum }}');
       expect(
-          tmpl.render({
-            'values': {'foo': 23, 'bar': 1, 'baz': 18}
-          }),
-          equals('42'));
+        tmpl.render({
+          'values': {'foo': 23, 'bar': 1, 'baz': 18},
+        }),
+        equals('42'),
+      );
     });
 
     test('abs', () {
@@ -454,7 +459,7 @@ void main() {
       var users = [
         {'name': 'john'},
         {'name': 'jane'},
-        {'name': 'mike'}
+        {'name': 'mike'},
       ];
       expect(tmpl.render({'users': users}), equals('john|jane|mike'));
     });
@@ -540,7 +545,7 @@ void main() {
     });
 
     test('wordwrap', () {
-      var env = Environment(newLine: '\n');
+      var env = Environment();
       var tmpl = env.fromString('{{ string|wordwrap(20) }}');
       var data = {'string': 'Hello!\nThis is Jinja saying something.'};
       var result = tmpl.render(data);
@@ -554,9 +559,13 @@ void main() {
       expect(tmpl.render(), equals('Null'));
     });
 
-    test('filter undefined', () {
-      expect(() => env.fromString('{{ var|f }}'), aNoFilterNamedF);
-    }, skip: 'Enable after implementing compiler assert checks.');
+    test(
+      'filter undefined',
+      () {
+        expect(() => env.fromString('{{ var|f }}'), aNoFilterNamedF);
+      },
+      skip: 'Enable after implementing compiler assert checks.',
+    );
 
     test('filter undefined in if', () {
       var t1 = env.fromString(

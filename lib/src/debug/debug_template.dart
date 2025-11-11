@@ -1,14 +1,10 @@
 import 'dart:async';
 
-import 'dart:async';
-
-import 'dart:async';
-
-import 'package:jinja/src/debug/async_debug_renderer.dart';
-import 'package:jinja/src/debug/debug_controller.dart';
-import 'package:jinja/src/debug/debug_renderer.dart';
-import 'package:jinja/src/environment.dart';
-import 'package:jinja/src/nodes.dart';
+import '../environment.dart';
+import '../nodes.dart';
+import 'async_debug_renderer.dart';
+import 'debug_controller.dart';
+import 'debug_renderer.dart';
 
 /// Extension to add debug capabilities to Template
 extension DebugTemplate on Template {

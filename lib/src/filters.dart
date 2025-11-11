@@ -1,11 +1,12 @@
 import 'dart:convert' show LineSplitter;
 import 'dart:math' as math;
 
-import 'package:jinja/src/environment.dart';
-import 'package:jinja/src/runtime.dart';
-import 'package:jinja/src/utils.dart' as utils;
 import 'package:textwrap/textwrap.dart' show TextWrapper;
 import 'package:textwrap/utils.dart';
+
+import 'environment.dart';
+import 'runtime.dart';
+import 'utils.dart' as utils;
 
 final RegExp _wordBeginningSplitRe = RegExp('([-\\s({\\[<]+)');
 
@@ -573,7 +574,7 @@ Object? Function(Object? object) _prepareMap(
         throw ArgumentError.value(named[first], first, 'Unexpected keyword argument.');
       }
 
-      return makeItemGetter(context.environment, item, defaultValue: defaultValue, attribute: null);
+      return makeItemGetter(context.environment, item, defaultValue: defaultValue);
     }
   }
 
@@ -584,7 +585,7 @@ Object? Function(Object? object) _prepareMap(
 
     var symbols = <Symbol, Object?>{for (var MapEntry(:key, :value) in named.entries) Symbol(key): value};
 
-    Object? getter(Object? object) {
+    Future<Object?>? getter(Object? object) async {
       return context.filter(name, <Object?>[object, ...positional], symbols);
     }
 

@@ -6,6 +6,7 @@ void main() async {
   var env = Environment();
 
   var templateSource = '''
+HELLO
 {% for VARIABLE_1 in dealership.inventory %}
 {{dealership.inventory |tojson}}
 {% endfor %}
@@ -34,6 +35,7 @@ void main() async {
   debugController.addBreakpoint(line: 0);
   debugController.addBreakpoint(line: 1);
   debugController.addBreakpoint(line: 2);
+  debugController.addBreakpoint(line: 3);
 
   print('Starting debug render...\n');
 
@@ -49,7 +51,7 @@ void main() async {
             'model': 'Camry',
             'year': 2021,
             'features': ['Bluetooth', 'Backup Camera', 'Cruise Control'],
-            'specs': {'engine': '2.5L', 'transmission': 'Automatic', 'fuelType': 'Gasoline'}
+            'specs': {'engine': '2.5L', 'transmission': 'Automatic', 'fuelType': 'Gasoline'},
           },
           {
             'id': 2,
@@ -57,11 +59,11 @@ void main() async {
             'model': 'Model 3',
             'year': 2023,
             'features': ['Autopilot', 'Electric', 'Touchscreen'],
-            'specs': {'engine': 'Electric', 'transmission': 'Single-speed', 'fuelType': 'Electric'}
+            'specs': {'engine': 'Electric', 'transmission': 'Single-speed', 'fuelType': 'Electric'},
           }
         ],
-        'openHours': {'mon-fri': '9:00-18:00', 'sat': '10:00-15:00', 'sun': 'Closed'}
-      }
+        'openHours': {'mon-fri': '9:00-18:00', 'sat': '10:00-15:00', 'sun': 'Closed'},
+      },
     },
     debugController: debugController,
   );

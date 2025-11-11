@@ -24,7 +24,7 @@ void main() {
             'query': query,
           };
         }
-      }
+      },
     },
     loader: loader,
     leftStripBlocks: true,

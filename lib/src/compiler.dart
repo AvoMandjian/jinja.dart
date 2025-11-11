@@ -1,6 +1,6 @@
-import 'package:jinja/src/exceptions.dart';
-import 'package:jinja/src/nodes.dart';
-import 'package:jinja/src/visitor.dart';
+import 'exceptions.dart';
+import 'nodes.dart';
+import 'visitor.dart';
 import 'package:meta/meta.dart';
 
 // TODO(renderer): Rename to `StringSinkRendererCompiler`
@@ -80,7 +80,7 @@ class RuntimeCompiler implements Visitor<void, Node> {
         if (calling.keywords.isNotEmpty) {
           var pairs = <Pair>[
             for (var (:key, :value) in calling.keywords)
-              (key: Constant(value: key), value: value)
+              (key: Constant(value: key), value: value),
           ];
 
           values.add(Dict(pairs: pairs));
@@ -90,7 +90,7 @@ class RuntimeCompiler implements Visitor<void, Node> {
           value: visitNode(node.value, context),
           calling: Calling(
             arguments: <Expression>[
-              if (values.isNotEmpty) Array(values: values)
+              if (values.isNotEmpty) Array(values: values),
             ],
           ),
         );
@@ -109,7 +109,7 @@ class RuntimeCompiler implements Visitor<void, Node> {
               Dict(pairs: <Pair>[
                 for (var (:key, :value) in keywords)
                   (key: Constant(value: key), value: value),
-              ]),
+              ],),
             ],
           ),
         );
@@ -130,7 +130,7 @@ class RuntimeCompiler implements Visitor<void, Node> {
               Dict(pairs: <Pair>[
                 for (var (:key, :value) in keywords)
                   (key: Constant(value: key), value: value),
-              ]),
+              ],),
             ],
           ),
         );
@@ -149,7 +149,7 @@ class RuntimeCompiler implements Visitor<void, Node> {
       arguments: visitNodes(node.arguments, context),
       keywords: <Keyword>[
         for (var (:key, :value) in node.keywords)
-          (key: key, value: visitNode(value, context))
+          (key: key, value: visitNode(value, context)),
       ],
     );
   }
@@ -160,7 +160,7 @@ class RuntimeCompiler implements Visitor<void, Node> {
       value: visitNode(node.value, context),
       operands: <Operand>[
         for (var (operator, value) in node.operands)
-          (operator, value.accept(this, context) as Expression)
+          (operator, value.accept(this, context) as Expression),
       ],
     );
   }
@@ -189,7 +189,7 @@ class RuntimeCompiler implements Visitor<void, Node> {
     return node.copyWith(
       pairs: <Pair>[
         for (var (:key, :value) in node.pairs)
-          (key: visitNode(key, context), value: visitNode(value, context))
+          (key: visitNode(key, context), value: visitNode(value, context)),
       ],
     );
   }
@@ -207,8 +207,8 @@ class RuntimeCompiler implements Visitor<void, Node> {
           Array(values: calling.arguments.sublist(1)),
           Dict(pairs: <Pair>[
             for (var (:key, :value) in calling.keywords)
-              (key: Constant(value: key), value: value)
-          ]),
+              (key: Constant(value: key), value: value),
+          ],),
         ],
       );
 
@@ -303,7 +303,7 @@ class RuntimeCompiler implements Visitor<void, Node> {
           (
             argument.accept(this, context) as Expression,
             defaultValue.accept(this, context) as Expression,
-          )
+          ),
       ],
       body: visitNode(node.body, context),
     );
@@ -404,7 +404,7 @@ class RuntimeCompiler implements Visitor<void, Node> {
       named.add((
         argument.accept(this, context) as Expression,
         defaultValue.accept(this, context) as Expression,
-      ));
+      ),);
     }
 
     if (node.caller && !explicitCaller) {

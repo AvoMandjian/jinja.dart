@@ -114,7 +114,8 @@ void main() {
 
     test('reusing blocks', () {
       var tmpl = env.fromString(
-          '{{ self.foo() }}|{% block foo %}42{% endblock %}|{{ self.foo() }}');
+        '{{ self.foo() }}|{% block foo %}42{% endblock %}|{{ self.foo() }}',
+      );
       expect(tmpl.render(), equals('42|42|42'));
     });
 
@@ -145,33 +146,38 @@ void main() {
       expect(tmpl.render({'default': 'default2'}), equals('DEFAULT2CHILD'));
     });
 
-    test('multi inheritance', () {
-      var env = Environment(
-        loader: MapLoader({
-          'default1': 'DEFAULT1{% block x %}{% endblock %}',
-          'default2': 'DEFAULT2{% block x %}{% endblock %}',
-          'child': '{% if default %}{% extends default %}{% else %}'
-              '{% extends "default1" %}{% endif %}'
-              '{% block x %}CHILD{% endblock %}',
-        }),
-      );
+    test(
+      'multi inheritance',
+      () {
+        var env = Environment(
+          loader: MapLoader({
+            'default1': 'DEFAULT1{% block x %}{% endblock %}',
+            'default2': 'DEFAULT2{% block x %}{% endblock %}',
+            'child': '{% if default %}{% extends default %}{% else %}'
+                '{% extends "default1" %}{% endif %}'
+                '{% block x %}CHILD{% endblock %}',
+          }),
+        );
 
-      var tmpl = env.getTemplate('child');
-      expect(tmpl.render(), equals('DEFAULT1CHILD'));
-      expect(tmpl.render({'default': 'default1'}), equals('DEFAULT1CHILD'));
-      expect(tmpl.render({'default': 'default2'}), equals('DEFAULT2CHILD'));
-    }, skip: true);
+        var tmpl = env.getTemplate('child');
+        expect(tmpl.render(), equals('DEFAULT1CHILD'));
+        expect(tmpl.render({'default': 'default1'}), equals('DEFAULT1CHILD'));
+        expect(tmpl.render({'default': 'default2'}), equals('DEFAULT2CHILD'));
+      },
+      skip: true,
+    );
 
     test('scoped block', () {
       var env = Environment(
         loader: MapLoader({
           'default.html': '{% for item in seq %}[{% block item scoped %}'
-              '{% endblock %}]{% endfor %}'
+              '{% endblock %}]{% endfor %}',
         }),
       );
 
       var tmpl = env.fromString(
-          '{% extends "default.html" %}{% block item %}{{ item }}{% endblock %}');
+        '{% extends "default.html" %}{% block item %}{{ item }}{% endblock %}',
+      );
       expect(tmpl.render({'seq': range(5)}), equals('[0][1][2][3][4]'));
     });
 
@@ -186,7 +192,9 @@ void main() {
       var tmpl = env.fromString('{% extends "default.html" %}{% block item %}'
           '{{ super() }}|{{ item * 2 }}{% endblock %}');
       expect(
-          tmpl.render({'seq': range(5)}), equals('[0|0][1|2][2|4][3|6][4|8]'));
+        tmpl.render({'seq': range(5)}),
+        equals('[0|0][1|2][2|4][3|6][4|8]'),
+      );
     });
 
     // TODO: add test(import, from, macro): scoped block after inheritance
@@ -253,9 +261,13 @@ void main() {
       );
 
       expect(
-          () => env.getTemplate('level1').render(),
-          throwsA(predicate<TemplateRuntimeError>(
-              (error) => error.message == "Required block 'x' not found.")));
+        () => env.getTemplate('level1').render(),
+        throwsA(
+          predicate<TemplateRuntimeError>(
+            (error) => error.message == "Required block 'x' not found.",
+          ),
+        ),
+      );
 
       expect(env.getTemplate('level2').render(), equals('[2]'));
       expect(env.getTemplate('level3').render(), equals('[2]'));
@@ -269,18 +281,17 @@ void main() {
               '{% endblock %}  {% endblock %}',
           'default3': '{% block x required %}{% if true %}{% endif %}  '
               '{% endblock %}',
-          'level1default1':
-              '{% extends "default" %}{%- block x %}CHILD{% endblock %}',
-          'level1default2':
-              '{% extends "default2" %}{%- block x %}CHILD{% endblock %}',
-          'level1default3':
-              '{% extends "default3" %}{%- block x %}CHILD{% endblock %}'
+          'level1default1': '{% extends "default" %}{%- block x %}CHILD{% endblock %}',
+          'level1default2': '{% extends "default2" %}{%- block x %}CHILD{% endblock %}',
+          'level1default3': '{% extends "default3" %}{%- block x %}CHILD{% endblock %}',
         }),
       );
 
-      var matcher = throwsA(predicate<TemplateSyntaxError>((error) =>
-          error.message ==
-          'Required blocks can only contain comments or whitespace.'));
+      var matcher = throwsA(
+        predicate<TemplateSyntaxError>(
+          (error) => error.message == 'Required blocks can only contain comments or whitespace.',
+        ),
+      );
 
       expect(() => env.getTemplate('level1default1').render(), matcher);
       expect(() => env.getTemplate('level1default2').render(), matcher);
@@ -289,9 +300,13 @@ void main() {
 
     test('double extends', () {
       expect(
-          () => env.getTemplate('doublee').render(),
-          throwsA(predicate<TemplateSyntaxError>(
-              (error) => error.message!.contains('Extended multiple times.'))));
+        () => env.getTemplate('doublee').render(),
+        throwsA(
+          predicate<TemplateSyntaxError>(
+            (error) => error.message!.contains('Extended multiple times.'),
+          ),
+        ),
+      );
     });
   });
 }

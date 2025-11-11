@@ -1,4 +1,4 @@
-import 'package:jinja/src/visitor.dart';
+import 'visitor.dart';
 
 part 'nodes/expressions.dart';
 part 'nodes/statements.dart';

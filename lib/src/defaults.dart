@@ -1,6 +1,6 @@
-import 'package:jinja/src/exceptions.dart';
-import 'package:jinja/src/runtime.dart';
-import 'package:jinja/src/utils.dart';
+import 'exceptions.dart';
+import 'runtime.dart';
+import 'utils.dart';
 
 export 'package:jinja/src/filters.dart' show filters;
 export 'package:jinja/src/tests.dart' show tests;
@@ -69,10 +69,10 @@ Object? getItem(Object? key, Object? object, {Object? node}) {
         return object[key];
       }
       throw UndefinedError(
-          'Index `$key` is out of bounds for list of length `${object.length}`.');
+          'Index `$key` is out of bounds for list of length `${object.length}`.',);
     }
     throw TemplateRuntimeError(
-        'List index must be an integer, but got `${key.runtimeType}`.');
+        'List index must be an integer, but got `${key.runtimeType}`.',);
   }
 
   if (object is MapEntry) {
@@ -94,7 +94,7 @@ Object? getItem(Object? key, Object? object, {Object? node}) {
   }
 
   throw TemplateRuntimeError(
-      'Cannot access item on object of type `${object.runtimeType}`.');
+      'Cannot access item on object of type `${object.runtimeType}`.',);
 }
 
 Object? undefined(String name, [String? template]) {

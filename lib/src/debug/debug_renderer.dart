@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:jinja/src/debug/debug_controller.dart';
-import 'package:jinja/src/nodes.dart';
-import 'package:jinja/src/renderer.dart';
-import 'package:jinja/src/runtime.dart';
+import 'debug_controller.dart';
+import '../nodes.dart';
+import '../renderer.dart';
+import '../runtime.dart';
 
 /// Debug version of StringSinkRenderContext that tracks execution
 base class DebugRenderContext extends StringSinkRenderContext {
@@ -107,9 +107,9 @@ base class DebugRenderer extends StringSinkRenderer {
   }
 
   @override
-  void visitData(Data node, StringSinkRenderContext context) {
+  Future<void> visitData(Data node, StringSinkRenderContext context) async {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((_) {
+      await _checkBreakpoint(node, context).then((_) {
         super.visitData(node, context);
       });
     } else {
@@ -118,9 +118,9 @@ base class DebugRenderer extends StringSinkRenderer {
   }
 
   @override
-  void visitInterpolation(Interpolation node, StringSinkRenderContext context) {
+  Future<void> visitInterpolation(Interpolation node, StringSinkRenderContext context) async {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((_) {
+      await _checkBreakpoint(node, context).then((_) {
         super.visitInterpolation(node, context);
       });
     } else {
@@ -129,9 +129,9 @@ base class DebugRenderer extends StringSinkRenderer {
   }
 
   @override
-  void visitFor(For node, StringSinkRenderContext context) {
+  Future<void> visitFor(For node, StringSinkRenderContext context) async {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((_) {
+      await _checkBreakpoint(node, context).then((_) {
         super.visitFor(node, context);
       });
     } else {
@@ -140,9 +140,9 @@ base class DebugRenderer extends StringSinkRenderer {
   }
 
   @override
-  void visitIf(If node, StringSinkRenderContext context) {
+  Future<void> visitIf(If node, StringSinkRenderContext context) async {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((_) {
+      await _checkBreakpoint(node, context).then((_) {
         super.visitIf(node, context);
       });
     } else {
@@ -151,9 +151,9 @@ base class DebugRenderer extends StringSinkRenderer {
   }
 
   @override
-  void visitAssign(Assign node, StringSinkRenderContext context) {
+  Future<void> visitAssign(Assign node, StringSinkRenderContext context) async {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((_) {
+      await _checkBreakpoint(node, context).then((_) {
         super.visitAssign(node, context);
       });
     } else {
@@ -162,9 +162,9 @@ base class DebugRenderer extends StringSinkRenderer {
   }
 
   @override
-  void visitBlock(Block node, StringSinkRenderContext context) {
+  Future<void> visitBlock(Block node, StringSinkRenderContext context) async {
     if (context is DebugRenderContext) {
-      _checkBreakpoint(node, context).then((_) {
+      await _checkBreakpoint(node, context).then((_) {
         super.visitBlock(node, context);
       });
     } else {

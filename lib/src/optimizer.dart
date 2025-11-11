@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
-import 'package:jinja/src/nodes.dart';
-import 'package:jinja/src/runtime.dart';
-import 'package:jinja/src/utils.dart';
-import 'package:jinja/src/visitor.dart';
+import 'nodes.dart';
+import 'runtime.dart';
+import 'utils.dart';
+import 'visitor.dart';
 import 'package:meta/meta.dart';
 
 @doNotStore
@@ -65,7 +65,7 @@ class Optimizer implements Visitor<Context, Node> {
       arguments: visitNodes<Expression>(node.arguments, context),
       keywords: <Keyword>[
         for (var (:key, :value) in node.keywords)
-          (key: key, value: visitNode<Expression>(value, context))
+          (key: key, value: visitNode<Expression>(value, context)),
       ],
     );
   }
@@ -146,7 +146,7 @@ class Optimizer implements Visitor<Context, Node> {
         (
           key: visitNode<Expression>(key, context),
           value: visitNode<Expression>(value, context),
-        )
+        ),
     ];
 
     if (pairs.any((pair) => pair.key is Constant && pair.value is Constant)) {
@@ -309,7 +309,7 @@ class Optimizer implements Visitor<Context, Node> {
           (
             visitNode<Expression>(argument, context),
             visitNode<Expression>(defaultValue, context),
-          )
+          ),
       ],
       body: visitNode<Node>(node.body, context),
     );
@@ -396,7 +396,7 @@ class Optimizer implements Visitor<Context, Node> {
           (
             visitNode<Expression>(argument, context),
             visitNode<Expression>(defaultValue, context),
-          )
+          ),
       ],
       body: visitNode<Node>(node.body, context),
     );
