@@ -23,14 +23,19 @@ base class Context {
 
   final Map<String, Object?> context;
 
-  Object? call(
+  Future<Object?> call(
     dynamic object,
     Object? node, [
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
-  ]) {
+  ]) async {
     if (object is Function) {
-      return environment.callCommon(object, positional, named, this);
+      final res = await environment.callCommon(object, positional, named, this);
+      // NOTE: This method is async, so when called from templates:
+      // - Use template.renderAsync() for proper Future handling
+      // - template.render() won't await this Future and will output 'Instance of Future<Object?>'
+      print('res: $res');
+      return res;
     }
 
     if (object == null) {
@@ -48,7 +53,8 @@ base class Context {
 
     // Handle other callable objects if necessary, otherwise default to `call` method.
     // For now, we assume if it's not a Function, it's a callable class instance.
-    return environment.callCommon(object.call as Function, positional, named, this);
+    return await environment.callCommon(
+        object.call as Function, positional, named, this);
   }
 
   Context derived({
@@ -84,6 +90,22 @@ base class Context {
     return undefined(name, template);
   }
 
+  /// Async version of resolve that awaits Future values.
+  /// This is used when globals contain Future values that need to be awaited.
+  Future<Object?> resolveAsync(String name) async {
+    if (context.containsKey(name)) {
+      var value = context[name];
+      return value is Future ? await value : value;
+    }
+
+    if (parent.containsKey(name)) {
+      var value = parent[name];
+      return value is Future ? await value : value;
+    }
+
+    return undefined(name, template);
+  }
+
   Object? get(String key) {
     return context[key];
   }
@@ -113,7 +135,7 @@ base class Context {
     return environment.getItem(name, value, node: node);
   }
 
-  Object? filter(
+  Future<Object?> filter(
     String name, [
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
@@ -121,7 +143,7 @@ base class Context {
     return environment.callFilter(name, positional, named, this);
   }
 
-  bool test(
+  Future<bool> test(
     String name, [
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},

@@ -32,17 +32,20 @@ typedef ContextFinalizer = Object? Function(Context context, Object? value);
 /// {@macro jinja.finalizer}
 ///
 /// Takes [Environment] as first argument.
-typedef EnvironmentFinalizer = Object? Function(Environment environment, Object? value);
+typedef EnvironmentFinalizer = Object? Function(
+    Environment environment, Object? value);
 
 /// A function that can be used to get object atribute.
 ///
 /// Used by `object.attribute` expression.
-typedef AttributeGetter = Object? Function(String attribute, Object? object, {Object? node});
+typedef AttributeGetter = Object? Function(String attribute, Object? object,
+    {Object? node});
 
 /// A function that can be used to get object item.
 ///
 /// Used by `object['item']` expression.
-typedef ItemGetter = Object? Function(Object? key, Object? object, {Object? node});
+typedef ItemGetter = Object? Function(Object? key, Object? object,
+    {Object? node});
 
 /// A function that returns a value or throws an error if the variable is not
 /// found.
@@ -275,17 +278,18 @@ base class Environment {
 
   /// Common filter and test caller.
   @internal
-  Object? callCommon(
+  Future<Object?> callCommon(
     Function function,
     List<Object?> positional,
     Map<Symbol, Object?> named,
     Context? context,
-  ) {
+  ) async {
     var pass = PassArgument.types[function];
 
     if (pass == PassArgument.context) {
       if (context == null) {
-        throw TemplateRuntimeError('Attempted to invoke context function without context.');
+        throw TemplateRuntimeError(
+            'Attempted to invoke context function without context.');
       }
 
       positional = <Object?>[context, ...positional];
@@ -293,19 +297,20 @@ base class Environment {
       positional = <Object?>[this, ...positional];
     }
 
-    return Function.apply(function, positional, named);
+    var result = await Function.apply(function, positional, named);
+    return result;
   }
 
   /// If [name] filter not found [TemplateRuntimeError] thrown.
   @internal
-  Object? callFilter(
+  Future<Object?> callFilter(
     String name,
     List<Object?> positional, [
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
     Context? context,
-  ]) {
+  ]) async {
     if (filters[name] case var function?) {
-      return callCommon(function, positional, named, context);
+      return await callCommon(function, positional, named, context);
     }
 
     throw TemplateRuntimeError("No filter named '$name'.");
@@ -313,14 +318,14 @@ base class Environment {
 
   /// If [name] not found throws [TemplateRuntimeError].
   @internal
-  bool callTest(
+  Future<bool> callTest(
     String name,
     List<Object?> positional, [
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
     Context? context,
-  ]) {
+  ]) async {
     if (tests[name] case var function?) {
-      return callCommon(function, positional, named, context) as bool;
+      return await callCommon(function, positional, named, context) as bool;
     }
 
     throw TemplateRuntimeError("No test named '$name'.");
@@ -397,7 +402,8 @@ base class Environment {
   /// If the template does not exist a [TemplatesNotFound] exception is thrown.
   Template selectTemplate(List<Object?> names) {
     if (names.isEmpty) {
-      throw TemplatesNotFound(message: 'Tried to select from an empty list of templates.');
+      throw TemplatesNotFound(
+          message: 'Tried to select from an empty list of templates.');
     }
 
     for (var template in names) {
@@ -432,12 +438,29 @@ base class Environment {
   @protected
   static ContextFinalizer wrapFinalizer(Function function) {
     if (function is ContextFinalizer) {
-      return function;
+      return (Context context, Object? value) {
+        // Don't wrap Futures - let them pass through so AsyncRenderer can handle them
+        if (value is Future) {
+          return value;
+        }
+        var result = function(context, value);
+        if (result is Future) {
+          return result;
+        }
+        return result;
+      };
     }
 
     if (function is EnvironmentFinalizer) {
       Object? finalizer(Context context, Object? value) {
-        return function(context.environment, value);
+        if (value is Future) {
+          return value;
+        }
+        var result = function(context.environment, value);
+        if (result is Future) {
+          return result;
+        }
+        return result;
       }
 
       return finalizer;
@@ -445,7 +468,14 @@ base class Environment {
 
     if (function is Finalizer) {
       Object? finalizer(Context context, Object? value) {
-        return function(value);
+        if (value is Future) {
+          return value;
+        }
+        var result = function(value);
+        if (result is Future) {
+          return result;
+        }
+        return result;
       }
 
       return finalizer;
@@ -454,7 +484,6 @@ base class Environment {
     // Dart doesn't support union types, so we have to throw an error here.
     throw TypeError();
   }
-
 }
 
 /// {@template jinja.Template}
@@ -563,5 +592,32 @@ base class Template {
     );
 
     body.accept(const StringSinkRenderer(), context);
+  }
+
+  /// Async version of [render] that supports Future values in globals.
+  ///
+  /// All Future values in globals will be awaited before rendering.
+  /// If no arguments are given the context will be empty.
+  Future<String> renderAsync([Map<String, Object?>? data]) async {
+    var buffer = StringBuffer();
+    await renderToAsync(buffer, data);
+    return buffer.toString();
+  }
+
+  /// Async version of [renderTo] that supports Future values in globals.
+  ///
+  /// All Future values in globals will be awaited before rendering.
+  /// If no arguments are given the context will be empty.
+  Future<void> renderToAsync(StringSink sink,
+      [Map<String, Object?>? data]) async {
+    var context = AsyncRenderContext(
+      environment,
+      sink,
+      template: path,
+      parent: globals,
+      data: data,
+    );
+
+    await const AsyncRenderer().render(body, context);
   }
 }

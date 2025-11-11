@@ -44,7 +44,8 @@ abstract base class RenderContext extends Context {
 
       value[target.item] = current;
     } else {
-      throw TemplateRuntimeError('Invalid target. ${target.toString()}, current: ${current.toString()}');
+      throw TemplateRuntimeError(
+          'Invalid target. ${target.toString()}, current: ${current.toString()}');
     }
   }
 
@@ -99,7 +100,52 @@ base class StringSinkRenderContext extends RenderContext {
   }
 }
 
-base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> {
+/// Async version of StringSinkRenderContext that supports async global resolution.
+base class AsyncRenderContext extends RenderContext {
+  AsyncRenderContext(
+    super.environment,
+    this.sink, {
+    super.template,
+    super.blocks,
+    super.parent,
+    super.data,
+  });
+
+  final StringSink sink;
+
+  @override
+  AsyncRenderContext derived({
+    StringSink? sink,
+    String? template,
+    Map<String, Object?>? data,
+    bool withContext = true,
+  }) {
+    Map<String, Object?> parent;
+
+    if (withContext) {
+      parent = <String, Object?>{...this.parent, ...context};
+    } else {
+      parent = this.parent;
+    }
+
+    return AsyncRenderContext(
+      environment,
+      sink ?? this.sink,
+      template: template ?? this.template,
+      blocks: blocks,
+      parent: parent,
+      data: data,
+    );
+  }
+
+  @noInline
+  void write(Object? value) {
+    sink.write(value);
+  }
+}
+
+base class StringSinkRenderer
+    extends Visitor<StringSinkRenderContext, Object?> {
   const StringSinkRenderer();
 
   Map<String, Object?> getDataForTargets(Object? targets, Object? current) {
@@ -112,15 +158,19 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       var values = list(current);
 
       if (values.length < names.length) {
-        throw StateError('Not enough values to unpack (expected ${names.length}, '
+        throw StateError(
+            'Not enough values to unpack (expected ${names.length}, '
             'got ${values.length}).');
       }
 
       if (values.length > names.length) {
-        throw StateError('Too many values to unpack (expected ${names.length}).');
+        throw StateError(
+            'Too many values to unpack (expected ${names.length}).');
       }
 
-      return <String, Object?>{for (var i = 0; i < names.length; i++) names[i]: values[i]};
+      return <String, Object?>{
+        for (var i = 0; i < names.length; i++) names[i]: values[i]
+      };
     }
 
     // TODO(renderer): add error message
@@ -196,7 +246,9 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   List<Object?> visitArray(Array node, StringSinkRenderContext context) {
-    return <Object?>[for (var value in node.values) value.accept(this, context)];
+    return <Object?>[
+      for (var value in node.values) value.accept(this, context)
+    ];
   }
 
   @override
@@ -209,14 +261,22 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   Object? visitCall(Call node, StringSinkRenderContext context) {
     var function = node.value.accept(this, context);
     var (positional, named) = node.calling.accept(this, context) as Parameters;
-    return context.call(function, node, positional, named);
+    var result = context.call(function, node, positional, named);
+    // If the result is a Future, we need to handle it in the async renderer
+    // For now, return it as-is so the finalization layer can handle it
+    return result;
   }
 
   @override
   Parameters visitCalling(Calling node, StringSinkRenderContext context) {
-    var positional = <Object?>[for (var argument in node.arguments) argument.accept(this, context)];
+    var positional = <Object?>[
+      for (var argument in node.arguments) argument.accept(this, context)
+    ];
 
-    var named = <Symbol, Object?>{for (var (:key, :value) in node.keywords) Symbol(key): value.accept(this, context)};
+    var named = <Symbol, Object?>{
+      for (var (:key, :value) in node.keywords)
+        Symbol(key): value.accept(this, context)
+    };
 
     return (positional, named);
   }
@@ -276,7 +336,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   Map<Object?, Object?> visitDict(Dict node, StringSinkRenderContext context) {
-    return <Object?, Object?>{for (var (:key, :value) in node.pairs) key.accept(this, context): value.accept(this, context)};
+    return <Object?, Object?>{
+      for (var (:key, :value) in node.pairs)
+        key.accept(this, context): value.accept(this, context)
+    };
   }
 
   @override
@@ -297,8 +360,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     var left = node.left.accept(this, context);
 
     return switch (node.operator) {
-      LogicalOperator.and => boolean(left) ? node.right.accept(this, context) : left,
-      LogicalOperator.or => boolean(left) ? left : node.right.accept(this, context),
+      LogicalOperator.and =>
+        boolean(left) ? node.right.accept(this, context) : left,
+      LogicalOperator.or =>
+        boolean(left) ? left : node.right.accept(this, context),
     };
   }
 
@@ -348,7 +413,9 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   List<Object?> visitTuple(Tuple node, StringSinkRenderContext context) {
-    return <Object?>[for (var value in node.values) value.accept(this, context)];
+    return <Object?>[
+      for (var value in node.values) value.accept(this, context)
+    ];
   }
 
   @override
@@ -405,7 +472,8 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   @override
   void visitCallBlock(CallBlock node, StringSinkRenderContext context) {
     var function = node.call.value.accept(this, context) as MacroFunction;
-    var (positional, named) = node.call.calling.accept(this, context) as Parameters;
+    var (positional, named) =
+        node.call.calling.accept(this, context) as Parameters;
     named[#caller] = getMacroFunction(node, context);
     context.write(context.call(function, node, positional, named));
   }
@@ -538,7 +606,8 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         }
 
         if (targetMacro == null) {
-          throw TemplateRuntimeError("The '${template.path}' does not export the requested name.");
+          throw TemplateRuntimeError(
+              "The '${template.path}' does not export the requested name.");
         }
 
         MacroFunction function;
@@ -666,7 +735,8 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
       if (block.required) {
         Never callback(Context context) {
-          throw TemplateRuntimeError("Required block '${block.name}' not found.");
+          throw TemplateRuntimeError(
+              "Required block '${block.name}' not found.");
         }
 
         blocks.add(callback);
@@ -717,9 +787,13 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   void visitWith(With node, StringSinkRenderContext context) {
-    var targets = <Object?>[for (var target in node.targets) target.accept(this, context)];
+    var targets = <Object?>[
+      for (var target in node.targets) target.accept(this, context)
+    ];
 
-    var values = <Object?>[for (var value in node.values) value.accept(this, context)];
+    var values = <Object?>[
+      for (var value in node.values) value.accept(this, context)
+    ];
 
     var data = getDataForTargets(targets, values);
     var newContext = context.derived(data: data);
@@ -737,5 +811,128 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     }
 
     throw TemplateRuntimeError('Invalid slice operation.');
+  }
+}
+
+/// Custom sink that collects Futures written during rendering
+class _AsyncCollectingSink implements StringSink {
+  final StringSink _delegate;
+  final List<Future<Object?>> _futures = [];
+  final StringBuffer _buffer = StringBuffer();
+
+  _AsyncCollectingSink(this._delegate);
+
+  @override
+  void write(Object? obj) {
+    if (obj is Future) {
+      // Store the Future and write a placeholder
+      _futures.add(obj);
+      _buffer.write('__FUTURE_${_futures.length - 1}__');
+    } else {
+      _buffer.write(obj);
+    }
+  }
+
+  @override
+  void writeCharCode(int charCode) {
+    _buffer.writeCharCode(charCode);
+  }
+
+  @override
+  void writeln([Object? obj = '']) {
+    write(obj);
+    _buffer.writeln();
+  }
+
+  @override
+  void writeAll(Iterable<Object?> objects, [String separator = '']) {
+    var iterator = objects.iterator;
+    if (!iterator.moveNext()) return;
+    if (separator.isEmpty) {
+      do {
+        write(iterator.current);
+      } while (iterator.moveNext());
+    } else {
+      write(iterator.current);
+      while (iterator.moveNext()) {
+        write(separator);
+        write(iterator.current);
+      }
+    }
+  }
+
+  Future<String> getResolvedContent() async {
+    String content = _buffer.toString();
+
+    // Await all collected Futures
+    List<Object?> resolvedValues = [];
+    for (var future in _futures) {
+      try {
+        resolvedValues.add(await future);
+      } catch (e) {
+        resolvedValues.add('[Error: $e]');
+      }
+    }
+
+    // Replace placeholders with resolved values
+    for (int i = 0; i < resolvedValues.length; i++) {
+      content = content.replaceAll(
+          '__FUTURE_${i}__', resolvedValues[i]?.toString() ?? 'null');
+    }
+
+    return content;
+  }
+}
+
+/// Async renderer that supports async function calls and global resolution.
+///
+/// This renderer properly awaits Future values returned from function calls
+/// during template rendering.
+base class AsyncRenderer {
+  const AsyncRenderer();
+
+  final StringSinkRenderer _baseRenderer = const StringSinkRenderer();
+
+  /// Renders a template node asynchronously, resolving all Future values in globals and during rendering.
+  Future<void> render(TemplateNode node, AsyncRenderContext context) async {
+    // First, resolve all async values in parent (globals)
+    var resolvedGlobals = <String, Object?>{};
+    for (var entry in context.parent.entries) {
+      if (entry.value is Future) {
+        resolvedGlobals[entry.key] = await entry.value;
+      } else {
+        resolvedGlobals[entry.key] = entry.value;
+      }
+    }
+
+    // Also resolve async values in context data
+    var resolvedData = <String, Object?>{};
+    for (var entry in context.context.entries) {
+      if (entry.value is Future) {
+        resolvedData[entry.key] = await entry.value;
+      } else {
+        resolvedData[entry.key] = entry.value;
+      }
+    }
+
+    // Create a custom sink that collects Futures
+    _AsyncCollectingSink collectingSink = _AsyncCollectingSink(context.sink);
+
+    // Create a sync context with the collecting sink
+    var syncContext = StringSinkRenderContext(
+      context.environment,
+      collectingSink,
+      template: context.template,
+      blocks: context.blocks,
+      parent: resolvedGlobals,
+      data: resolvedData,
+    );
+
+    // Use the base synchronous renderer
+    _baseRenderer.visitTemplateNode(node, syncContext);
+
+    // Get the resolved content and write it to the original sink
+    String resolvedContent = await collectingSink.getResolvedContent();
+    context.sink.write(resolvedContent);
   }
 }
