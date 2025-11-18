@@ -308,7 +308,6 @@ base class Environment {
     }
 
     var result = await Function.apply(function, positional, named);
-    print('result: ${result is Future}');
     return result is Future ? await result : result;
   }
 
@@ -318,28 +317,37 @@ base class Environment {
     List<Object?> positional, [
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
     Context? context,
-  ]) async {
+  ]) {
     final filter = filters[name];
 
     if (filter == null) {
       throw TemplateRuntimeError("No filter named '$name'.");
     }
 
-    // Await any Future values in positional arguments before calling the filter
-    final resolvedPositional = <Object?>[];
-    for (var arg in positional) {
-      if (arg is Future) {
-        resolvedPositional.add(await arg);
-      } else {
-        resolvedPositional.add(arg);
-      }
+    // Check if any arguments are Futures - if so, we need to be async
+    bool hasAsyncArgs = positional.any((arg) => arg is Future);
+    
+    if (hasAsyncArgs) {
+      // Return a Future that resolves arguments then calls the filter
+      return Future(() async {
+        final resolvedPositional = <Object?>[];
+        for (var arg in positional) {
+          if (arg is Future) {
+            resolvedPositional.add(await arg);
+          } else {
+            resolvedPositional.add(arg);
+          }
+        }
+        
+        final result = Function.apply(filter, resolvedPositional, named);
+        return result is Future ? await result : result;
+      });
+    } else {
+      // No async args - call filter synchronously
+      final result = Function.apply(filter, positional, named);
+      // Still need to check if the filter itself returns a Future
+      return result;
     }
-
-    // Call the filter with resolved arguments
-    final result = Function.apply(filter, resolvedPositional, named);
-
-    // If the filter itself returns a Future, await it
-    return result is Future ? await result : result;
   }
 
   /// If [name] not found throws [TemplateRuntimeError].

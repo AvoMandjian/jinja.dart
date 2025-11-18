@@ -34,7 +34,6 @@ base class Context {
       // NOTE: This method is async, so when called from templates:
       // - Use template.renderAsync() for proper Future handling
       // - template.render() won't await this Future and will output 'Instance of Future<Object?>'
-      print('res: $res');
       return res;
     }
 
@@ -132,13 +131,12 @@ base class Context {
     return environment.getItem(name, value, node: node);
   }
 
-  Future<Object?> filter(
+  dynamic filter(
     String name, [
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
-  ]) async {
-    final res = await environment.callFilter(name, positional, named, this);
-    return res;
+  ]) {
+    return environment.callFilter(name, positional, named, this);
   }
 
   Future<bool> test(
