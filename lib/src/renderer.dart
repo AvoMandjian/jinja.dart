@@ -342,10 +342,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   }
 
   @override
-  Future<Object?> visitFilter(Filter node, StringSinkRenderContext context) async {
+  Object? visitFilter(Filter node, StringSinkRenderContext context) {
     var (positional, named) = node.calling.accept(this, context) as Parameters;
-    final res = await context.filter(node.name, positional, named);
-    return res;
+    // Return the Future without awaiting - the AsyncRenderer will handle it
+    return context.filter(node.name, positional, named);
   }
 
   @override
@@ -519,6 +519,12 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   void visitFor(For node, StringSinkRenderContext context) {
     var targets = node.target.accept(this, context);
     var iterable = node.iterable.accept(this, context);
+
+    // If iterable is a Future, write it to the sink so AsyncRenderer can handle it
+    if (iterable is Future) {
+      context.write(iterable);
+      return;
+    }
 
     if (iterable == null) {
       if (node.iterable is Name) {

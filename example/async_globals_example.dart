@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:jinja/jinja.dart';
 
@@ -345,7 +346,11 @@ void main() async {
       }
     ],
   });
-  print(result1); // Should print: Hello World!
+  try {
+    print(jsonDecode(result1)); // Should print: Hello World!
+  } catch (e) {
+    print(e);
+  }
 
   // Example 2: Multiple async globals
   print('\n=== Example 2: Multiple async globals ===');

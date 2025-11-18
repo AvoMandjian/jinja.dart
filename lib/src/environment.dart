@@ -287,7 +287,7 @@ base class Environment {
 
   /// Common filter and test caller.
   @internal
-  Future<Object?> callCommon(
+  dynamic callCommon(
     Function function,
     List<Object?> positional,
     Map<Symbol, Object?> named,
@@ -308,23 +308,38 @@ base class Environment {
     }
 
     var result = await Function.apply(function, positional, named);
-    return result;
+    print('result: ${result is Future}');
+    return result is Future ? await result : result;
   }
 
   /// If [name] filter not found [TemplateRuntimeError] thrown.
-  @internal
-  Future<Object?> callFilter(
+  dynamic callFilter(
     String name,
     List<Object?> positional, [
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
     Context? context,
   ]) async {
-    if (filters[name] case var function?) {
-      final res = await callCommon(function, positional, named, context);
-      return res;
+    final filter = filters[name];
+
+    if (filter == null) {
+      throw TemplateRuntimeError("No filter named '$name'.");
     }
 
-    throw TemplateRuntimeError("No filter named '$name'.");
+    // Await any Future values in positional arguments before calling the filter
+    final resolvedPositional = <Object?>[];
+    for (var arg in positional) {
+      if (arg is Future) {
+        resolvedPositional.add(await arg);
+      } else {
+        resolvedPositional.add(arg);
+      }
+    }
+
+    // Call the filter with resolved arguments
+    final result = Function.apply(filter, resolvedPositional, named);
+
+    // If the filter itself returns a Future, await it
+    return result is Future ? await result : result;
   }
 
   /// If [name] not found throws [TemplateRuntimeError].
