@@ -182,8 +182,15 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     MacroCall node,
     StringSinkRenderContext context,
   ) {
-    String macro(List<Object?> positional, Map<Object?, Object?> named) {
-      var buffer = StringBuffer();
+    Object? macro(List<Object?> positional, Map<Object?, Object?> named) {
+      // Use the same sink type as context to preserve async behavior
+      StringSink buffer;
+      if (context.sink is _AsyncCollectingSink) {
+        // For async contexts, use a new collecting sink
+        buffer = _AsyncCollectingSink(StringBuffer());
+      } else {
+        buffer = StringBuffer();
+      }
       var derived = context.derived(sink: buffer);
 
       var index = 0;
@@ -237,6 +244,11 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       }
 
       node.body.accept(this, derived);
+      
+      // If buffer is an async collecting sink, return a Future that resolves it
+      if (buffer is _AsyncCollectingSink) {
+        return buffer.getResolvedContent();
+      }
       return buffer.toString();
     }
 
@@ -600,7 +612,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     };
 
     for (var (name, alias) in node.names) {
-      String macro(List<Object?> positional, Map<Object?, Object?> named) {
+      Object? macro(List<Object?> positional, Map<Object?, Object?> named) {
         Macro? targetMacro;
 
         for (var macro in template.body.macros) {

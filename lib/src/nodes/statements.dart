@@ -196,7 +196,7 @@ final class If extends Statement {
   }
 }
 
-typedef MacroFunction = String Function(
+typedef MacroFunction = Object? Function(
   List<Object?> positional,
   Map<Symbol, Object?> named,
 );
