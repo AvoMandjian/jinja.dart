@@ -1,10 +1,12 @@
-import 'dart:convert' show LineSplitter;
+import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:collection/collection.dart';
+import 'package:intl/intl.dart';
 import 'package:textwrap/textwrap.dart' show TextWrapper;
-import 'package:textwrap/utils.dart';
 
 import 'environment.dart';
+import 'exceptions.dart';
 import 'runtime.dart';
 import 'utils.dart' as utils;
 
@@ -28,10 +30,6 @@ Iterable<Object> _prepareAttributeParts(Object? attribute) sync* {
 
 /// Returns a callable that looks up the given attribute from a
 /// passed object with the rules of the environment.
-///
-/// Dots are allowed to access attributes of attributes.
-/// Integer parts in paths are looked up as integers.
-// TODO(filters): add postprocess
 Object? Function(Object? object) makeAttributeGetter(
   Environment environment,
   Object attribute, {
@@ -69,26 +67,14 @@ Object? Function(Object?) makeItemGetter(
   return getter;
 }
 
-/// Replace the characters `&`, `<`, `>`, `'`, and `"`
-/// in the string with HTML-safe sequences.
-///
-/// Use this if you need to display text that might contain such characters in HTML.
 String doEscape(String value) {
   return utils.escape(value);
 }
 
-/// A string representation of this object.
 String doString(Object? value) {
   return value.toString();
 }
 
-/// Return a copy of the value with all occurrences of a substring
-/// replaced with a new one.
-///
-/// The first argument is the substring that should be replaced,
-/// the second is the replacement string.
-/// If the optional third argument [count] is given, only the first
-/// `count` occurrences are replaced.
 String doReplace(
   String value,
   String from,
@@ -143,48 +129,35 @@ String doRegexReplace(
   String to,
 ) {
   RegExp regex = RegExp(from);
-
-  var decodedString = value.replaceAll(regex, to);
-
-  return decodedString;
+  return value.replaceAll(regex, to);
 }
 
-/// Convert a value to uppercase.
 String doUpper(String value) {
   return value.toUpperCase();
 }
 
-/// Convert a value to lowercase.
 String doLower(String value) {
   return value.toLowerCase();
 }
 
-/// Return an iterator over the `[key, value]` items of a mapping.
 Iterable<List<Object?>> doItems(Map<Object?, Object?>? value) {
   if (value == null) {
     return Iterable<List<Object?>>.empty();
   }
-
   return value.entries.map<List<Object?>>(utils.pair);
 }
 
-/// Capitalize a value. The first character will be uppercase,
-/// all others lowercase.
 String doCapitalize(String value) {
   return utils.capitalize(value);
 }
 
-/// Capitalize a value. The first character will be uppercase,
-/// all others lowercase.
 String doTitle(String value) {
   if (value.isEmpty) {
     return '';
   }
-
-  return _wordBeginningSplitRe.split(value).map<String>(utils.capitalize).join();
+  return value.split(_wordBeginningSplitRe).map<String>(utils.capitalize).join();
 }
 
-/// Sort a dict and return `[key, value]` pairs.
 List<Object?> doDictSort(
   Map<Object?, Object?> dict, {
   bool caseSensetive = false,
@@ -201,7 +174,6 @@ List<Object?> doDictSort(
   };
 
   var order = reverse ? -1 : 1;
-
   var entities = dict.entries.map<List<Object?>>(utils.pair).toList();
 
   Comparable<Object?> Function(List<Object?> values) get;
@@ -211,11 +183,9 @@ List<Object?> doDictSort(
   } else {
     get = (values) {
       var value = values[position];
-
       if (value case String string) {
         return string.toLowerCase();
       }
-
       return value as Comparable<Object?>;
     };
   }
@@ -228,8 +198,52 @@ List<Object?> doDictSort(
   return entities;
 }
 
-/// If the value is null it will return the passed default value,
-/// otherwise the value of the variable.
+List<Object?> doSort(
+  Environment environment,
+  Iterable<Object?> value, {
+  bool reverse = false,
+  bool caseSensitive = false,
+  Object? attribute,
+}) {
+  var list = List<Object?>.from(value);
+
+  if (attribute != null) {
+    var getter = makeAttributeGetter(environment, attribute);
+    list.sort((a, b) {
+      var valA = getter(a);
+      var valB = getter(b);
+      return _compare(valA, valB, caseSensitive);
+    });
+  } else {
+    list.sort((a, b) => _compare(a, b, caseSensitive));
+  }
+
+  if (reverse) {
+    return list.reversed.toList();
+  }
+
+  return list;
+}
+
+int _compare(Object? a, Object? b, bool caseSensitive) {
+  if (a == null && b == null) return 0;
+  if (a == null) return -1;
+  if (b == null) return 1;
+
+  if (a is String && b is String && !caseSensitive) {
+    return a.toLowerCase().compareTo(b.toLowerCase());
+  }
+
+  if (a is Comparable && b is Comparable) {
+    try {
+      return a.compareTo(b);
+    } catch (_) {
+    }
+  }
+  
+  return a.toString().compareTo(b.toString());
+}
+
 Object? doDefault(
   Object? value, [
   Object? defaultValue = '',
@@ -238,66 +252,52 @@ Object? doDefault(
   if (asBool) {
     return utils.boolean(value) ? value : defaultValue;
   }
-
   return value ?? defaultValue;
 }
 
-/// Return a string which is the concatenation of the strings in the
-/// sequence.
-///
-/// The separator between elements is an empty string per
-/// default, you can define it with the optional parameter
 Object doJoin(
   Iterable<Object?> values, [
   String delimiter = '',
+  Object? attribute,
 ]) {
   return values.join(delimiter);
 }
 
-/// Centers the value in a field of a given width.
 String doCenter(String value, int width) {
   if (value.length >= width) {
     return value;
   }
-
   var padLength = (width - value.length) ~/ 2;
   var pad = ' ' * padLength;
   return pad + value + pad;
 }
 
-/// Return the first item of a sequence.
 Object? doFirst(Object? values) {
   var list = utils.list(values);
+  if (list.isEmpty) return null;
   return list.first;
 }
 
-/// Return the last item of a sequence.
 Object? doLast(Object? values) {
   var list = utils.list(values);
+  if (list.isEmpty) return null;
   return list.last;
 }
 
-/// Return a random item from the sequence.
 Object? doRandom(Environment environment, Object? value) {
   if (value == null) {
     return null;
   }
-
   var values = utils.list(value);
+  if (values.isEmpty) return null;
   var index = environment.random.nextInt(values.length);
   var result = values[index];
-
   if (value case Map<Object?, Object?> map) {
     return map[result];
   }
-
   return result;
 }
 
-/// Format the value like a 'human-readable' file size (i.e. 13 kB, 4.1 MB, 102 Bytes, etc).
-///
-/// Per default decimal prefixes are used (Mega, Giga, etc.), if the second
-/// parameter is set to True the binary prefixes are used (Mebi, Gibi).
 String doFileSizeFormat(Object? value, [bool binary = false]) {
   const suffixes = <List<String>>[
     <String>[' KiB', ' kB'],
@@ -324,11 +324,9 @@ String doFileSizeFormat(Object? value, [bool binary = false]) {
 
   if (bytes < base) {
     var size = bytes.toStringAsFixed(1);
-
     if (size.endsWith('.0')) {
       return '${size.substring(0, size.length - 2)} Bytes';
     }
-
     return '$size Bytes';
   }
 
@@ -337,7 +335,6 @@ String doFileSizeFormat(Object? value, [bool binary = false]) {
 
   for (var i = 0; i < suffixes.length; i += 1) {
     unit = math.pow(base, i + 2);
-
     if (bytes < unit) {
       return (base * bytes / unit).toStringAsFixed(1) + suffixes[i][k];
     }
@@ -346,15 +343,6 @@ String doFileSizeFormat(Object? value, [bool binary = false]) {
   return (base * bytes / unit).toStringAsFixed(1) + suffixes.last[k];
 }
 
-/// Return a truncated copy of the string.
-///
-/// The length is specified with the first parameter which defaults to `255`.
-/// If the second parameter is `true` the filter will cut the text at length.
-/// Otherwise it will discard the last word. If the text was in fact truncated
-/// it will append an ellipsis sign (`"..."`). If you want a different ellipsis
-/// sign than `"..."` you can specify it using the third parameter. Strings
-/// that only exceed the length by the tolerance margin given in the fourth
-/// parameter will not be truncated.
 String doTruncate(
   String value, [
   int length = 255,
@@ -387,9 +375,6 @@ String doTruncate(
   return substring.substring(0, found) + end;
 }
 
-/// Wrap a string to the given width.
-///
-/// Existing newlines are treated as paragraphs to be wrapped separately.
 String doWordWrap(
   Environment environment,
   String value,
@@ -410,52 +395,42 @@ String doWordWrap(
   return const LineSplitter().convert(value).expand<String>(wrapper.wrap).join(wrap);
 }
 
-/// Count the words in that string.
 int doWordCount(Object? value) {
   var matches = _wordRe.allMatches(value.toString());
   return matches.length;
 }
 
-/// Convert the value into an integer.
-///
-/// If the conversion doesn’t work it will return null.
-int doInteger(String value, {int defaultValue = 0, int base = 10}) {
-  return int.tryParse(value, radix: base) ?? defaultValue;
+int doInteger(Object? value, {int defaultValue = 0, int base = 10}) {
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is String) return int.tryParse(value, radix: base) ?? defaultValue;
+  return defaultValue;
 }
 
-/// Convert the value into a floating point number.
-///
-/// If the conversion doesn’t work it will return null.
-double doFloat(String value, [double defaultValue = 0.0]) {
-  return double.tryParse(value) ?? defaultValue;
+double doFloat(Object? value, [double defaultValue = 0.0]) {
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? defaultValue;
+  return defaultValue;
 }
 
-/// Return the absolute value of the argument.
 num doAbs(num number) {
   return number.abs();
 }
 
-/// Strip leading and trailing characters, by default whitespace.
 String doTrim(String value, [String? characters]) {
   if (characters == null) {
     return value.trim();
   }
-
   var left = RegExp('^[$characters]+', multiLine: true);
   var right = RegExp('[$characters]+\$', multiLine: true);
   return value.replaceAll(left, '').replaceAll(right, '');
 }
 
-/// Strip SGML/XML tags and replace adjacent whitespace by one space.
 String doStripTags(String value) {
   return utils.stripTags(value);
 }
 
-/// Slice an iterator and return a list of lists containing
-/// those items.
-///
-/// Useful if you want to create a div containing
-/// three ul tags that represent columns.
 List<List<Object?>> doSlice(Object? value, int slices, [Object? fillWith]) {
   var result = <List<Object?>>[];
   var values = utils.list(value);
@@ -465,29 +440,19 @@ List<List<Object?>> doSlice(Object? value, int slices, [Object? fillWith]) {
 
   for (var i = 0, offset = 0; i < slices; i += 1) {
     var start = offset + i * perSlice;
-
     if (i < withExtra) {
       offset += 1;
     }
-
     var end = offset + (i + 1) * perSlice;
     var tmp = values.sublist(start, end);
-
     if (fillWith != null && i >= withExtra) {
       tmp.add(fillWith);
     }
-
     result.add(tmp);
   }
-
   return result;
 }
 
-/// A filter that batches items.
-///
-/// It works pretty much like slice just the other way round. It returns
-/// a list of lists with the given number of items. If you provide
-/// a second parameter this is used to fill up missing items.
 List<List<Object?>> doBatch(
   Iterable<Object?> items,
   int lineCount, [
@@ -501,7 +466,6 @@ List<List<Object?>> doBatch(
       result.add(temp);
       temp = <Object?>[];
     }
-
     temp.add(item);
   }
 
@@ -509,41 +473,41 @@ List<List<Object?>> doBatch(
     if (fillWith != null) {
       temp += List<Object?>.filled(lineCount - temp.length, fillWith);
     }
-
     result.add(temp);
   }
-
   return result;
 }
 
-/// Return the number of items in a container.
 int? doLength(dynamic object) {
   try {
-    // TODO(dynamic): dynamic invocation
+    if (object == null) return 0;
+    if (object is String) return object.length;
+    if (object is Iterable) return object.length;
+    if (object is Map) return object.length;
     // ignore: avoid_dynamic_calls
     return object.length as int;
   } on NoSuchMethodError {
-    return null;
+    return 0;
   }
 }
 
-/// Returns the sum of a sequence of numbers plus the value of parameter
-/// `start`.
-///
-/// When the sequence is empty it returns start.
-dynamic doSum(Iterable<Object?> values, [num start = 0]) {
+dynamic doSum(
+  Environment environment,
+  Iterable<Object?> values, {
+  Object? attribute,
+  num start = 0,
+}) {
+  if (attribute != null) {
+    var getter = makeAttributeGetter(environment, attribute);
+    values = values.map(getter);
+  }
   return values.cast<dynamic>().fold<dynamic>(start, utils.sum);
 }
 
-/// Convert the value into a list.
-///
-/// If it was a string the returned list will be a list of characters.
 List<Object?> doList(Object? object) {
   return utils.list(object);
 }
 
-/// Reverse the object or return an iterator that iterates over it the other
-/// way round.
 Object? doReverse(Object? value) {
   var values = utils.list(value);
   return values.reversed;
@@ -556,50 +520,29 @@ Object? Function(Object? object) _prepareMap(
 ) {
   if (positional.isEmpty) {
     if (named.remove('attribute') case String attribute?) {
-      var defaultValue = named.remove('defaultValue');
-
+      var defaultValue = named.remove('default');
       if (named.isNotEmpty) {
         var first = named.keys.first;
         throw ArgumentError.value(named[first], first, 'Unexpected keyword argument.');
       }
-
       return makeAttributeGetter(context.environment, attribute, defaultValue: defaultValue);
-    }
-
-    if (named.remove('item') case Object item?) {
-      var defaultValue = named.remove('defaultValue');
-
-      if (named.isNotEmpty) {
-        var first = named.keys.first;
-        throw ArgumentError.value(named[first], first, 'Unexpected keyword argument.');
-      }
-
-      return makeItemGetter(context.environment, item, defaultValue: defaultValue);
     }
   }
 
   try {
-    // TODO(filters): catch cast error or not?
     var name = positional.first as String;
     positional = positional.sublist(1);
-
     var symbols = <Symbol, Object?>{for (var MapEntry(:key, :value) in named.entries) Symbol(key): value};
 
     Future<Object?>? getter(Object? object) async {
       return context.filter(name, <Object?>[object, ...positional], symbols);
     }
-
     return getter;
   } on RangeError {
     throw ArgumentError('Map requires a filter argument.', 'filter');
   }
 }
 
-/// Applies a filter on a sequence of objects or looks up an attribute.
-/// This is useful when dealing with lists of objects but you are really
-/// only interested in a certain value of it.
-///
-/// The basic usage is mapping on an attribute or item.
 Iterable<Object?> doMap(
   Context context,
   Iterable<Object?>? values,
@@ -608,105 +551,657 @@ Iterable<Object?> doMap(
 ) sync* {
   if (values != null) {
     var func = _prepareMap(context, positional, named.cast<String, Object?>());
-
     for (var value in values) {
       yield func(value);
     }
   }
 }
 
-/// Get an attribute of an object.
-///
-/// `foo | attr('bar')` works like `foo.bar`.
 Object? doAttribute(Environment environment, Object? value, String attribute) {
   return environment.getAttribute(attribute, value, node: environment);
 }
 
-/// Get an item of an object.
-///
-/// `foo | item('bar')` works like `foo['bar']`.
 Object? doItem(Environment environment, Object? value, Object item) {
   return environment.getItem(item, value, node: environment);
 }
 
-/// Serialize an object to a string of JSON, and mark it safe to render in
-/// HTML.
-///
-/// This filter is only for use in HTML documents.
-///
-/// {@template jinja.safestring}
-/// The returned string is safe to render in HTML documents and `<script>` tags.
-/// The exception is in HTML attributes that are double quoted; either use
-/// single quotes or the `|forceescape` filter.
-/// {@endtemplate}
-String doToJson(Object? value, [String? indent]) {
-  return utils.htmlSafeJsonEncode(value, indent);
+String doToJson(Object? value, [bool? indent]) {
+  return utils.htmlSafeJsonEncode(value, indent == true ? '  ' : null);
 }
 
-/// Return the runtime type of an object.
-///
-/// Useful for debugging. Not recommended for production use.
 String doRuntimeType(dynamic object) {
   return object.runtimeType.toString();
 }
 
+String doUrlEncode(Object? value) {
+  if (value == null) return '';
+  if (value is Map) {
+    var parts = <String>[];
+    for (var entry in value.entries) {
+      parts.add('${Uri.encodeQueryComponent(entry.key.toString())}=${Uri.encodeQueryComponent(entry.value.toString())}');
+    }
+    return parts.join('&');
+  }
+  return Uri.encodeQueryComponent(value.toString());
+}
+
+String doXmlAttr(Map<Object?, Object?>? d, {bool autospace = true}) {
+  if (d == null) return '';
+  var parts = <String>[];
+  for (var entry in d.entries) {
+    if (entry.value == null) continue;
+    parts.add('${entry.key}="${utils.escape(entry.value.toString())}"');
+  }
+  var result = parts.join(' ');
+  return (autospace && result.isNotEmpty) ? ' $result' : result;
+}
+
+List<Object?> doUnique(
+  Environment environment,
+  Iterable<Object?> value, {
+  bool caseSensitive = false,
+  Object? attribute,
+}) {
+  var list = List<Object?>.from(value);
+  if (attribute != null) {
+    var getter = makeAttributeGetter(environment, attribute);
+    var seen = <Object?>{};
+    var result = <Object?>[];
+    for (var item in list) {
+      var key = getter(item);
+      if (caseSensitive == false && key is String) {
+        key = key.toLowerCase();
+      }
+      if (seen.add(key)) {
+        result.add(item);
+      }
+    }
+    return result;
+  } else {
+    if (caseSensitive == false) {
+      var seen = <Object?>{};
+      var result = <Object?>[];
+      for (var item in list) {
+        var key = item;
+        if (key is String) key = key.toLowerCase();
+        if (seen.add(key)) {
+          result.add(item);
+        }
+      }
+      return result;
+    }
+    return list.toSet().toList();
+  }
+}
+
+Object? doMin(
+  Environment environment,
+  Iterable<Object?> value, {
+  bool caseSensitive = false,
+  Object? attribute,
+}) {
+  if (value.isEmpty) return null;
+  var sorted = doSort(environment, value, caseSensitive: caseSensitive, attribute: attribute);
+  return sorted.first;
+}
+
+Object? doMax(
+  Environment environment,
+  Iterable<Object?> value, {
+  bool caseSensitive = false,
+  Object? attribute,
+}) {
+  if (value.isEmpty) return null;
+  var sorted = doSort(environment, value, caseSensitive: caseSensitive, attribute: attribute);
+  return sorted.last;
+}
+
+List<Object?> doIntersect(Iterable<Object?> value, Iterable<Object?> other) {
+  var set1 = value.toSet();
+  var set2 = other.toSet();
+  return set1.intersection(set2).toList();
+}
+
+List<Object?> doDifference(Iterable<Object?> value, Iterable<Object?> other) {
+  var set1 = value.toSet();
+  var set2 = other.toSet();
+  return set1.difference(set2).toList();
+}
+
+String doPPrint(Object? value) {
+  const encoder = JsonEncoder.withIndent('  ');
+  return encoder.convert(value);
+}
+
+Object? doFromJson(String value) {
+  return json.decode(value);
+}
+
+String doBase64Encode(Object? value) {
+  if (value is List<int>) {
+    return base64.encode(value);
+  }
+  return base64.encode(utf8.encode(value.toString()));
+}
+
+String doBase64Decode(String value) {
+  return utf8.decode(base64.decode(value));
+}
+
+String doSlugify(String value) {
+  value = value.toLowerCase().trim();
+  value = value.replaceAll(RegExp(r'[^a-z0-9\s-]'), '');
+  value = value.replaceAll(RegExp(r'[\s-]+'), '-');
+  return value;
+}
+
+String doUrlize(
+  String value, {
+  int trimUrlLimit = 0,
+  bool nofollow = false,
+  String? target,
+  String rel = '',
+}) {
+  final urlRegex = RegExp(r'https?://[^\s<]+');
+  return value.replaceAllMapped(urlRegex, (match) {
+    var url = match.group(0)!;
+    var displayUrl = url;
+    if (trimUrlLimit > 0 && url.length > trimUrlLimit) {
+      displayUrl = '${url.substring(0, trimUrlLimit - 3)}...';
+    }
+    var relAttr = rel.isNotEmpty ? ' rel="$rel"' : '';
+    if (nofollow) {
+      relAttr = ' rel="nofollow$relAttr"';
+    }
+    var targetAttr = target != null ? ' target="$target"' : '';
+    return '<a href="$url"$targetAttr$relAttr>$displayUrl</a>';
+  });
+}
+
+String doIndent(String value, [int width = 4, bool first = false, bool blank = false]) {
+  var indent = ' ' * width;
+  var lines = const LineSplitter().convert(value);
+  var buffer = StringBuffer();
+  
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    if (i == 0 && !first) {
+      buffer.writeln(line);
+    } else {
+      if (line.isEmpty && !blank) {
+        buffer.writeln(line);
+      } else {
+        buffer.writeln('$indent$line');
+      }
+    }
+  }
+  var result = buffer.toString();
+  if (result.endsWith('\n') && !value.endsWith('\n')) {
+    return result.substring(0, result.length - 1);
+  }
+  return result;
+}
+
+String doQuote(Object? value) {
+  return '"$value"';
+}
+
+String doStrftime(Object? value, [String format = 'yyyy-MM-dd']) {
+  DateTime? date;
+  if (value is DateTime) {
+    date = value;
+  } else if (value is String) {
+    date = DateTime.tryParse(value);
+  }
+  if (date == null) return value.toString();
+  try {
+    return DateFormat(format).format(date);
+  } catch (e) {
+    return date.toString();
+  }
+}
+
+num doIncrement(num value) {
+  return value + 1;
+}
+
+num doRound(num value, [int precision = 0, String method = 'common']) {
+  if (method == 'common') {
+    if (precision == 0) return value.round();
+    var mod = math.pow(10, precision);
+    return (value * mod).round() / mod;
+  } else if (method == 'ceil') {
+    if (precision == 0) return value.ceil();
+    var mod = math.pow(10, precision);
+    return (value * mod).ceil() / mod;
+  } else if (method == 'floor') {
+    if (precision == 0) return value.floor();
+    var mod = math.pow(10, precision);
+    return (value * mod).floor() / mod;
+  }
+  return value;
+}
+
+num doRoundToEven(num value) {
+  var integer = value.truncate();
+  var decimal = (value - integer).abs();
+  if (decimal == 0.5) {
+    return integer.isEven ? integer : integer + (value.sign.toInt());
+  }
+  return value.round();
+}
+
+Map<Object?, List<Object?>> doGroupBy(
+  Environment environment,
+  Iterable<Object?> value,
+  Object attribute,
+) {
+  var getter = makeAttributeGetter(environment, attribute);
+  return groupBy(value, (item) => getter(item));
+}
+
+Object doSelect(
+  Context context,
+  Iterable<Object?> value,
+  String testName, [
+  List<Object?>? args,
+]) {
+  var test = context.environment.tests[testName];
+  if (test == null) throw TemplateRuntimeError("No test named '$testName'.");
+  
+  var positionalArgs = args ?? const [];
+  
+  Function func;
+  bool needsContext = false;
+  bool needsEnvironment = false;
+
+  if (test is utils.ContextFilter) {
+    func = test.function;
+    needsContext = true;
+  } else if (test is utils.EnvFilter) {
+    func = test.function;
+    needsEnvironment = true;
+  } else if (test is Function) {
+    func = test;
+  } else {
+    throw TemplateRuntimeError('Test "$testName" is not a function.');
+  }
+
+  List<Object?> getPositional(Object? item) {
+    var positional = [item, ...positionalArgs];
+    if (needsContext) {
+       return [context, ...positional];
+    } else if (needsEnvironment) {
+       return [context.environment, ...positional];
+    }
+    return positional;
+  }
+
+  var results = <Object?>[];
+  bool isAsync = false;
+
+  for (var item in value) {
+    var result = Function.apply(func, getPositional(item));
+    if (result is Future) {
+      isAsync = true;
+      break;
+    }
+    if (result == true) {
+      results.add(item);
+    }
+  }
+  
+  if (isAsync) {
+    return _doSelectAsync(context, value, testName, args);
+  }
+  return results;
+}
+
+Future<List<Object?>> _doSelectAsync(
+  Context context,
+  Iterable<Object?> value,
+  String testName, [
+  List<Object?>? args,
+]) async {
+  var test = context.environment.tests[testName]!;
+  var results = <Object?>[];
+  for (var item in value) {
+     var result = await context.environment.callCommon(test, [item, ...?args], const {}, context);
+     if (result == true) results.add(item);
+  }
+  return results;
+}
+
+Object doReject(
+  Context context,
+  Iterable<Object?> value,
+  String testName, [
+  List<Object?>? args,
+]) {
+  var test = context.environment.tests[testName];
+  if (test == null) throw TemplateRuntimeError("No test named '$testName'.");
+  
+  var positionalArgs = args ?? const [];
+  
+  Function func;
+  bool needsContext = false;
+  bool needsEnvironment = false;
+
+  if (test is utils.ContextFilter) {
+    func = test.function;
+    needsContext = true;
+  } else if (test is utils.EnvFilter) {
+    func = test.function;
+    needsEnvironment = true;
+  } else if (test is Function) {
+    func = test;
+  } else {
+    throw TemplateRuntimeError('Test "$testName" is not a function.');
+  }
+
+  List<Object?> getPositional(Object? item) {
+    var positional = [item, ...positionalArgs];
+    if (needsContext) {
+       return [context, ...positional];
+    } else if (needsEnvironment) {
+       return [context.environment, ...positional];
+    }
+    return positional;
+  }
+
+  var results = <Object?>[];
+  bool isAsync = false;
+
+  for (var item in value) {
+    var result = Function.apply(func, getPositional(item));
+    if (result is Future) {
+      isAsync = true;
+      break;
+    }
+    if (result == false) {
+      results.add(item);
+    }
+  }
+  
+  if (isAsync) {
+    return _doRejectAsync(context, value, testName, args);
+  }
+  return results;
+}
+
+Future<List<Object?>> _doRejectAsync(
+  Context context,
+  Iterable<Object?> value,
+  String testName, [
+  List<Object?>? args,
+]) async {
+  var test = context.environment.tests[testName]!;
+  var results = <Object?>[];
+  for (var item in value) {
+     var result = await context.environment.callCommon(test, [item, ...?args], const {}, context);
+     if (result == false) results.add(item);
+  }
+  return results;
+}
+
+Object doSelectAttr(
+  Context context,
+  Iterable<Object?> value,
+  Object attribute, [
+  String? testName,
+  List<Object?>? args,
+]) {
+  testName ??= 'defined';
+  var test = context.environment.tests[testName];
+  if (test == null) throw TemplateRuntimeError("No test named '$testName'.");
+  
+  var getter = makeAttributeGetter(context.environment, attribute);
+  var positionalArgs = args ?? const [];
+  
+  Function func;
+  bool needsContext = false;
+  bool needsEnvironment = false;
+
+  if (test is utils.ContextFilter) {
+    func = test.function;
+    needsContext = true;
+  } else if (test is utils.EnvFilter) {
+    func = test.function;
+    needsEnvironment = true;
+  } else if (test is Function) {
+    func = test;
+  } else {
+    throw TemplateRuntimeError('Test "$testName" is not a function.');
+  }
+
+  List<Object?> getPositional(Object? attrVal) {
+    var positional = [attrVal, ...positionalArgs];
+    if (needsContext) {
+       return [context, ...positional];
+    } else if (needsEnvironment) {
+       return [context.environment, ...positional];
+    }
+    return positional;
+  }
+
+  var results = <Object?>[];
+  bool isAsync = false;
+
+  for (var item in value) {
+    var attrVal = getter(item);
+    var result = Function.apply(func, getPositional(attrVal));
+    if (result is Future) {
+      isAsync = true;
+      break;
+    }
+    if (result == true) {
+      results.add(item);
+    }
+  }
+  
+  if (isAsync) {
+    return _doSelectAttrAsync(context, value, attribute, testName, args);
+  }
+  return results;
+}
+
+Future<List<Object?>> _doSelectAttrAsync(
+  Context context,
+  Iterable<Object?> value,
+  Object attribute, [
+  String? testName,
+  List<Object?>? args,
+]) async {
+  var test = context.environment.tests[testName!]!;
+  var getter = makeAttributeGetter(context.environment, attribute);
+  var results = <Object?>[];
+  for (var item in value) {
+     var attrVal = getter(item);
+     var result = await context.environment.callCommon(test, [attrVal, ...?args], const {}, context);
+     if (result == true) results.add(item);
+  }
+  return results;
+}
+
+Object doRejectAttr(
+  Context context,
+  Iterable<Object?> value,
+  Object attribute, [
+  String? testName,
+  List<Object?>? args,
+]) {
+  testName ??= 'defined';
+  var test = context.environment.tests[testName];
+  if (test == null) throw TemplateRuntimeError("No test named '$testName'.");
+  
+  var getter = makeAttributeGetter(context.environment, attribute);
+  var positionalArgs = args ?? const [];
+  
+  Function func;
+  bool needsContext = false;
+  bool needsEnvironment = false;
+
+  if (test is utils.ContextFilter) {
+    func = test.function;
+    needsContext = true;
+  } else if (test is utils.EnvFilter) {
+    func = test.function;
+    needsEnvironment = true;
+  } else if (test is Function) {
+    func = test;
+  } else {
+    throw TemplateRuntimeError('Test "$testName" is not a function.');
+  }
+
+  List<Object?> getPositional(Object? attrVal) {
+    var positional = [attrVal, ...positionalArgs];
+    if (needsContext) {
+       return [context, ...positional];
+    } else if (needsEnvironment) {
+       return [context.environment, ...positional];
+    }
+    return positional;
+  }
+
+  var results = <Object?>[];
+  bool isAsync = false;
+
+  for (var item in value) {
+    var attrVal = getter(item);
+    var result = Function.apply(func, getPositional(attrVal));
+    if (result is Future) {
+      isAsync = true;
+      break;
+    }
+    if (result == false) {
+      results.add(item);
+    }
+  }
+  
+  if (isAsync) {
+    return _doRejectAttrAsync(context, value, attribute, testName, args);
+  }
+  return results;
+}
+
+Future<List<Object?>> _doRejectAttrAsync(
+  Context context,
+  Iterable<Object?> value,
+  Object attribute, [
+  String? testName,
+  List<Object?>? args,
+]) async {
+  var test = context.environment.tests[testName!]!;
+  var getter = makeAttributeGetter(context.environment, attribute);
+  var results = <Object?>[];
+  for (var item in value) {
+     var attrVal = getter(item);
+     var result = await context.environment.callCommon(test, [attrVal, ...?args], const {}, context);
+     if (result == false) results.add(item);
+  }
+  return results;
+}
+
+Map<Object?, Object?> doCombine(Map<Object?, Object?> value, Map<Object?, Object?> other) {
+  return {...value, ...other};
+}
+
+List<Object?> doShuffle(Environment environment, Iterable<Object?> value) {
+  var list = List<Object?>.from(value);
+  list.shuffle(environment.random);
+  return list;
+}
+
+bool doBool(Object? value) => utils.boolean(value);
+int doInt(Object? value, [int defaultVal = 0, int base = 10]) => doInteger(value, defaultValue: defaultVal, base: base);
+double doFloatFilter(Object? value, [double defaultVal = 0.0]) => doFloat(value, defaultVal);
+
+String doRegexReplaceFilter(String value, String pattern, String replacement, {bool ignoreCase = false}) {
+  return value.replaceAll(RegExp(pattern, caseSensitive: !ignoreCase), replacement);
+}
+
+Object? doRegexSearch(String value, String pattern, {bool ignoreCase = false}) {
+  return RegExp(pattern, caseSensitive: !ignoreCase).firstMatch(value)?.group(0);
+}
+
+List<String> doRegexFindall(String value, String pattern, {bool ignoreCase = false}) {
+  return RegExp(pattern, caseSensitive: !ignoreCase).allMatches(value).map((m) => m.group(0)!).toList();
+}
+
 /// Filters map.
-final Map<String, Function> filters = <String, Function>{
+final Map<String, Object> filters = <String, Object>{
   'e': doEscape,
   'escape': doEscape,
   'string': doString,
-  // 'urlencode': doURLEncode,
+  'urlencode': doUrlEncode,
   'replace': doReplace,
   'replace_each': doReplaceEach,
-  'regex_replace': doRegexReplace,
+  'regex_replace': doRegexReplaceFilter,
   'upper': doUpper,
   'lower': doLower,
   'items': doItems,
-  // 'xmlattr': passContext(doXMLAttr),
+  'xmlattr': doXmlAttr,
   'capitalize': doCapitalize,
   'title': doTitle,
   'dictsort': doDictSort,
-  // 'sort': passEnvironment(doSort),
-  // 'unique': passEnvironment(doUnique),
-  // 'min': passEnvironment(doMin),
-  // 'max': passEnvironment(doMax),
+  'sort': utils.EnvFilter(doSort),
+  'unique': utils.EnvFilter(doUnique),
+  'min': utils.EnvFilter(doMin),
+  'max': utils.EnvFilter(doMax),
   'd': doDefault,
   'default': doDefault,
   'join': doJoin,
   'center': doCenter,
   'first': doFirst,
   'last': doLast,
-  'random': passEnvironment(doRandom),
+  'random': utils.EnvFilter(doRandom),
   'filesizeformat': doFileSizeFormat,
-  // 'pprint': doPPrint,
-  // 'urlize': passContext(doUrlize),
-  // 'indent': doIndent,
+  'pprint': doPPrint,
+  'urlize': doUrlize,
+  'indent': doIndent,
   'truncate': doTruncate,
-  'wordwrap': passEnvironment(doWordWrap),
+  'wordwrap': utils.EnvFilter(doWordWrap),
   'wordcount': doWordCount,
-  'int': doInteger,
-  'float': doFloat,
+  'int': doInt,
+  'float': doFloatFilter,
   'abs': doAbs,
   // 'format': doFormat,
   'trim': doTrim,
   'striptags': doStripTags,
   'slice': doSlice,
   'batch': doBatch,
-  // 'round': doRound,
-  // 'groupby': passEnvironment(doGroupBy),
+  'round': doRound,
+  'round_to_even': doRoundToEven,
+  'groupby': utils.EnvFilter(doGroupBy),
   'count': doLength,
   'length': doLength,
-  'sum': doSum,
+  'sum': utils.EnvFilter(doSum),
   'list': doList,
   'reverse': doReverse,
-  'attr': passEnvironment(doAttribute),
-  'item': passEnvironment(doItem),
-  'map': passContext(doMap),
-  // 'select': passContext(doSelect),
-  // 'reject': passContext(doReject),
-  // 'selectattr': passContext(doSelectAttr),
-  // 'rejectattr': passContext(doRejectAttr),
+  'attr': utils.EnvFilter(doAttribute),
+  'item': utils.EnvFilter(doItem),
+  'map': utils.ContextFilter(doMap),
+  'select': utils.ContextFilter(doSelect),
+  'reject': utils.ContextFilter(doReject),
+  'selectattr': utils.ContextFilter(doSelectAttr),
+  'rejectattr': utils.ContextFilter(doRejectAttr),
   'tojson': doToJson,
-
+  'fromjson': doFromJson,
   'runtimetype': doRuntimeType,
+  'intersect': doIntersect,
+  'difference': doDifference,
+  'slugify': doSlugify,
+  'base64encode': doBase64Encode,
+  'base64decode': doBase64Decode,
+  'quote': doQuote,
+  'strftime': doStrftime,
+  'dateformat': doStrftime,
+  'increment': doIncrement,
+  'bool': doBool,
+  'regex_search': doRegexSearch,
+  'regex_findall': doRegexFindall,
+  'shuffle': utils.EnvFilter(doShuffle),
+  'combine': doCombine,
+  'pluck': utils.ContextFilter((Context context, Iterable<Object?>? values, String attribute) => 
+      doMap(context, values, [attribute], {}),),
 };

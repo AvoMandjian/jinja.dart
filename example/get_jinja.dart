@@ -6,6 +6,8 @@ import 'package:jinja/jinja.dart';
 import 'package:json_path/json_path.dart';
 import 'package:uuid/uuid.dart';
 
+import 'async_globals_example.dart';
+
 // Mock BuildContext for standalone usage
 class MockBuildContext {}
 
@@ -17,6 +19,7 @@ enum LogType {
 
 // Mock UtilFunctions for standalone usage
 class UtilFunctions {
+  UtilFunctions._();
   static void appLog(dynamic message, {dynamic logType}) {}
   static String formatDate(String date) => date;
   static double getScreenWidth(dynamic context) => 1024.0;
@@ -31,6 +34,7 @@ class UtilFunctions {
 
 // Mock JinjaGoogleTranslateService for standalone usage
 class JinjaGoogleTranslateService {
+  JinjaGoogleTranslateService._();
   static Future<String> translateText(
     String value,
     String to,
@@ -70,6 +74,10 @@ class GetJinja {
   }) {
     return Environment(
       globals: <String, Object?>{
+        'fetchDataGlobal': () async {
+          final result = await fetchData();
+          return result;
+        },
         'translate': translateSync,
         'uuid': () {
           final String uniqueId = const Uuid().v4();
@@ -335,6 +343,11 @@ class GetJinja {
       },
       loader: loader,
       filters: {
+        'fetchDataFilter': () async {
+          final result = await fetchData();
+          return result;
+        },
+
         'append': (List list, value, [String? type = 'MAP']) {
           try {
             if (value != null) {

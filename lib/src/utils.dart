@@ -1,28 +1,23 @@
 import 'dart:convert';
 
 import 'package:html_unescape/html_unescape.dart';
+import 'package:textwrap/utils.dart';
+
 import 'environment.dart';
 import 'runtime.dart';
-import 'package:textwrap/utils.dart';
 
 final RegExp _tagsRe = RegExp('(<!--.*?-->|<[^>]*>)');
 
-/// Jinja [Environment] function types.
-///
-/// See [passContext] and [passEnvironment].
-enum PassArgument {
-  /// Function with [Context] argument.
-  ///
-  /// See [passContext].
-  context,
+/// Wrapper for functions that need [Context] as the first argument.
+class ContextFilter {
+  final Function function;
+  const ContextFilter(this.function);
+}
 
-  /// Function with [Environment] argument.
-  ///
-  /// See [passEnvironment].
-  environment;
-
-  /// Type cache for functions, filters and tests.
-  static final Expando<PassArgument> types = Expando<PassArgument>();
+/// Wrapper for functions that need [Environment] as the first argument.
+class EnvFilter {
+  final Function function;
+  const EnvFilter(this.function);
 }
 
 /// Convert value to [bool]
@@ -157,12 +152,7 @@ String escape(String text) {
 String htmlSafeJsonEncode(Object? value, [String? indent]) {
   var encoder = indent == null ? json.encoder : JsonEncoder.withIndent(indent);
 
-  return encoder
-      .convert(value)
-      .replaceAll('<', '\\u003c')
-      .replaceAll('>', '\\u003e')
-      .replaceAll('&', '\\u0026')
-      .replaceAll("'", '\\u0027');
+  return encoder.convert(value).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e').replaceAll('&', '\\u0026').replaceAll("'", '\\u0027');
 }
 
 String unescape(String text) {
@@ -185,7 +175,8 @@ String stripTags(String value) {
   }
 
   return unescape(
-      RegExp(r'\s+').split(value.replaceAll(_tagsRe, '')).join(' '),);
+    RegExp(r'\s+').split(value.replaceAll(_tagsRe, '')).join(' '),
+  );
 }
 
 /// Sum two values.

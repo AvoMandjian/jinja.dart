@@ -66,18 +66,16 @@ typedef UndefinedCallback = Object? Function(String name, [String? template]);
 /// called while rendering a template.
 ///
 /// Can be used on functions, filters, and tests.
-Function passContext(Function function) {
-  PassArgument.types[function] = PassArgument.context;
-  return function;
+Object passContext(Function function) {
+  return ContextFilter(function);
 }
 
 /// Pass the [Environment] as the first argument to the applied function when
 /// called while rendering a template.
 ///
 /// Can be used on functions, filters, and tests.
-Function passEnvironment(Function function) {
-  PassArgument.types[function] = PassArgument.environment;
-  return function;
+Object passEnvironment(Function function) {
+  return EnvFilter(function);
 }
 
 /// {@template jinja.Environment}
@@ -108,8 +106,8 @@ base class Environment {
     this.loader,
     this.autoReload = true,
     Map<String, Object?>? globals,
-    Map<String, Function>? filters,
-    Map<String, Function>? tests,
+    Map<String, Object>? filters,
+    Map<String, Object>? tests,
     List<Node Function(Node)>? modifiers,
     Map<String, Template>? templates,
     Random? random,
@@ -118,8 +116,8 @@ base class Environment {
     this.undefined = defaults.undefined,
   })  : finalize = wrapFinalizer(finalize),
         globals = <String, Object?>{...defaults.globals},
-        filters = <String, Function>{...defaults.filters},
-        tests = <String, Function>{...defaults.tests},
+        filters = <String, Object>{...defaults.filters},
+        tests = <String, Object>{...defaults.tests},
         modifiers = <Node Function(Node)>[],
         templates = <String, Template>{},
         random = random ?? Random() {
@@ -220,11 +218,11 @@ base class Environment {
 
   /// A map of filters that are available in every template loaded by
   /// the environment.
-  final Map<String, Function> filters;
+  final Map<String, Object> filters;
 
   /// A map of tests that are available in every template loaded by
   /// the environment.
-  final Map<String, Function> tests;
+  final Map<String, Object> tests;
 
   /// A list of template modifiers.
   final List<Node Function(Node)> modifiers;
@@ -288,27 +286,37 @@ base class Environment {
   /// Common filter and test caller.
   @internal
   dynamic callCommon(
-    Function function,
+    Object function,
     List<Object?> positional,
     Map<Symbol, Object?> named,
     Context? context,
-  ) async {
-    var pass = PassArgument.types[function];
-
-    if (pass == PassArgument.context) {
+  ) {
+    Function func;
+    if (function is ContextFilter) {
       if (context == null) {
         throw TemplateRuntimeError(
           'Attempted to invoke context function without context.',
         );
       }
-
       positional = <Object?>[context, ...positional];
-    } else if (pass == PassArgument.environment) {
+      func = function.function;
+    } else if (function is EnvFilter) {
       positional = <Object?>[this, ...positional];
+      func = function.function;
+    } else if (function is Function) {
+      func = function;
+    } else {
+      // Try to invoke as callable object (Joiner, Cycler)
+      try {
+        // This assumes dynamic dispatch will work for call() method
+        // We might need to check for call method existence more robustly if needed
+        return Function.apply(function as dynamic, positional, named);
+      } catch (e) {
+        throw TemplateRuntimeError('Invalid callable: $function');
+      }
     }
 
-    var result = await Function.apply(function, positional, named);
-    return result is Future ? await result : result;
+    return Function.apply(func, positional, named);
   }
 
   /// If [name] filter not found [TemplateRuntimeError] thrown.
@@ -324,42 +332,81 @@ base class Environment {
       throw TemplateRuntimeError("No filter named '$name'.");
     }
 
+    var finalPositional = positional;
+    Function func;
+
+    if (filter is ContextFilter) {
+      if (context == null) {
+        throw TemplateRuntimeError(
+          'Attempted to invoke context filter without context.',
+        );
+      }
+      finalPositional = <Object?>[context, ...positional];
+      func = filter.function;
+    } else if (filter is EnvFilter) {
+      finalPositional = <Object?>[this, ...positional];
+      func = filter.function;
+    } else if (filter is Function) {
+      func = filter;
+    } else {
+      throw TemplateRuntimeError('Filter "$name" is not a function.');
+    }
+
     // Check if any arguments are Futures - if so, we need to be async
-    bool hasAsyncArgs = positional.any((arg) => arg is Future);
-    
+    bool hasAsyncArgs = finalPositional.any((arg) => arg is Future);
+
     if (hasAsyncArgs) {
       // Return a Future that resolves arguments then calls the filter
       return Future(() async {
         final resolvedPositional = <Object?>[];
-        for (var arg in positional) {
+        for (var arg in finalPositional) {
           if (arg is Future) {
             resolvedPositional.add(await arg);
           } else {
             resolvedPositional.add(arg);
           }
         }
-        
-        final result = Function.apply(filter, resolvedPositional, named);
+
+        final result = Function.apply(func, resolvedPositional, named);
         return result is Future ? await result : result;
       });
     } else {
       // No async args - call filter synchronously
-      final result = Function.apply(filter, positional, named);
-      // Still need to check if the filter itself returns a Future
+      final result = Function.apply(func, finalPositional, named);
+      // Return result as is (can be Future or value)
       return result;
     }
   }
 
   /// If [name] not found throws [TemplateRuntimeError].
   @internal
-  Future<bool> callTest(
+  dynamic callTest(
     String name,
     List<Object?> positional, [
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
     Context? context,
-  ]) async {
-    if (tests[name] case var function?) {
-      return await callCommon(function, positional, named, context) as bool;
+  ]) {
+    final test = tests[name];
+    if (test != null) {
+      // Check if arguments are async
+      bool hasAsyncArgs = positional.any((arg) => arg is Future);
+
+      if (hasAsyncArgs) {
+        return Future(() async {
+          final resolvedPositional = <Object?>[];
+          for (var arg in positional) {
+            if (arg is Future)
+              resolvedPositional.add(await arg);
+            else
+              resolvedPositional.add(arg);
+          }
+          // callCommon handles filter/env wrappers
+          var result = callCommon(test, resolvedPositional, named, context);
+          return result is Future ? await result : result;
+        });
+      }
+
+      return callCommon(test, positional, named, context);
     }
 
     throw TemplateRuntimeError("No test named '$name'.");
@@ -547,8 +594,8 @@ base class Template {
     ContextFinalizer finalize = defaults.finalize,
     bool autoEscape = false,
     Map<String, Object?>? globals,
-    Map<String, Function>? filters,
-    Map<String, Function>? tests,
+    Map<String, Object>? filters,
+    Map<String, Object>? tests,
     List<Node Function(Node)>? modifiers,
     Random? random,
     AttributeGetter getAttribute = defaults.getAttribute,
@@ -573,8 +620,8 @@ base class Template {
         finalize: finalize,
         autoReload: false,
         globals: globals,
-        filters: filters,
-        tests: tests,
+        filters: filters?.cast(),
+        tests: tests?.cast(),
         modifiers: modifiers,
         random: random,
         getAttribute: getAttribute,

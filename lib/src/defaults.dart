@@ -1,3 +1,7 @@
+import 'dart:math' as math;
+
+import 'package:collection/collection.dart';
+
 import 'exceptions.dart';
 import 'runtime.dart';
 import 'utils.dart';
@@ -10,6 +14,11 @@ const Map<String, Object?> globals = <String, Object?>{
   'list': list,
   'print': print,
   'range': range,
+  'cycler': makeCycler,
+  'joiner': makeJoiner,
+  'lipsum': lipsum,
+  'zip': zip,
+  'now': now,
 };
 
 Object finalize(Context context, Object? value) {
@@ -43,6 +52,16 @@ Object? getAttribute(String attribute, Object? object, {Object? node}) {
     return object[attribute];
   }
 
+  if (object is Cycler) {
+    if (attribute == 'next') return object.next;
+    if (attribute == 'reset') return object.reset;
+    if (attribute == 'current') return object.current;
+  }
+
+  if (object is Joiner) {
+    // Joiner is usually called directly, but if attributes needed?
+  }
+
   // For other object types, attribute access is not supported by default
   // in the reflection-free model. Returning null is a safe fallback.
   return null;
@@ -69,10 +88,12 @@ Object? getItem(Object? key, Object? object, {Object? node}) {
         return object[key];
       }
       throw UndefinedError(
-          'Index `$key` is out of bounds for list of length `${object.length}`.',);
+        'Index `$key` is out of bounds for list of length `${object.length}`.',
+      );
     }
     throw TemplateRuntimeError(
-        'List index must be an integer, but got `${key.runtimeType}`.',);
+      'List index must be an integer, but got `${key.runtimeType}`.',
+    );
   }
 
   if (object is MapEntry) {
@@ -94,9 +115,120 @@ Object? getItem(Object? key, Object? object, {Object? node}) {
   }
 
   throw TemplateRuntimeError(
-      'Cannot access item on object of type `${object.runtimeType}`.',);
+    'Cannot access item on object of type `${object.runtimeType}`.',
+  );
 }
 
 Object? undefined(String name, [String? template]) {
   return null;
+}
+
+// -- Globals Implementations --
+
+class Cycler {
+  final List<Object?> values;
+  int _index = 0;
+
+  Cycler(this.values);
+
+  Object? get current => values.isEmpty ? null : values[_index];
+
+  Object? call() {
+    return next();
+  }
+
+  Object? next() {
+    if (values.isEmpty) return null;
+    var res = current;
+    _index = (_index + 1) % values.length;
+    return res;
+  }
+
+  void reset() {
+    _index = 0;
+  }
+}
+
+Cycler makeCycler([Object? arg1, Object? arg2, Object? arg3, Object? arg4, Object? arg5]) {
+  var args = [if (arg1 != null) arg1, if (arg2 != null) arg2, if (arg3 != null) arg3, if (arg4 != null) arg4, if (arg5 != null) arg5];
+  return Cycler(args);
+}
+
+class Joiner {
+  final String sep;
+  bool _used = false;
+
+  Joiner([this.sep = ', ']);
+
+  String call() {
+    if (!_used) {
+      _used = true;
+      return '';
+    }
+    return sep;
+  }
+}
+
+Joiner makeJoiner([String sep = ', ']) {
+  return Joiner(sep);
+}
+
+const _lipsumText = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod '
+    'tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, '
+    'quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo '
+    'consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse '
+    'cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat '
+    'non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+
+String lipsum({int n = 5, bool html = true, int min = 20, int max = 100}) {
+  var words = _lipsumText.split(' ');
+  var random = math.Random();
+  var buffer = StringBuffer();
+
+  String generateParagraph() {
+    var count = min + random.nextInt(max - min + 1);
+    var result = <String>[];
+    var current = 0;
+    while (result.length < count) {
+      if (current >= words.length) current = 0;
+      result.add(words[current]);
+      current++;
+    }
+    // Capitalize first
+    if (result.isNotEmpty) {
+      result[0] = result[0].substring(0, 1).toUpperCase() + result[0].substring(1);
+    }
+    // Add dot at end if missing
+    var text = result.join(' ');
+    if (!text.endsWith('.')) text += '.';
+    return text;
+  }
+
+  for (var i = 0; i < n; i++) {
+    var p = generateParagraph();
+    if (html) {
+      buffer.writeln('<p>$p</p>');
+    } else {
+      buffer.writeln(p);
+      buffer.writeln();
+    }
+  }
+
+  return buffer.toString().trim();
+}
+
+/// Zip multiple iterables.
+/// Supports up to 5 iterables.
+Iterable<List<Object?>> zip(Iterable<Object?> i1, [Iterable<Object?>? i2, Iterable<Object?>? i3, Iterable<Object?>? i4, Iterable<Object?>? i5]) {
+  var iterables = [i1];
+  if (i2 != null) iterables.add(i2);
+  if (i3 != null) iterables.add(i3);
+  if (i4 != null) iterables.add(i4);
+  if (i5 != null) iterables.add(i5);
+  return IterableZip(iterables);
+}
+
+/// Current time.
+DateTime now() {
+  return DateTime.now();
 }

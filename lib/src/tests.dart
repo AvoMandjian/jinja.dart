@@ -1,4 +1,5 @@
 import 'environment.dart';
+import 'utils.dart';
 
 /// Return `true` if the variable is odd.
 bool isOdd(int value) {
@@ -179,15 +180,90 @@ bool isCallable(dynamic object) {
   }
 }
 
+/// Check if value matches regex pattern (anchored to start).
+bool isMatch(String value, String pattern, {bool ignoreCase = false}) {
+  return RegExp(pattern, caseSensitive: !ignoreCase).matchAsPrefix(value) != null;
+}
+
+/// Check if value contains regex pattern.
+bool isSearch(String value, String pattern, {bool ignoreCase = false}) {
+  return RegExp(pattern, caseSensitive: !ignoreCase).hasMatch(value);
+}
+
+/// Check if iterable is a subset of another.
+bool isSubsetOf(Iterable<Object?> value, Iterable<Object?> other) {
+  var set = other.toSet();
+  return value.every((element) => set.contains(element));
+}
+
+/// Check if iterable is a superset of another.
+bool isSupersetOf(Iterable<Object?> value, Iterable<Object?> other) {
+  var set = value.toSet();
+  return other.every((element) => set.contains(element));
+}
+
+/// Version comparison test.
+///
+/// Compares a version string against another version string using an operator.
+/// Supports simple semantic versioning (x.y.z).
+///
+/// Usage: `{{ '1.2.0' is version('1.0.0', '>=') }}`
+bool isVersion(String value, String version, [String operator = '==']) {
+  List<int> parse(String v) {
+    return v.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+  }
+
+  var v1 = parse(value);
+  var v2 = parse(version);
+
+  // Pad with zeros to match length
+  var len = v1.length > v2.length ? v1.length : v2.length;
+  if (v1.length < len) v1.addAll(List.filled(len - v1.length, 0));
+  if (v2.length < len) v2.addAll(List.filled(len - v2.length, 0));
+
+  int compare(List<int> a, List<int> b) {
+    for (var i = 0; i < len; i++) {
+      if (a[i] > b[i]) return 1;
+      if (a[i] < b[i]) return -1;
+    }
+    return 0;
+  }
+
+  var result = compare(v1, v2);
+
+  switch (operator) {
+    case '==':
+    case 'eq':
+      return result == 0;
+    case '!=':
+    case 'ne':
+      return result != 0;
+    case '>':
+    case 'gt':
+      return result > 0;
+    case '>=':
+    case 'ge':
+      return result >= 0;
+    case '<':
+    case 'lt':
+      return result < 0;
+    case '<=':
+    case 'le':
+      return result <= 0;
+    default:
+      throw ArgumentError.value(operator, 'operator', 'Unknown operator');
+  }
+}
+
 /// Tests map.
-final Map<String, Function> tests = <String, Function>{
+final Map<String, Object> tests = <String, Object>{
   'odd': isOdd,
   'even': isEven,
   'divisibleby': isDivisibleBy,
   'defined': isDefined,
   'undefined': isUndefined,
-  'filter': passEnvironment(isFilter),
-  'test': passEnvironment(isTest),
+  'filter': EnvFilter(isFilter),
+  'test': EnvFilter(isTest),
   'none': isNull,
   'null': isNull,
   'boolean': isBoolean,
@@ -221,4 +297,9 @@ final Map<String, Function> tests = <String, Function>{
   'lessthan': isLessThan,
   'lt': isLessThan,
   'ne': isNotEqual,
+  'match': isMatch,
+  'search': isSearch,
+  'subsetof': isSubsetOf,
+  'supersetof': isSupersetOf,
+  'version': isVersion,
 };

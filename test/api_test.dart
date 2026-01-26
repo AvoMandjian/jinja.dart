@@ -2,6 +2,7 @@
 library;
 
 import 'package:jinja/jinja.dart';
+import 'package:jinja/src/defaults.dart';
 import 'package:jinja/src/runtime.dart';
 import 'package:test/test.dart';
 
@@ -58,7 +59,7 @@ void main() {
     test('cycler', () {
       var items = [1, 2, 3];
       var cycler = Cycler(items);
-      var iterator = cycler.iterator;
+      var iterator = cycler.values.iterator;
 
       for (var item in items + items) {
         expect(cycler.current, equals(item));

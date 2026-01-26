@@ -23,18 +23,14 @@ base class Context {
 
   final Map<String, Object?> context;
 
-  Future<Object?> call(
+  dynamic call(
     dynamic object,
     Object? node, [
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
-  ]) async {
+  ]) {
     if (object is Function) {
-      var res = await environment.callCommon(object, positional, named, this);
-      // NOTE: This method is async, so when called from templates:
-      // - Use template.renderAsync() for proper Future handling
-      // - template.render() won't await this Future and will output 'Instance of Future<Object?>'
-      return res;
+      return environment.callCommon(object, positional, named, this);
     }
 
     if (object == null) {
@@ -48,9 +44,18 @@ base class Context {
       throw Exception('Object is null at $positional');
     }
 
-    // Handle other callable objects if necessary, otherwise default to `call` method.
-    // For now, we assume if it's not a Function, it's a callable class instance.
-    return environment.callCommon(object.call as Function, positional, named, this);
+    // Try to find a 'call' method on the object (for callable classes)
+    try {
+      final callMethod = (object as dynamic).call;
+      if (callMethod is Function) {
+        return environment.callCommon(callMethod, positional, named, this);
+      }
+    } catch (_) {
+      // Ignore error if .call does not exist
+    }
+
+    // Fallback to callCommon which might handle other types or throw
+    return environment.callCommon(object, positional, named, this);
   }
 
   Context derived({
@@ -139,7 +144,7 @@ base class Context {
     return environment.callFilter(name, positional, named, this);
   }
 
-  Future<bool> test(
+  dynamic test(
     String name, [
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
@@ -295,54 +300,6 @@ final class LoopIterator implements Iterator<Object?> {
     }
 
     return false;
-  }
-}
-
-final class Cycler extends Iterable<Object?> {
-  Cycler(Iterable<Object?> values)
-      : values = List<Object?>.of(values),
-        length = values.length,
-        index = 0;
-
-  final List<Object?> values;
-
-  @override
-  final int length;
-
-  int index;
-
-  Object? get current {
-    return values[index];
-  }
-
-  @override
-  Iterator<Object?> get iterator {
-    return CyclerIterator(this);
-  }
-
-  Object? next() {
-    var result = current;
-    index = (index + 1) % length;
-    return result;
-  }
-
-  void reset() {
-    index = 0;
-  }
-}
-
-final class CyclerIterator implements Iterator<Object?> {
-  CyclerIterator(this.cycler);
-
-  final Cycler cycler;
-
-  @override
-  Object? current;
-
-  @override
-  bool moveNext() {
-    current = cycler.next();
-    return true;
   }
 }
 
