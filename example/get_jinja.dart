@@ -71,18 +71,161 @@ class GetJinja {
     dynamic context,
     MapLoader loader, {
     required Function(String? error) valueListenableJinjaError,
+    required Future<dynamic> Function({
+      required Map<String, dynamic> payload,
+    }) callbackToParentProject,
   }) {
     return Environment(
       globals: <String, Object?>{
+        /// Returns data to the caller, preserving the data type (dict, list, int, etc).
+        ///
+        /// This function is compatible with dbt's `return` function behavior.
+        /// See: https://docs.getdbt.com/reference/dbt-jinja-functions/return
+        ///
+        /// **Usage:**
+        /// - **Expression**: `{{ return([1,2,3]) }}` - Outputs the value directly
+        /// - **Statement with do tag**: `{% do return([1,2,3]) %}` - Executes without output
+        ///
+        /// **Type Preservation:**
+        /// The type of the data (dict, list, int, etc) will be preserved through the return call.
+        /// This allows macros to return structured data that can be used in loops or assignments.
+        ///
+        /// **Example:**
+        /// ```jinja
+        /// {% macro get_data() %}
+        ///   {{ return([1,2,3]) }}
+        /// {% endmacro %}
+        ///
+        /// {% for i in get_data() %}
+        ///   {{ i }}
+        /// {% endfor %}
+        /// ```
+        ///
+        /// **Note:** Unlike dbt in some contexts, this implementation does not stop macro
+        /// execution (early exit). It only returns the value to the caller.
+        'return': (dynamic value) {
+          return value;
+        },
+
+        /// Retrieves a widget configuration or data by its ID via the parent project callback.
+        'get_widget_by_id': (
+          String widgetId, [
+          dynamic jinjaData,
+        ]) async {
+          // print('getting widget by id: $widgetId, jinjaData: $jinjaData');
+          final res = await callbackToParentProject(
+            payload: {
+              'widget_id': widgetId,
+              'jinja_data': jinjaData,
+            },
+          );
+          // print('widget by id result: $res');
+          return res ?? {};
+        },
+
+        /// Executes a generic callback via the parent project with an ID and optional payload.
+        'callback': (
+          String callbackId, [
+          dynamic jinjaData,
+          dynamic payload,
+        ]) async {
+          final res = await callbackToParentProject(
+            payload: {
+              'widget_id': callbackId,
+              'jinja_data': jinjaData,
+            },
+          );
+          // print('widget by id result: $res');
+          return res ?? {};
+        },
+
+        /// Logs a value to the application logs and returns it.
+        'print': (dynamic value) {
+          UtilFunctions.appLog(
+            'printed from jinja script: ${jsonEncode(value)}',
+          );
+          return value;
+        },
+
+        // dbt-compatible globals
+
+        /// Placeholder for dbt `ref` function. Returns the model name as string.
+        'ref': (dynamic modelName, [dynamic version]) {
+          if (modelName is String) return modelName;
+          return '';
+        },
+
+        /// Placeholder for dbt `source` function. Returns `source.table` string.
+        'source': (String sourceName, String tableName) {
+          return '$sourceName.$tableName';
+        },
+
+        /// Placeholder for dbt `config` function.
+        'config': (dynamic args) {
+          return '';
+        },
+
+        /// Retrieves a variable from the context or returns default.
+        'var': (String varName, [dynamic defaultValue]) {
+          return defaultValue ?? varName;
+        },
+
+        /// Retrieves an environment variable (placeholder).
+        'env_var': (String varName, [dynamic defaultValue]) {
+          return defaultValue ?? '';
+        },
+
+        /// Logs a message to the application logs (dbt compatible).
+        'log': (dynamic message) {
+          UtilFunctions.appLog('dbt log: $message');
+          return '';
+        },
+
+        /// Placeholder for dbt `run_query`.
+        'run_query': (String query) {
+          UtilFunctions.appLog('dbt run_query (placeholder): $query');
+          return [];
+        },
+
+        /// Provides access to utility modules like `datetime`.
+        'modules': {
+          'datetime': {
+            'now': () => DateTime.now(),
+          },
+        },
+
+        /// Checks deep equality between two values, supporting Futures.
+        'is_equal': (dynamic value1, dynamic value2) async {
+          if (value1 is Future) {
+            final value = await value1;
+            final result = value == value2;
+            return result;
+          } else if (value2 is Future) {
+            final value = await value2;
+            final result = value == value1;
+            return result;
+          } else {
+            final result = value1 == value2;
+            return result;
+          }
+        },
+
+        /// Fetches mock data asynchronously.
         'fetchDataGlobal': () async {
           final result = await fetchData();
           return result;
         },
+
+        /// Translates text using the configured translation service.
         'translate': translateSync,
+
+        /// Generates a v4 UUID.
         'uuid': () {
           final String uniqueId = const Uuid().v4();
           return uniqueId;
         },
+
+        /// Returns the current date formatted as dd/MM/yyyy.
         'get_current_date': () {
           return {
             'value': UtilFunctions.formatDate(
@@ -91,6 +234,8 @@ class GetJinja {
             'value_text': DateFormat('dd/MM/yyyy').format(DateTime.now()),
           };
         },
+
+        /// Generates a list of strings repeated `count` times.
         'generate_list': (int count, [String? values]) {
           try {
             return List.generate(count, (index) => values ?? '');
@@ -99,6 +244,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Flattens a nested structure of widgets into a single list.
         'get_list_of_widgets': (List? listOfNestedWidgets) {
           try {
             final List<Map<String, dynamic>> widgetsToSend = [];
@@ -120,10 +267,20 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Placeholder for getting widget width.
         'getWidgetWidth': () {},
+
+        /// Placeholder for getting widget height.
         'getWidgetHeight': () {},
+
+        /// Gets the screen width from the current context.
         'getScreenWidth': () => UtilFunctions.getScreenWidth(context),
+
+        /// Gets the screen height from the current context.
         'getScreenHeight': () => UtilFunctions.getScreenHeight(context),
+
+        /// Updates a JSON structure with new property values based on IDs or CSS styles.
         'changePropertiesValues': (
           dynamic initialJson,
           dynamic newValues, [
@@ -216,6 +373,8 @@ class GetJinja {
 
           return updatedValues;
         },
+
+        /// Decodes a JSON string with logging.
         'jsonDecode': (dynamic value) {
           try {
             final valueToSend = jsonDecode(
@@ -231,6 +390,8 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Safely retrieves a value from a nested Map/JSON structure using a key.
         'get': (dynamic json, String key, [dynamic defaultValue = '']) {
           try {
             if (json is! Map<Object?, Object?>) {
@@ -272,6 +433,8 @@ class GetJinja {
             return defaultValue;
           }
         },
+
+        /// Returns the key if it exists in the JSON structure, otherwise returns default.
         'get_key_if_in_json': (
           dynamic json,
           String key, [
@@ -317,6 +480,8 @@ class GetJinja {
             return defaultValue;
           }
         },
+
+        /// Executes a JSONPath query on the provided JSON object.
         'jsonPath': (dynamic json, String query) {
           if (json is! Map<Object?, Object?>) {
             UtilFunctions.appLog(
@@ -343,11 +508,13 @@ class GetJinja {
       },
       loader: loader,
       filters: {
-        'fetchDataFilter': () async {
+        /// Fetches data asynchronously (filter version).
+        'fetchDataFilter': (dynamic value) async {
           final result = await fetchData();
           return result;
         },
 
+        /// Appends a value to a list, optionally parsing as JSON map.
         'append': (List list, value, [String? type = 'MAP']) {
           try {
             if (value != null) {
@@ -368,7 +535,41 @@ class GetJinja {
           }
         },
 
+        // dbt-compatible filters
+
+        /// Converts an object to a JSON string representation.
+        'tojson': (dynamic value) {
+          try {
+            return jsonEncode(value);
+          } catch (e) {
+            return value.toString();
+          }
+        },
+
+        /// Parses a JSON string into an object.
+        'fromjson': (String? value) {
+          try {
+            return jsonDecode(value ?? '{}');
+          } catch (e) {
+            return {};
+          }
+        },
+
+        /// Converts a value to a boolean using common string representations.
+        'as_bool': (dynamic value) {
+          if (value == null) return false;
+          if (value is bool) return value;
+          if (value is num) return value != 0;
+          if (value is String) {
+            final lower = value.toLowerCase();
+            return lower == 'true' || lower == '1' || lower == 'yes' || lower == 'y';
+          }
+          return false;
+        },
+
         /// AVOM: AI ADDED FILTERS
+
+        /// Decodes a Base64 encoded string.
         'b64decode': (String? value) {
           try {
             return UtilFunctions.decodeFromBase64(value ?? '').toString();
@@ -377,6 +578,8 @@ class GetJinja {
             return value ?? '';
           }
         },
+
+        /// Casts a value to a boolean.
         'bool': (dynamic value) {
           try {
             if (value == null) return false;
@@ -391,6 +594,8 @@ class GetJinja {
             return false;
           }
         },
+
+        /// Merges two maps together.
         'combine': (Map value, Map combineValue) {
           try {
             return {...value, ...combineValue};
@@ -399,9 +604,13 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Returns the value if not null, otherwise the default value.
         'default': (dynamic value, dynamic defaultValue) {
           return value ?? defaultValue;
         },
+
+        /// Sorts a map by key or value.
         'dictsort': (Map value, [String? key, bool reverse = false]) {
           try {
             var entries = value.entries.toList();
@@ -425,6 +634,8 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Formats a number of bytes into a human-readable string (e.g., '10.5 MB').
         'filesizeformat': (dynamic value, [dynamic binary = false]) {
           try {
             final bool isBinary = binary == true || binary == 'true' || binary == '1';
@@ -460,6 +671,8 @@ class GetJinja {
             return '0 Bytes';
           }
         },
+
+        /// Returns the first item of a list.
         'first': (List? value) {
           try {
             return value?.isNotEmpty == true ? value?.first : null;
@@ -468,6 +681,8 @@ class GetJinja {
             return null;
           }
         },
+
+        /// Builds a tree structure from a flat list of items containing 'id' and 'parent_id'.
         'buildTree': (List<dynamic> flatList) {
           try {
             if (flatList.isEmpty) {
@@ -503,6 +718,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Groups a list of objects by a specified attribute.
         'groupby': (List value, String attribute) {
           try {
             final groups = <dynamic, List<Map<String, dynamic>>>{};
@@ -519,6 +736,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Recursively groups a list of objects by multiple attributes.
         'groupbyMultiple': (List value, List attributes) {
           try {
             if (attributes.isEmpty) {
@@ -555,6 +774,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Joins elements of a list into a string with a separator.
         'join': (List? value, [String separator = '']) {
           try {
             return value?.map((e) => e.toString()).join(separator) ?? '';
@@ -563,6 +784,8 @@ class GetJinja {
             return '';
           }
         },
+
+        /// Returns the last item of a list.
         'last': (List? value) {
           try {
             return value?.isNotEmpty == true ? value?.last : null;
@@ -571,6 +794,8 @@ class GetJinja {
             return null;
           }
         },
+
+        /// Converts value (list, map, string) to a list.
         'list': (dynamic value) {
           try {
             if (value == null) return [];
@@ -583,6 +808,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Extracts a specific attribute from a list of objects.
         'map': (List? value, String attribute) {
           try {
             return value?.map((e) => e[attribute]).toList() ?? [];
@@ -591,6 +818,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Returns the maximum value from a list.
         'max': (List? value) {
           try {
             if (value?.isEmpty ?? true) return null;
@@ -600,6 +829,8 @@ class GetJinja {
             return null;
           }
         },
+
+        /// Returns the minimum value from a list.
         'min': (List? value) {
           try {
             if (value?.isEmpty ?? true) return null;
@@ -609,6 +840,8 @@ class GetJinja {
             return null;
           }
         },
+
+        /// Returns a random item from a list.
         'random': (List? value) {
           try {
             if (value?.isEmpty ?? true) return null;
@@ -619,6 +852,8 @@ class GetJinja {
             return null;
           }
         },
+
+        /// Filters a list to exclude items where an attribute is true.
         'reject': (List? value, String attribute) {
           try {
             return value?.where((e) => !e[attribute]).toList() ?? [];
@@ -627,6 +862,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Filters a list to exclude items where an attribute is true (same as reject).
         'rejectattr': (List? value, String attribute) {
           try {
             return value?.where((e) => !e[attribute]).toList() ?? [];
@@ -635,6 +872,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Filters a list to include items where an attribute is true.
         'select': (List? value, String attribute) {
           try {
             return value?.where((e) => e[attribute] == true).toList() ?? [];
@@ -643,6 +882,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Sorts a list, optionally by an attribute and in reverse order.
         'sort': (List? value, [bool reverse = false, String? attribute]) {
           try {
             if (value == null) return [];
@@ -661,6 +902,8 @@ class GetJinja {
             return value ?? [];
           }
         },
+
+        /// Returns the sum of values in a list, optionally by attribute.
         'sum': (List? value, [String? attribute, double start = 0]) {
           try {
             if (value == null) return start;
@@ -673,6 +916,8 @@ class GetJinja {
             return start;
           }
         },
+
+        /// Returns a list of unique items, optionally by attribute.
         'unique': (List? value, [String? attribute]) {
           try {
             if (value == null) return [];
@@ -688,6 +933,8 @@ class GetJinja {
             return value ?? [];
           }
         },
+
+        /// URL-encodes a string.
         'urlencode': (String? value) {
           try {
             return Uri.encodeComponent(value ?? '');
@@ -696,6 +943,8 @@ class GetJinja {
             return '';
           }
         },
+
+        /// URL-decodes a string.
         'urldecode': (String? value) {
           try {
             return Uri.decodeComponent(value ?? '');
@@ -704,6 +953,8 @@ class GetJinja {
             return '';
           }
         },
+
+        /// Converts a value to JSON string with optional indentation.
         'to_json': (dynamic value, [int? indent]) {
           try {
             final encoder = JsonEncoder.withIndent(' ' * (indent ?? 0));
@@ -713,6 +964,8 @@ class GetJinja {
             return value?.toString() ?? '';
           }
         },
+
+        /// Parses a JSON string.
         'from_json': (String? value) {
           try {
             return jsonDecode(value ?? '{}');
@@ -721,12 +974,16 @@ class GetJinja {
             return {};
           }
         },
+
+        /// Throws an exception if value is null.
         'mandatory': (dynamic value, {String? hint}) {
           if (value == null) {
             throw Exception(hint ?? 'Mandatory value is undefined');
           }
           return value;
         },
+
+        /// Returns one of two values based on a boolean condition.
         'ternary': (
           bool? condition,
           dynamic trueValue, [
@@ -741,7 +998,11 @@ class GetJinja {
             return null;
           }
         },
+
+        /// Returns the runtime type of the value.
         'type_debug': (dynamic value) => value.runtimeType.toString(),
+
+        /// Converts a map to a list of key-value pair maps.
         'dict2items': (
           Map value, {
           String keyName = 'key',
@@ -754,6 +1015,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Converts a list of key-value pair maps to a map.
         'items2dict': (
           List items, {
           String keyName = 'key',
@@ -776,6 +1039,8 @@ class GetJinja {
             return {};
           }
         },
+
+        /// Flattens a nested list structure.
         'flatten': (List list, [int levels = 1]) {
           try {
             dynamic result = [];
@@ -800,6 +1065,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Computes the Cartesian product of input iterables.
         'product': (List<dynamic> lists) {
           try {
             List<List<dynamic>> result = [[]];
@@ -816,6 +1083,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Returns successive r-length permutations of elements in the list.
         'permutations': (List items, [int? length]) {
           try {
             length ??= items.length;
@@ -838,6 +1107,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Returns r-length subsequences of elements from the input list.
         'combinations': (List items, int length) {
           try {
             if (length <= 0 || items.isEmpty || length > items.length) return [];
@@ -860,6 +1131,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Aggregates elements from each of the iterables.
         'zip': (List list1, List list2) {
           try {
             var result = [];
@@ -873,6 +1146,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Aggregates elements, filling missing values with `fillvalue`.
         'zip_longest': (List list1, List list2, {dynamic fillvalue}) {
           try {
             var result = [];
@@ -888,6 +1163,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Generates a v4 UUID.
         'to_uuid': ([String? value]) {
           try {
             return value ?? const Uuid().v4();
@@ -896,6 +1173,7 @@ class GetJinja {
             return const Uuid().v4();
           }
         },
+
         // 'hash': (String value, [String method = 'sha1']) {
         //   try {
         //     var bytes = utf8.encode(value);
@@ -920,6 +1198,8 @@ class GetJinja {
         //     return '';
         //   }
         // },
+
+        /// Escapes special characters in a regex string.
         'regex_escape': (String value, [String? regexType]) {
           try {
             if (regexType == 'posix_basic') {
@@ -934,6 +1214,8 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Searches for a regex pattern in a string and returns the first match.
         'regex_search': (
           String value,
           String pattern, [
@@ -953,6 +1235,8 @@ class GetJinja {
             return '';
           }
         },
+
+        /// Finds all non-overlapping matches of a regex pattern in a string.
         'regex_findall': (
           String value,
           String pattern, [
@@ -973,12 +1257,16 @@ class GetJinja {
         },
 
         /// AVOM: AI ADDED FILTERS
+
+        /// Calculates the difference in days between two dates.
         'date_diff_days': (String startDate, String endDate) {
           const dateFormat = DateTime.parse;
           final start = dateFormat(startDate);
           final end = dateFormat(endDate);
           return end.difference(start).inDays;
         },
+
+        /// Merges a JSON string or Map into an existing Map.
         'merge': (Map value, dynamic mergeValue) {
           try {
             if (mergeValue is String) {
@@ -991,6 +1279,8 @@ class GetJinja {
           }
           return value;
         },
+
+        /// Converts a value to its string representation or JSON string.
         'tostring': (dynamic value) {
           try {
             if (value is! String) {
@@ -1002,6 +1292,8 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Flexible JSON conversion: parses string to JSON, or object to JSON object.
         'toJsonF': (dynamic value) {
           try {
             if (value is String) {
@@ -1009,7 +1301,13 @@ class GetJinja {
               return jsonValue;
             }
             try {
-              return UtilFunctions.changeObjectToMap(value);
+              if (value is Map) {
+                return UtilFunctions.changeObjectToMap(value);
+              } else if (value is List) {
+                return List<Map<String, dynamic>>.from(value);
+              } else {
+                return jsonDecode(jsonEncode(value));
+              }
             } catch (e) {
               valueListenableJinjaError(e.toString());
               return jsonDecode(jsonEncode(value));
@@ -1019,6 +1317,8 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Splits a list into chunks of a specified size.
         'chunk': (List? list, int? size) {
           try {
             if (list == null || size == null) return [];
@@ -1030,6 +1330,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Calculates statistics (max, min, sum) for a list of numeric values.
         'calculate_list_stats': (listOfValues, [String? key, String? path]) {
           List values = [];
           if (listOfValues is String) {
@@ -1090,6 +1392,8 @@ class GetJinja {
 
           return returnedMap;
         },
+
+        /// Formats a number with a specific format pattern and locale.
         'format_number': (dynamic value, [String? format, String? locale]) {
           try {
             if (value == null) {
@@ -1108,6 +1412,8 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Returns the length of a list, map, or string.
         'length': (dynamic value) {
           try {
             if (value is List) {
@@ -1122,6 +1428,7 @@ class GetJinja {
             return 0;
           }
         },
+
         // 'capitalize_letters': (String? value) {
         //   try {
         //     return value?.capitalizeAllWords();
@@ -1130,6 +1437,8 @@ class GetJinja {
         //     return value;
         //   }
         // },
+
+        /// Removes HTML tags from a string.
         'get_plain_text_from_html': (String? html) {
           try {
             return UtilFunctions.getPlainTextFromHtml(html ?? '');
@@ -1138,6 +1447,8 @@ class GetJinja {
             return html;
           }
         },
+
+        /// Extracts filter options from a data map structure.
         'get_filter_map': (Map? data) {
           final result = <String, List<String>>{};
           data?.forEach((key, val) {
@@ -1150,6 +1461,8 @@ class GetJinja {
           result.removeWhere((key, value) => value.isEmpty);
           return result;
         },
+
+        /// Filters a list of maps based on a filter map criteria.
         'filter_map': (List? listOfMap, Map? filter) {
           final List result = [];
           bool isMatch = false;
@@ -1166,6 +1479,8 @@ class GetJinja {
           }
           return result;
         },
+
+        /// Converts map entries to a list of key-value maps.
         'get_items_from_map': (Map<String, dynamic>? map) {
           try {
             return (map?.entries ?? []).map((entry) => {'key': entry.key, 'value': entry.value}).toList();
@@ -1174,6 +1489,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Sorts a list of maps by multiple keys and optional order.
         'sort_by': (
           List? list,
           dynamic sortingKeys,
@@ -1201,6 +1518,8 @@ class GetJinja {
             return list;
           }
         },
+
+        /// Filters a list where multiple attributes match specified values.
         'selectattrmulti': (List list, List keys, List operators, List values) {
           try {
             // Ensure the input lists have the same length
@@ -1266,6 +1585,8 @@ class GetJinja {
             return list;
           }
         },
+
+        /// Filters a list where a single attribute matches an operator/value condition.
         'selectattr': (dynamic list, dynamic key, dynamic operator, dynamic value) {
           try {
             // the function needs to loop through the list, check the key with the operator against the value
@@ -1309,6 +1630,8 @@ class GetJinja {
             return list;
           }
         },
+
+        /// Returns the first item in a list that matches an operator/value condition.
         'firstWhere': (dynamic list, dynamic key, dynamic operator, dynamic value) {
           try {
             // the function needs to loop through the list, check the key with the operator against the value
@@ -1368,6 +1691,8 @@ class GetJinja {
             return list;
           }
         },
+
+        /// Rounds a number to a specified number of decimals.
         'round': (dynamic value, [int? decimals = 2]) {
           if (value is num) {
             return double.parse(value.toStringAsFixed(decimals ?? 2));
@@ -1380,6 +1705,8 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Parses a value to a double.
         'float': (dynamic value) {
           if (value is double) return value;
           try {
@@ -1397,6 +1724,8 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Parses a value to an integer.
         'int': (dynamic value) {
           if (value is int) return value;
           try {
@@ -1413,6 +1742,8 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Finds the index of an item in a list where the 'by' attribute matches 'id'.
         'indexOfBy': (List? items, String? by, String? id) {
           try {
             return (items ?? []).indexWhere((item) => item[by ?? ''] == id);
@@ -1421,6 +1752,8 @@ class GetJinja {
             return -1;
           }
         },
+
+        /// Returns a slice of a list.
         'sublist': (List? items, int? start, [int? end]) {
           try {
             return (items ?? []).sublist((start ?? 0) + 1, end).toList();
@@ -1429,6 +1762,8 @@ class GetJinja {
             return items;
           }
         },
+
+        /// Flexible boolean conversion.
         'toBool': (dynamic value) {
           try {
             if (value == '' || value == '0' || value == 0 || value == null || value == 'null' || value == 'false' || value == false) {
@@ -1443,6 +1778,8 @@ class GetJinja {
             return false;
           }
         },
+
+        /// Decodes a JSON string (filter version).
         'jsonDecode': (dynamic value) {
           try {
             return jsonDecode(value);
@@ -1451,6 +1788,8 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Encodes a value to a JSON string (filter version).
         'jsonEncode': (dynamic value) {
           try {
             return UtilFunctions.jsonEncodeMethod(value);
@@ -1459,9 +1798,13 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Checks if a string is Base64 encoded.
         'isb64': (String? value) {
           return UtilFunctions.isBase64(value ?? '');
         },
+
+        /// Encodes a string to Base64.
         'b64encode': (String? value) {
           try {
             return UtilFunctions.encodeToBase64(value);
@@ -1470,6 +1813,8 @@ class GetJinja {
             return value;
           }
         },
+
+        /// Returns a substring of a string.
         'sub_string': (String? value, int? start, int? end) {
           try {
             return value?.substring(start ?? 0, end ?? 0);
@@ -1478,6 +1823,8 @@ class GetJinja {
             return e.toString();
           }
         },
+
+        /// Converts a value to a string.
         'to_string': (dynamic value) {
           try {
             return value.toString();
@@ -1486,6 +1833,8 @@ class GetJinja {
             return '';
           }
         },
+
+        /// Splits a string by a delimiter.
         'split': ([String? a, String? b]) {
           try {
             return a?.split(b ?? '');
@@ -1494,6 +1843,8 @@ class GetJinja {
             return [];
           }
         },
+
+        /// Formats a date string according to a Python or Dart date format.
         'date_format': (
           String? value,
           String? pythonDateFormat, [
@@ -1509,6 +1860,8 @@ class GetJinja {
           ).format(DateTime.parse(value));
           return inputFormat;
         },
+
+        /// Replaces occurrences of a character or substring in a string.
         'replace_each': (
           String? value,
           String? from,
@@ -1540,6 +1893,8 @@ class GetJinja {
 
           return value;
         },
+
+        /// Replaces matches of a regex pattern in a string.
         'regex_replace': (String? value, String? from, String? to) {
           try {
             final RegExp regex = RegExp(from ?? '');

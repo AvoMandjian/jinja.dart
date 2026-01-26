@@ -13,22 +13,12 @@ void main() async {
       print('Jinja Error: $error');
       errors.add(error);
     },
+    callbackToParentProject: ({required payload}) async {
+      await Future<void>.delayed(const Duration(seconds: 2));
+      print('Mock callbackToParentProject called with: $payload');
+      return {'mock_data': 'test_data'};
+    },
   );
-
-  // Example 3: Mix of sync and async globals
-  print('\n=== Example 3: Mix of sync and async globals ===');
-  var template3 = env.fromString('{{ sync_var }} and {{ async_var }}');
-
-  Future<String> getAsyncValue() async {
-    await Future<void>.delayed(const Duration(milliseconds: 75));
-    return 'async value';
-  }
-
-  var result3 = await template3.renderAsync({
-    'sync_var': 'sync value',
-    'async_var': getAsyncValue(),
-  });
-  print(result3); // Should print: sync value and async value
 
   // Example 4: Using environment globals
   print('\n=== Example 4: Using environment globals ===');
