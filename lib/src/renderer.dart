@@ -203,13 +203,50 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       var derived = context.derived(sink: buffer);
 
       var index = 0;
-      var length = node.positional.length;
+      var mandatoryLength = node.positional.length;
 
       try {
-        for (; index < length; index += 1) {
+        // 1. Mandatory positional arguments
+        for (; index < mandatoryLength; index += 1) {
           var key = node.positional[index].accept(this, context) as String;
           derived.set(key, positional[index]);
         }
+
+        // 2. Optional arguments (node.named) - fill from positional if available, else named/default
+        var remaining = named.keys.toSet();
+
+        for (var (argument, defaultValue) in node.named) {
+          var key = argument.accept(this, context) as String;
+
+          if (index < positional.length) {
+            // Use positional argument
+            derived.set(key, positional[index]);
+            index++;
+          } else {
+            // Check named arguments
+            if (remaining.remove(key)) {
+              derived.set(key, named[key]);
+            } else if (remaining.remove(Symbol(key))) {
+              derived.set(key, named[Symbol(key)]);
+            } else {
+              // Evaluate default value
+              if (defaultValue is Name) {
+                // For Name defaults like b=x, look in named arguments only
+                // This allows defaults to reference other macro parameters
+                // Check both String and Symbol keys
+                var defaultValueValue = named[defaultValue.name];
+                defaultValueValue ??= named[Symbol(defaultValue.name)];
+                derived.set(key, defaultValueValue);
+              } else {
+                // For other defaults, evaluate in outer context
+                var defaultValueResult = defaultValue.accept(this, context);
+                derived.set(key, defaultValueResult);
+              }
+            }
+          }
+        }
+
+        // 3. Varargs
         if (node.varargs) {
           derived.set('varargs', positional.sublist(index));
         } else if (index < positional.length) {
@@ -219,58 +256,32 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
             given arguments: ${positional.toString()},
             ''');
         }
+
+        // 4. Kwargs
+        if (node.kwargs) {
+          var kwargs = <Object?, Object?>{};
+          for (var key in remaining) {
+            if (key is String) {
+              kwargs[key] = named[key];
+            } else if (key is Symbol) {
+              // Convert Symbol to String for kwargs
+              var keyStr = key.toString().replaceAll('Symbol("', '').replaceAll('")', '');
+              kwargs[keyStr] = named[key];
+            } else {
+              kwargs[key] = named[key];
+            }
+          }
+          derived.set('kwargs', kwargs);
+        } else if (remaining.isNotEmpty) {
+          throw TemplateRuntimeError('remaining.isNotEmpty: ${remaining.map((e) => e.toString()).join(', ')}');
+        }
       } catch (e) {
         throw TemplateRuntimeError('''Error at macro ${node.name},
-            expected arguments count: $length
+            expected arguments count: ${mandatoryLength + node.named.length} (mandatory: $mandatoryLength)
             given arguments count: ${positional.length}
             given arguments: ${positional.toString()},
             error: ${e.toString()}
             ''');
-      }
-
-      var remaining = named.keys.toSet();
-
-      for (var (argument, defaultValue) in node.named) {
-        var key = argument.accept(this, context) as String;
-
-        // Try to remove the key, handling both String and Symbol keys
-        if (remaining.remove(key)) {
-          derived.set(key, named[key]);
-        } else if (remaining.remove(Symbol(key))) {
-          derived.set(key, named[Symbol(key)]);
-        } else {
-          // Evaluate default value
-          if (defaultValue is Name) {
-            // For Name defaults like b=x, look in named arguments only
-            // This allows defaults to reference other macro parameters
-            // Check both String and Symbol keys
-            var defaultValueValue = named[defaultValue.name];
-            defaultValueValue ??= named[Symbol(defaultValue.name)];
-            derived.set(key, defaultValueValue);
-          } else {
-            // For other defaults, evaluate in outer context
-            var defaultValueResult = defaultValue.accept(this, context);
-            derived.set(key, defaultValueResult);
-          }
-        }
-      }
-
-      if (node.kwargs) {
-        var kwargs = <Object?, Object?>{};
-        for (var key in remaining) {
-          if (key is String) {
-            kwargs[key] = named[key];
-          } else if (key is Symbol) {
-            // Convert Symbol to String for kwargs
-            var keyStr = key.toString().replaceAll('Symbol("', '').replaceAll('")', '');
-            kwargs[keyStr] = named[key];
-          } else {
-            kwargs[key] = named[key];
-          }
-        }
-        derived.set('kwargs', kwargs);
-      } else if (remaining.isNotEmpty) {
-        throw TemplateRuntimeError('remaining.isNotEmpty: ${remaining.map((e) => e.toString()).join(', ')}');
       }
 
       node.body.accept(this, derived);
