@@ -55,11 +55,154 @@ template.renderTo(stringSink, {'key': value});
 See also examples with [conduit][conduit_example] and
 [reflectable][reflectable_example].
 
+## Error Handling Example
+
+```dart
+import 'package:jinja/jinja.dart';
+
+var env = Environment();
+var template = env.fromString('''
+  {% for user in users %}
+    <div>{{ user.name }}</div>
+  {% endfor %}
+''');
+
+try {
+  // This will throw UndefinedError with enhanced context
+  template.render({'users': null});
+} on UndefinedError catch (e) {
+  print(e.toString());
+  // Output includes:
+  // - Location (template path, line, column)
+  // - Available variables
+  // - Suggestions for fixing the error
+}
+```
+
+### Common Error Scenarios
+
+**Undefined Variable**:
+```dart
+// Template: {{ userName }}
+// Error includes: similar variable names, available variables, suggestions
+```
+
+**Attribute Access on Null**:
+```dart
+// Template: {{ user.name }}
+// Context: user = null
+// Error includes: available attributes, suggestions for null checks
+```
+
+**Filter Not Found**:
+```dart
+// Template: {{ text|uppercase }}
+// Error includes: similar filter names, available filters
+```
+
+**Syntax Error**:
+```dart
+// Template: {% if condition %}
+// Error includes: context snippet, tag stack, suggestions
+```
+
+## Enhanced Error Messages
+
+The Jinja library now provides comprehensive, actionable error messages with rich context to help you quickly identify and fix template errors.
+
+### Features
+
+- **Detailed Location Information**: Template path, line number, and column where errors occur
+- **Context Snapshots**: Variable state at the time of error (sanitized, max 50 variables)
+- **Actionable Suggestions**: Specific recommendations for fixing common errors
+- **Fuzzy Matching**: Suggestions for similar variable/filter/test names when typos occur
+- **Call Stack**: Rendering call stack showing template → macro → include chain
+- **Node Information**: AST node type and details where the error occurred
+
+### Example Error Output
+
+**Before** (basic error):
+```
+UndefinedError: Cannot access attribute `name` on a null object.
+```
+
+**After** (enhanced error):
+```
+UndefinedError: Cannot access attribute `name` on a null object.
+  Location: template 'users.html', line 15, column 8
+  Node: Attribute (user.name)
+  Operation: Accessing attribute 'name' on null object
+  Context:
+    - Template: 'users.html'
+    - Variable 'user': null
+    - Available variables: ['users', 'userList', 'currentUser']
+  Suggestions:
+    - Check if 'user' is defined before accessing 'name': {% if user %}{{ user.name }}{% endif %}
+    - Verify the variable name spelling (did you mean 'users' or 'currentUser'?)
+    - Ensure 'user' is passed to the template context
+```
+
+### Error Types
+
+All error types (`TemplateSyntaxError`, `TemplateRuntimeError`, `UndefinedError`, `TemplateNotFound`, `TemplateAssertionError`) now include:
+
+- **Location**: Template path, line, and column
+- **Node**: AST node where error occurred
+- **Operation**: Description of what was being performed
+- **Context**: Variable state snapshot (sanitized)
+- **Suggestions**: Actionable fix recommendations
+- **Call Stack**: Template rendering call chain
+
+### Context Size Limits
+
+To prevent memory issues, context capture has built-in limits:
+
+- **Maximum 50 variables** in context snapshot
+- **Maximum 10KB** total context size (truncated if exceeded)
+- **Maximum 10 stack frames** in call stack
+- **Sensitive data** automatically excluded (see below)
+
+### Sensitive Data Handling
+
+The error system automatically sanitizes sensitive information from context snapshots. Keys matching these patterns are excluded:
+
+- `*password*`
+- `*secret*`
+- `*token*`
+- `*key*`
+- `*api_key*`
+- `*auth*`
+
+This ensures that sensitive credentials are never included in error messages or logs.
+
+### ErrorLogger (Optional)
+
+For structured logging, you can configure an `ErrorLogger`:
+
+```dart
+import 'package:jinja/jinja.dart';
+import 'package:jinja/src/error_logger.dart';
+
+final env = Environment(
+  // ErrorLogger is optional - enhanced exceptions work without it
+  // errorLogger: ErrorLogger(level: LogLevel.error),
+);
+
+// Enhanced exceptions automatically include all context
+try {
+  template.render({'user': null});
+} catch (e) {
+  // Error contains: location, context, suggestions, call stack
+  print(e.toString());
+}
+```
+
+### Backward Compatibility
+
+All enhancements are **additive** - existing code continues to work without changes. Enhanced error messages are automatically included when errors occur.
+
 ## Status:
 ### TODO:
-- Informative error messages
-  - Template name 🔥
-  - Source span 🔥
 - `Template` class:
   - `generate` method
   - `stream` method
@@ -100,6 +243,10 @@ See also examples with [conduit][conduit_example] and
 
 ### Done:
 **Note**: ~~item~~ - _not supported_
+- Informative error messages ✅
+  - Template name ✅
+  - Source span ✅
+  - Enhanced context (variables, suggestions, call stack) ✅
 - Variables
 - Filters
   - ~~`forceescape`~~

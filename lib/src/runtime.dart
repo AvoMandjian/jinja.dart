@@ -1,5 +1,7 @@
 import 'environment.dart';
+import 'exceptions.dart';
 import 'nodes.dart';
+import 'utils.dart';
 
 typedef ContextCallback = void Function(Context context);
 
@@ -29,33 +31,83 @@ base class Context {
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
   ]) {
-    if (object is Function) {
-      return environment.callCommon(object, positional, named, this);
-    }
-
-    if (object == null) {
-      if (node is Call) {
-        if (node.value is Attribute) {
-          throw Exception('The function ${((node.value as Attribute).value as Name).name} is null at $positional');
-        } else {
-          throw Exception('The function ${node.value.toString()} is null at $positional');
-        }
-      }
-      throw Exception('Object is null at $positional');
-    }
-
-    // Try to find a 'call' method on the object (for callable classes)
     try {
-      final callMethod = (object as dynamic).call;
-      if (callMethod is Function) {
-        return environment.callCommon(callMethod, positional, named, this);
+      if (object is Function) {
+        return environment.callCommon(object, positional, named, this);
       }
-    } catch (_) {
-      // Ignore error if .call does not exist
-    }
 
-    // Fallback to callCommon which might handle other types or throw
-    return environment.callCommon(object, positional, named, this);
+      if (object == null) {
+        String? functionName;
+        if (node is Call) {
+          if (node.value is Attribute) {
+            functionName = ((node.value as Attribute).value as Name).name;
+          } else {
+            functionName = node.value.toString();
+          }
+        }
+        final suggestions = <String>[
+          'Check if the function is defined before calling it',
+          if (functionName != null) 'Ensure \'$functionName\' is passed to the template context',
+        ];
+        throw TemplateRuntimeError(
+          functionName != null ? 'The function $functionName is null at $positional' : 'Object is null at $positional',
+          nodeValue: node is Node ? node : null,
+          operationValue: 'Calling null function',
+          suggestionsValue: suggestions,
+        );
+      }
+
+      // Handle LoopContext specially - it has a call method that should be called directly
+      if (object is LoopContext) {
+        if (positional.isEmpty) {
+          final suggestions = <String>[
+            'LoopContext.call() requires at least one argument (the iterable to recurse)',
+            'Usage: {{ loop(items) }}',
+          ];
+          throw TemplateRuntimeError(
+            'LoopContext.call() requires an iterable argument.',
+            nodeValue: node is Node ? node : null,
+            operationValue: 'Calling LoopContext without arguments',
+            suggestionsValue: suggestions,
+          );
+        }
+        return object.call(positional[0]);
+      }
+
+      // Try to find a 'call' method on the object (for callable classes)
+      try {
+        final callMethod = (object as dynamic).call;
+        if (callMethod is Function) {
+          return environment.callCommon(callMethod, positional, named, this);
+        }
+      } catch (_) {
+        // Ignore error if .call does not exist
+      }
+
+      // Fallback to callCommon which might handle other types or throw
+      return environment.callCommon(object, positional, named, this);
+    } on TemplateError {
+      // Re-throw template errors as-is
+      rethrow;
+    } catch (e, stackTrace) {
+      // Wrap non-template exceptions with context
+      final contextSnapshot = captureContext(this);
+      final suggestions = <String>[
+        'Check if the object is callable',
+        'Verify the function signature matches the arguments provided',
+        'Ensure all required arguments are provided',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error calling function: ${e.toString()}',
+        stackTrace: stackTrace,
+        node: node is Node ? node : null,
+        contextSnapshot: contextSnapshot,
+        operation: 'Calling function with ${positional.length} positional and ${named.length} named arguments',
+        suggestions: suggestions,
+        templatePath: template,
+      );
+    }
   }
 
   Context derived({
@@ -80,15 +132,43 @@ base class Context {
   }
 
   Object? resolve(String name) {
-    if (context.containsKey(name)) {
-      return context[name];
-    }
+    try {
+      if (context.containsKey(name)) {
+        return context[name];
+      }
 
-    if (parent.containsKey(name)) {
-      return parent[name];
-    }
+      if (parent.containsKey(name)) {
+        return parent[name];
+      }
 
-    return undefined(name, template);
+      return undefined(name, template);
+    } on TemplateError {
+      // Re-throw template errors as-is (they already have context)
+      rethrow;
+    } catch (e, stackTrace) {
+      // Wrap non-template exceptions with context
+      final contextSnapshot = captureContext(this);
+      final availableKeys = <String>[
+        ...context.keys,
+        ...parent.keys,
+      ];
+      final similarNames = getSimilarNames(name, availableKeys);
+      final suggestions = <String>[
+        'Check if \'$name\' is defined before using it: {% if $name %}...{% endif %}',
+        if (similarNames.isNotEmpty) 'Did you mean one of these? ${similarNames.join(', ')}',
+        'Ensure \'$name\' is passed to the template context',
+        if (availableKeys.isNotEmpty) 'Available variables: ${availableKeys.take(10).join(', ')}${availableKeys.length > 10 ? '...' : ''}',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error resolving variable \'$name\': ${e.toString()}',
+        stackTrace: stackTrace,
+        contextSnapshot: contextSnapshot,
+        operation: 'Resolving variable \'$name\'',
+        suggestions: suggestions,
+        templatePath: template,
+      );
+    }
   }
 
   /// Async version of resolve that awaits Future values.
@@ -129,11 +209,58 @@ base class Context {
   }
 
   Object? attribute(String name, Object? value, Object? node) {
-    return environment.getAttribute(name, value, node: node);
+    try {
+      return environment.getAttribute(name, value, node: node);
+    } on TemplateError {
+      // Re-throw template errors as-is (they already have context from defaults.dart)
+      rethrow;
+    } catch (e, stackTrace) {
+      // Wrap non-template exceptions with context
+      final contextSnapshot = captureContext(this);
+      final suggestions = <String>[
+        'Check if the object is null before accessing attributes',
+        'Use conditional rendering: {% if object %}{{ object.$name }}{% endif %}',
+        'Verify the attribute name is correct',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error accessing attribute \'$name\': ${e.toString()}',
+        stackTrace: stackTrace,
+        node: node is Node ? node : null,
+        contextSnapshot: contextSnapshot,
+        operation: 'Accessing attribute \'$name\' on ${value.runtimeType}',
+        suggestions: suggestions,
+        templatePath: template,
+      );
+    }
   }
 
   Object? item(Object? name, Object? value, Object? node) {
-    return environment.getItem(name, value, node: node);
+    try {
+      return environment.getItem(name, value, node: node);
+    } on TemplateError {
+      // Re-throw template errors as-is (they already have context from defaults.dart)
+      rethrow;
+    } catch (e, stackTrace) {
+      // Wrap non-template exceptions with context
+      final contextSnapshot = captureContext(this);
+      final suggestions = <String>[
+        'Check if the object is null before accessing items',
+        'Use conditional rendering: {% if object %}{{ object[$name] }}{% endif %}',
+        'Verify the key type matches the object type',
+        if (value is Map) 'Check if the key exists: {% if object.$name is defined %}...{% endif %}',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error accessing item \'$name\': ${e.toString()}',
+        stackTrace: stackTrace,
+        node: node is Node ? node : null,
+        contextSnapshot: contextSnapshot,
+        operation: 'Accessing item \'$name\' on ${value.runtimeType}',
+        suggestions: suggestions,
+        templatePath: template,
+      );
+    }
   }
 
   dynamic filter(
@@ -141,7 +268,33 @@ base class Context {
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
   ]) {
-    return environment.callFilter(name, positional, named, this);
+    try {
+      return environment.callFilter(name, positional, named, this);
+    } on TemplateError {
+      // Re-throw template errors as-is (they already have context from environment.dart)
+      rethrow;
+    } catch (e, stackTrace) {
+      // Wrap non-template exceptions with context
+      final contextSnapshot = captureContext(this);
+      final availableFilters = environment.filters.keys.toList();
+      final similarFilters = getSimilarNames(name, availableFilters);
+      final suggestions = <String>[
+        'Check if the filter \'$name\' exists',
+        if (similarFilters.isNotEmpty) 'Did you mean one of these? ${similarFilters.join(', ')}',
+        'Verify the filter arguments match the expected signature',
+        if (availableFilters.isNotEmpty)
+          'Available filters: ${availableFilters.take(10).join(', ')}${availableFilters.length > 10 ? '...' : ''}',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error calling filter \'$name\': ${e.toString()}',
+        stackTrace: stackTrace,
+        contextSnapshot: contextSnapshot,
+        operation: 'Calling filter \'$name\' with ${positional.length} positional and ${named.length} named arguments',
+        suggestions: suggestions,
+        templatePath: template,
+      );
+    }
   }
 
   dynamic test(
@@ -149,7 +302,32 @@ base class Context {
     List<Object?> positional = const <Object?>[],
     Map<Symbol, Object?> named = const <Symbol, Object?>{},
   ]) {
-    return environment.callTest(name, positional, named, this);
+    try {
+      return environment.callTest(name, positional, named, this);
+    } on TemplateError {
+      // Re-throw template errors as-is (they already have context from environment.dart)
+      rethrow;
+    } catch (e, stackTrace) {
+      // Wrap non-template exceptions with context
+      final contextSnapshot = captureContext(this);
+      final availableTests = environment.tests.keys.toList();
+      final similarTests = getSimilarNames(name, availableTests);
+      final suggestions = <String>[
+        'Check if the test \'$name\' exists',
+        if (similarTests.isNotEmpty) 'Did you mean one of these? ${similarTests.join(', ')}',
+        'Verify the test arguments match the expected signature',
+        if (availableTests.isNotEmpty) 'Available tests: ${availableTests.take(10).join(', ')}${availableTests.length > 10 ? '...' : ''}',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error calling test \'$name\': ${e.toString()}',
+        stackTrace: stackTrace,
+        contextSnapshot: contextSnapshot,
+        operation: 'Calling test \'$name\' with ${positional.length} positional and ${named.length} named arguments',
+        suggestions: suggestions,
+        templatePath: template,
+      );
+    }
   }
 }
 

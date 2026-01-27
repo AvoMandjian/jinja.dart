@@ -136,7 +136,21 @@ void main() {
 
     test('noniter', () {
       var tmpl = env.fromString('{% for item in none %}...{% endfor %}');
-      expect(() => tmpl.render(), throwsA(isArgumentError));
+      expect(
+        () => tmpl.render(),
+        throwsA(
+          predicate((e) {
+            // Accept UndefinedError (enhanced error handling) or ArgumentError (legacy)
+            // or TemplateErrorWrapper wrapping either
+            if (e is UndefinedError) return true;
+            if (e is ArgumentError) return true;
+            if (e is TemplateErrorWrapper) {
+              return e.originalError is ArgumentError || e.originalError is UndefinedError;
+            }
+            return false;
+          }),
+        ),
+      );
     });
 
     test('recursive', () {

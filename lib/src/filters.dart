@@ -640,6 +640,11 @@ String doToJson(Object? value, [bool? indent]) {
 }
 
 String doRuntimeType(dynamic object) {
+  // If it's a TemplateErrorWrapper, return the original error's runtime type
+  // This allows templates to access the original error type even when wrapped
+  if (object is TemplateErrorWrapper) {
+    return object.originalError.runtimeType.toString();
+  }
   return object.runtimeType.toString();
 }
 

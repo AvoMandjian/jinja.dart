@@ -28,12 +28,35 @@ final class Parser {
   Extends? extendsNode;
 
   Never fail(String message, {required int? line, required int? column}) {
+    // Generate suggestions based on common syntax errors
+    final suggestions = <String>[];
+
+    // Common syntax error patterns
+    if (message.toLowerCase().contains('unexpected end')) {
+      suggestions.add('Check if all tags are properly closed');
+      suggestions.add('Verify {% endfor %}, {% endif %}, {% endblock %} tags match opening tags');
+    } else if (message.toLowerCase().contains('unknown tag')) {
+      suggestions.add('Check if the tag name is spelled correctly');
+      suggestions.add('Verify all tag names are valid Jinja tags');
+      if (tagStack.isNotEmpty) {
+        suggestions.add('Currently inside: ${tagStack.join(" -> ")}');
+      }
+    } else if (message.toLowerCase().contains('nesting')) {
+      suggestions.add('Check tag nesting order');
+      suggestions.add('Ensure opening and closing tags match');
+    } else {
+      suggestions.add('Check the template syntax at the indicated line and column');
+      suggestions.add('Verify all tags are properly closed');
+      suggestions.add('Check for typos in tag names');
+    }
+
     throw TemplateSyntaxError(
       message,
       line: line,
       column: column,
       path: path,
       contextSnippet: (line != null && column != null) ? errorContextSnippet(templateSource, line, column) : null,
+      suggestions: suggestions,
     );
   }
 

@@ -13,7 +13,7 @@ import 'parser.dart';
 import 'renderer.dart';
 import 'runtime.dart';
 import 'tests.dart' as tests_lib;
-import 'utils.dart';
+import 'utils.dart' show captureContext, getSimilarNames, ContextFilter, EnvFilter;
 
 export 'package:jinja/src/exceptions.dart' show TemplateError;
 export 'package:jinja/src/loaders.dart' show Loader;
@@ -298,32 +298,64 @@ base class Environment {
     Map<Symbol, Object?> named,
     Context? context,
   ) {
-    Function func;
-    if (function is ContextFilter) {
-      if (context == null) {
-        throw TemplateRuntimeError(
-          'Attempted to invoke context function without context.',
-        );
+    try {
+      Function func;
+      if (function is ContextFilter) {
+        if (context == null) {
+          final suggestions = <String>[
+            'Context functions require a Context parameter',
+            'Ensure the function is called from within a template rendering context',
+          ];
+          throw TemplateRuntimeError(
+            'Attempted to invoke context function without context.',
+            operationValue: 'Calling context function',
+            suggestionsValue: suggestions,
+          );
+        }
+        positional = <Object?>[context, ...positional];
+        func = function.function;
+      } else if (function is EnvFilter) {
+        positional = <Object?>[this, ...positional];
+        func = function.function;
+      } else if (function is Function) {
+        func = function;
+      } else {
+        // Try to invoke as callable object (Joiner, Cycler)
+        try {
+          // This assumes dynamic dispatch will work for call() method
+          // We might need to check for call method existence more robustly if needed
+          return Function.apply(function as dynamic, positional, named);
+        } catch (_) {
+          final suggestions = <String>[
+            'Object must be a Function or have a call() method',
+            'Object type: ${function.runtimeType}',
+            'Check if the object is callable',
+          ];
+          throw TemplateRuntimeError(
+            'Invalid callable: $function',
+            operationValue: 'Calling function',
+            suggestionsValue: suggestions,
+          );
+        }
       }
-      positional = <Object?>[context, ...positional];
-      func = function.function;
-    } else if (function is EnvFilter) {
-      positional = <Object?>[this, ...positional];
-      func = function.function;
-    } else if (function is Function) {
-      func = function;
-    } else {
-      // Try to invoke as callable object (Joiner, Cycler)
-      try {
-        // This assumes dynamic dispatch will work for call() method
-        // We might need to check for call method existence more robustly if needed
-        return Function.apply(function as dynamic, positional, named);
-      } catch (e) {
-        throw TemplateRuntimeError('Invalid callable: $function');
-      }
-    }
 
-    return Function.apply(func, positional, named);
+      return Function.apply(func, positional, named);
+    } on TemplateError {
+      rethrow;
+    } catch (e, stackTrace) {
+      final suggestions = <String>[
+        'Check if the function signature matches the arguments',
+        'Verify all required arguments are provided',
+        'Ensure argument types match the function parameters',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error calling function: ${e.toString()}',
+        stackTrace: stackTrace,
+        operation: 'Calling function with ${positional.length} positional and ${named.length} named arguments',
+        suggestions: suggestions,
+      );
+    }
   }
 
   /// If [name] filter not found [TemplateRuntimeError] thrown.
@@ -336,7 +368,19 @@ base class Environment {
     final filter = filters[name];
 
     if (filter == null) {
-      throw TemplateRuntimeError("No filter named '$name'.");
+      final availableFilters = filters.keys.toList();
+      final similarFilters = getSimilarNames(name, availableFilters);
+      final suggestions = <String>[
+        'Check if the filter name is spelled correctly',
+        if (similarFilters.isNotEmpty) 'Did you mean one of these? ${similarFilters.join(', ')}',
+        if (availableFilters.isNotEmpty)
+          'Available filters: ${availableFilters.take(10).join(', ')}${availableFilters.length > 10 ? '...' : ''}',
+      ];
+      throw TemplateRuntimeError(
+        "No filter named '$name'.",
+        operationValue: 'Calling filter \'$name\'',
+        suggestionsValue: suggestions,
+      );
     }
 
     var finalPositional = positional;
@@ -344,8 +388,14 @@ base class Environment {
 
     if (filter is ContextFilter) {
       if (context == null) {
+        final suggestions = <String>[
+          'Context filters require a Context parameter',
+          'Ensure the filter is called from within a template rendering context',
+        ];
         throw TemplateRuntimeError(
           'Attempted to invoke context filter without context.',
+          operationValue: 'Calling context filter \'$name\'',
+          suggestionsValue: suggestions,
         );
       }
       finalPositional = <Object?>[context, ...positional];
@@ -356,7 +406,16 @@ base class Environment {
     } else if (filter is Function) {
       func = filter;
     } else {
-      throw TemplateRuntimeError('Filter "$name" is not a function.');
+      final suggestions = <String>[
+        'Filter must be a Function',
+        'Filter type: ${filter.runtimeType}',
+        'Check filter registration',
+      ];
+      throw TemplateRuntimeError(
+        'Filter "$name" is not a function.',
+        operationValue: 'Calling filter \'$name\'',
+        suggestionsValue: suggestions,
+      );
     }
 
     // Check if any arguments are Futures - if so, we need to be async
@@ -377,12 +436,26 @@ base class Environment {
         try {
           final result = Function.apply(func, resolvedPositional, named);
           return result is Future ? await result : result;
-        } catch (e, stackTrace) {
-          print('Error calling filter "$name": $e');
-          print('Positional args types: ${resolvedPositional.map((e) => e.runtimeType).toList()}');
-          print('Named args: $named');
-          print('Stack trace:\n$stackTrace');
+        } on TemplateError {
           rethrow;
+        } catch (e, stackTrace) {
+          final contextSnapshot = context != null ? captureContext(context) : null;
+          final argTypes = resolvedPositional.map((e) => e.runtimeType).toList();
+          final suggestions = <String>[
+            'Check if the filter arguments match the expected signature',
+            'Positional args types: $argTypes',
+            'Verify all required arguments are provided',
+            'Ensure argument types match the filter parameters',
+          ];
+          throw TemplateErrorWrapper(
+            e,
+            message: 'Error calling filter "$name": ${e.toString()}',
+            stackTrace: stackTrace,
+            contextSnapshot: contextSnapshot,
+            operation: 'Calling filter \'$name\' with ${resolvedPositional.length} positional and ${named.length} named arguments',
+            suggestions: suggestions,
+            templatePath: context?.template,
+          );
         }
       });
     } else {
@@ -391,12 +464,26 @@ base class Environment {
         final result = Function.apply(func, finalPositional, named);
         // Return result as is (can be Future or value)
         return result;
-      } catch (e, stackTrace) {
-        print('Error calling filter "$name": $e');
-        print('Positional args types: ${finalPositional.map((e) => e.runtimeType).toList()}');
-        print('Named args: $named');
-        print('Stack trace:\n$stackTrace');
+      } on TemplateError {
         rethrow;
+      } catch (e, stackTrace) {
+        final contextSnapshot = context != null ? captureContext(context) : null;
+        final argTypes = finalPositional.map((e) => e.runtimeType).toList();
+        final suggestions = <String>[
+          'Check if the filter arguments match the expected signature',
+          'Positional args types: $argTypes',
+          'Verify all required arguments are provided',
+          'Ensure argument types match the filter parameters',
+        ];
+        throw TemplateErrorWrapper(
+          e,
+          message: 'Error calling filter "$name": ${e.toString()}',
+          stackTrace: stackTrace,
+          contextSnapshot: contextSnapshot,
+          operation: 'Calling filter \'$name\' with ${finalPositional.length} positional and ${named.length} named arguments',
+          suggestions: suggestions,
+          templatePath: context?.template,
+        );
       }
     }
   }
@@ -418,37 +505,77 @@ base class Environment {
         return Future(() async {
           final resolvedPositional = <Object?>[];
           for (var arg in positional) {
-            if (arg is Future)
+            if (arg is Future) {
               resolvedPositional.add(await arg);
-            else
+            } else {
               resolvedPositional.add(arg);
+            }
           }
           // callCommon handles filter/env wrappers
           try {
             var result = callCommon(test, resolvedPositional, named, context);
             return result is Future ? await result : result;
-          } catch (e, stackTrace) {
-            print('Error calling test "$name": $e');
-            print('Positional args types: ${resolvedPositional.map((e) => e.runtimeType).toList()}');
-            print('Named args: $named');
-            print('Stack trace:\n$stackTrace');
+          } on TemplateError {
             rethrow;
+          } catch (e, stackTrace) {
+            final contextSnapshot = context != null ? captureContext(context) : null;
+            final argTypes = resolvedPositional.map((e) => e.runtimeType).toList();
+            final suggestions = <String>[
+              'Check if the test arguments match the expected signature',
+              'Positional args types: $argTypes',
+              'Verify all required arguments are provided',
+              'Ensure argument types match the test parameters',
+            ];
+            throw TemplateErrorWrapper(
+              e,
+              message: 'Error calling test "$name": ${e.toString()}',
+              stackTrace: stackTrace,
+              contextSnapshot: contextSnapshot,
+              operation: 'Calling test \'$name\' with ${resolvedPositional.length} positional and ${named.length} named arguments',
+              suggestions: suggestions,
+              templatePath: context?.template,
+            );
           }
         });
       }
 
       try {
         return callCommon(test, positional, named, context);
-      } catch (e, stackTrace) {
-        print('Error calling test "$name": $e');
-        print('Positional args types: ${positional.map((e) => e.runtimeType).toList()}');
-        print('Named args: $named');
-        print('Stack trace:\n$stackTrace');
+      } on TemplateError {
         rethrow;
+      } catch (e, stackTrace) {
+        final contextSnapshot = context != null ? captureContext(context) : null;
+        final argTypes = positional.map((e) => e.runtimeType).toList();
+        final suggestions = <String>[
+          'Check if the test arguments match the expected signature',
+          'Positional args types: $argTypes',
+          'Verify all required arguments are provided',
+          'Ensure argument types match the test parameters',
+        ];
+        throw TemplateErrorWrapper(
+          e,
+          message: 'Error calling test "$name": ${e.toString()}',
+          stackTrace: stackTrace,
+          contextSnapshot: contextSnapshot,
+          operation: 'Calling test \'$name\' with ${positional.length} positional and ${named.length} named arguments',
+          suggestions: suggestions,
+          templatePath: context?.template,
+        );
       }
     }
 
-    throw TemplateRuntimeError("No test named '$name'.");
+    final availableTests = tests.keys.toList();
+    final similarTests = getSimilarNames(name, availableTests);
+    final suggestions = <String>[
+      'Check if the test name is spelled correctly',
+      if (similarTests.isNotEmpty) 'Did you mean one of these? ${similarTests.join(', ')}',
+      if (availableTests.isNotEmpty) 'Available tests: ${availableTests.take(10).join(', ')}${availableTests.length > 10 ? '...' : ''}',
+    ];
+    throw TemplateRuntimeError(
+      "No test named '$name'.",
+      operationValue: 'Calling test \'$name\'',
+      suggestionsValue: suggestions,
+    );
   }
 
   /// Checks if a string matches a regex pattern (anchored to the start).
@@ -530,16 +657,45 @@ base class Environment {
   /// If the loader is not specified a [StateError] is thrown.
   Template getTemplate(String name) {
     if (loader case var loader?) {
-      var loaded = loader.load(this, name, globals: globals);
+      try {
+        var loaded = loader.load(this, name, globals: globals);
 
-      if (autoReload) {
-        return templates[name] = loaded;
+        if (autoReload) {
+          return templates[name] = loaded;
+        }
+
+        return templates[name] ??= loaded;
+      } on TemplateError {
+        // Re-throw template errors as-is (they already have context)
+        rethrow;
+      } catch (e, stackTrace) {
+        final suggestions = <String>[
+          'Check if the template path is correct',
+          'Verify the template exists in the loader',
+          'Ensure the loader is configured correctly',
+        ];
+        throw TemplateErrorWrapper(
+          e,
+          message: 'Error loading template "$name": ${e.toString()}',
+          stackTrace: stackTrace,
+          operation: 'Loading template \'$name\'',
+          suggestions: suggestions,
+          templatePath: name,
+        );
       }
-
-      return templates[name] ??= loaded;
     }
 
-    throw StateError('No loader for this environment specified.');
+    final suggestions = <String>[
+      'A loader must be specified to load templates',
+      'Set the loader when creating the Environment',
+      'Example: Environment(loader: FileSystemLoader(...))',
+    ];
+    throw TemplateRuntimeError(
+      'No loader for this environment specified.',
+      operationValue: 'Loading template \'$name\'',
+      suggestionsValue: suggestions,
+      templatePathValue: name,
+    );
   }
 
   /// Load a template from a list of names.

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:collection/collection.dart';
 
 import 'exceptions.dart';
+import 'nodes.dart';
 import 'runtime.dart';
 import 'utils.dart';
 
@@ -31,7 +32,18 @@ Object finalize(Context context, Object? value) {
 /// Handles `Map`, `List` methods, `LoopContext`, and `Namespace` objects.
 Object? getAttribute(String attribute, Object? object, {Object? node}) {
   if (object == null) {
-    throw UndefinedError('Cannot access attribute `$attribute` on a null object.');
+    // Collect available attributes for suggestions
+    final suggestions = <String>[
+      'Check if the object is null before accessing attributes',
+      'Use conditional rendering: {% if object %}{{ object.$attribute }}{% endif %}',
+    ];
+
+    throw UndefinedError(
+      'Cannot access attribute `$attribute` on a null object.',
+      nodeValue: node is Node ? node : null,
+      operationValue: 'Accessing attribute \'$attribute\' on null object',
+      suggestionsValue: suggestions,
+    );
   }
 
   if (object is Map) {
@@ -47,6 +59,8 @@ Object? getAttribute(String attribute, Object? object, {Object? node}) {
       return object.values;
     }
 
+    // Return null (undefined) if key doesn't exist to match Jinja2 behavior
+    // This allows {% if object.key %} to work correctly
     return object[attribute];
   }
 
@@ -55,6 +69,17 @@ Object? getAttribute(String attribute, Object? object, {Object? node}) {
       case 'add':
         return object.add;
     }
+    // List doesn't have this attribute
+    final suggestions = <String>[
+      'List attributes: add, length, isEmpty, isNotEmpty',
+      'Use index access for list items: object[index]',
+    ];
+    throw UndefinedError(
+      'List does not have attribute `$attribute`.',
+      nodeValue: node is Node ? node : null,
+      operationValue: 'Accessing attribute \'$attribute\' on List',
+      suggestionsValue: suggestions,
+    );
   }
 
   if (object is LoopContext) {
@@ -69,6 +94,16 @@ Object? getAttribute(String attribute, Object? object, {Object? node}) {
     if (attribute == 'next') return object.next;
     if (attribute == 'reset') return object.reset;
     if (attribute == 'current') return object.current;
+    // Cycler doesn't have this attribute
+    final suggestions = <String>[
+      'Cycler attributes: next, reset, current',
+    ];
+    throw UndefinedError(
+      'Cycler does not have attribute `$attribute`.',
+      nodeValue: node is Node ? node : null,
+      operationValue: 'Accessing attribute \'$attribute\' on Cycler',
+      suggestionsValue: suggestions,
+    );
   }
 
   if (object is Joiner) {
@@ -85,7 +120,16 @@ Object? getAttribute(String attribute, Object? object, {Object? node}) {
 /// Handles `Map`, `List`, `MapEntry`, `LoopContext`, and `Namespace` objects.
 Object? getItem(Object? key, Object? object, {Object? node}) {
   if (object == null) {
-    throw UndefinedError('Cannot access item `$key` on a null object.');
+    final suggestions = <String>[
+      'Check if the object is null before accessing items',
+      'Use conditional rendering: {% if object %}{{ object[$key] }}{% endif %}',
+    ];
+    throw UndefinedError(
+      'Cannot access item `$key` on a null object.',
+      nodeValue: node is Node ? node : null,
+      operationValue: 'Accessing item \'$key\' on null object',
+      suggestionsValue: suggestions,
+    );
   }
 
   if (object is Map) {
@@ -101,12 +145,26 @@ Object? getItem(Object? key, Object? object, {Object? node}) {
       if (key >= 0 && key < object.length) {
         return object[key];
       }
+      final suggestions = <String>[
+        'List has ${object.length} items (indices 0-${object.length - 1})',
+        'Check list length before accessing: {% if list.length > $key %}...{% endif %}',
+      ];
       throw UndefinedError(
         'Index `$key` is out of bounds for list of length `${object.length}`.',
+        nodeValue: node is Node ? node : null,
+        operationValue: 'Accessing index $key on List of length ${object.length}',
+        suggestionsValue: suggestions,
       );
     }
+    final suggestions = <String>[
+      'List index must be an integer',
+      'Use integer index: object[0], object[1], etc.',
+    ];
     throw TemplateRuntimeError(
       'List index must be an integer, but got `${key.runtimeType}`.',
+      nodeValue: node is Node ? node : null,
+      operationValue: 'Accessing List with non-integer key',
+      suggestionsValue: suggestions,
     );
   }
 
@@ -117,7 +175,15 @@ Object? getItem(Object? key, Object? object, {Object? node}) {
     if (key == 1) {
       return object.value;
     }
-    throw UndefinedError('MapEntry index must be 0 or 1.');
+    final suggestions = <String>[
+      'MapEntry indices: 0 (key), 1 (value)',
+    ];
+    throw UndefinedError(
+      'MapEntry index must be 0 or 1.',
+      nodeValue: node is Node ? node : null,
+      operationValue: 'Accessing MapEntry with invalid index',
+      suggestionsValue: suggestions,
+    );
   }
 
   if (object is LoopContext) {
@@ -128,12 +194,21 @@ Object? getItem(Object? key, Object? object, {Object? node}) {
     return object[key as String];
   }
 
+  final suggestions = <String>[
+    'Item access is only supported for Map, List, MapEntry, LoopContext, and Namespace',
+    'Object type: ${object.runtimeType}',
+  ];
   throw TemplateRuntimeError(
     'Cannot access item on object of type `${object.runtimeType}`.',
+    nodeValue: node is Node ? node : null,
+    operationValue: 'Accessing item on unsupported object type',
+    suggestionsValue: suggestions,
   );
 }
 
 Object? undefined(String name, [String? template]) {
+  // Return null for undefined variables to support "is defined" tests
+  // Errors are thrown when variables are actually used (in getAttribute, getItem, etc.)
   return null;
 }
 

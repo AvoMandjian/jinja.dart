@@ -159,32 +159,71 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   const StringSinkRenderer();
 
   Map<String, Object?> getDataForTargets(Object? targets, Object? current) {
-    if (targets is String) {
-      return <String, Object?>{targets: current};
-    }
-
-    if (targets is List<Object?>) {
-      var names = targets.cast<String>();
-      var values = list(current);
-
-      if (values.length < names.length) {
-        throw StateError('Not enough values to unpack (expected ${names.length}, '
-            'got ${values.length}).');
+    try {
+      if (targets is String) {
+        return <String, Object?>{targets: current};
       }
 
-      if (values.length > names.length) {
-        throw StateError(
-          'Too many values to unpack (expected ${names.length}).',
-        );
+      if (targets is List<Object?>) {
+        var names = targets.cast<String>();
+        var values = list(current);
+
+        if (values.length < names.length) {
+          final suggestions = <String>[
+            'Expected ${names.length} values but got ${values.length}',
+            'Check if the iterable has enough items',
+            'Ensure the for loop target matches the number of values',
+          ];
+          throw TemplateRuntimeError(
+            'Not enough values to unpack (expected ${names.length}, got ${values.length}).',
+            operationValue: 'Unpacking values for targets: ${names.join(', ')}',
+            suggestionsValue: suggestions,
+          );
+        }
+
+        if (values.length > names.length) {
+          final suggestions = <String>[
+            'Got ${values.length} values but expected ${names.length}',
+            'Add more target variables or reduce the number of values',
+            'Check if the iterable has the correct structure',
+          ];
+          throw TemplateRuntimeError(
+            'Too many values to unpack (expected ${names.length}).',
+            operationValue: 'Unpacking values for targets: ${names.join(', ')}',
+            suggestionsValue: suggestions,
+          );
+        }
+
+        return <String, Object?>{
+          for (var i = 0; i < names.length; i++) names[i]: values[i],
+        };
       }
 
-      return <String, Object?>{
-        for (var i = 0; i < names.length; i++) names[i]: values[i],
-      };
+      final suggestions = <String>[
+        'Target must be a string or list of strings',
+        'For single value: use a string target',
+        'For multiple values: use a list of strings',
+      ];
+      throw TemplateRuntimeError(
+        'Invalid target type: ${targets.runtimeType}. Expected String or List<String>.',
+        operationValue: 'Unpacking values for target',
+        suggestionsValue: suggestions,
+      );
+    } on TemplateError {
+      rethrow;
+    } catch (e, stackTrace) {
+      final suggestions = <String>[
+        'Check if the target structure matches the value structure',
+        'Verify the number of target variables matches the number of values',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error unpacking values for targets: ${e.toString()}',
+        stackTrace: stackTrace,
+        operation: 'Unpacking values for target',
+        suggestions: suggestions,
+      );
     }
-
-    // TODO(renderer): add error message
-    throw ArgumentError.value(targets, 'targets');
   }
 
   MacroFunction getMacroFunction(
@@ -575,15 +614,46 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   void visitExtends(Extends node, StringSinkRenderContext context) {
-    var templateOrParth = node.template.accept(this, context);
+    try {
+      var templateOrPath = node.template.accept(this, context);
 
-    var template = switch (templateOrParth) {
-      String path => context.environment.getTemplate(path),
-      Template template => template,
-      Object? value => throw ArgumentError.value(value, 'template'),
-    };
+      var template = switch (templateOrPath) {
+        String path => context.environment.getTemplate(path),
+        Template template => template,
+        Object? value => throw TemplateRuntimeError(
+            'Invalid template value: ${value.runtimeType}. Expected String or Template.',
+            nodeValue: node.template,
+            operationValue: 'Extending template',
+            suggestionsValue: <String>[
+              'Template path must be a string or Template object',
+              'Check if the template path expression evaluates correctly',
+              'Verify the template exists in the loader',
+            ],
+          ),
+      };
 
-    template.body.accept(this, context);
+      template.body.accept(this, context);
+    } on TemplateError {
+      // Re-throw template errors as-is (they already have context)
+      rethrow;
+    } catch (e, stackTrace) {
+      final contextSnapshot = captureContext(context);
+      final suggestions = <String>[
+        'Check if the template path is correct',
+        'Verify the template exists in the loader',
+        'Ensure the template path expression evaluates to a string',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error extending template: ${e.toString()}',
+        stackTrace: stackTrace,
+        node: node.template,
+        contextSnapshot: contextSnapshot,
+        operation: 'Extending template',
+        suggestions: suggestions,
+        templatePath: context.template,
+      );
+    }
   }
 
   @override
@@ -605,82 +675,158 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   void visitFor(For node, StringSinkRenderContext context) {
-    var targets = node.target.accept(this, context);
-    var iterable = node.iterable.accept(this, context);
+    try {
+      var targets = node.target.accept(this, context);
+      var iterable = node.iterable.accept(this, context);
 
-    // If iterable is a Future, write it to the sink so AsyncRenderer can handle it
-    if (iterable is Future) {
-      context.write(iterable);
-      return;
-    }
-
-    if (iterable == null) {
-      if (node.iterable is Name) {
-        throw ArgumentError(
-          'Trying to access an undefined list: "${(node.iterable as Name).name}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Name).name} %} in one of the jinja script: (${context.blocks.keys.toList().join(',')})',
-        );
-      } else if (node.iterable is Attribute) {
-        throw ArgumentError(
-          'Trying to access an undefined list: "${(node.iterable as Attribute).attribute}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Attribute).attribute} %} in one of the jinja script: (${context.blocks.keys.toList().join(',')})',
-        );
-      }
-    }
-
-    String render(Object? iterable, [int depth = 0]) {
-      List<Object?> values;
-
-      if (iterable is Map) {
-        values = List<Object?>.of(iterable.entries);
-      } else {
-        values = list(iterable);
+      // If iterable is a Future, write it to the sink so AsyncRenderer can handle it
+      if (iterable is Future) {
+        context.write(iterable);
+        return;
       }
 
-      if (values.isEmpty) {
-        if (node.orElse case var orElse?) {
-          orElse.accept(this, context);
+      if (iterable == null) {
+        String? iterableName;
+        if (node.iterable is Name) {
+          iterableName = (node.iterable as Name).name;
+        } else if (node.iterable is Attribute) {
+          iterableName = (node.iterable as Attribute).attribute;
         }
-
-        // Empty string prevents calling `finalize` on `null`.
-        return '';
+        final suggestions = <String>[
+          'Check if the iterable variable is defined',
+          if (iterableName != null) 'Ensure \'$iterableName\' is passed to the template context',
+          'Verify the iterable is not null before the for loop',
+          'Use conditional rendering: {% if $iterableName %}{% for ... %}{% endif %}',
+        ];
+        throw UndefinedError(
+          iterableName != null
+              ? 'Trying to access an undefined list: "$iterableName" from the jinja data, in a for loop'
+              : 'Trying to access an undefined iterable in a for loop',
+          nodeValue: node.iterable,
+          operationValue: 'Iterating over undefined variable',
+          variableNameValue: iterableName,
+          suggestionsValue: suggestions,
+          templatePathValue: context.template,
+        );
       }
 
-      if (node.test != null) {
-        var test = node.test!;
-        var filtered = <Object?>[];
-
-        for (var value in values) {
-          var data = getDataForTargets(targets, value);
-          var newContext = context.derived(data: data);
-
-          if (boolean(test.accept(this, newContext))) {
-            filtered.add(value);
-          }
-        }
-
-        values = filtered;
-      }
-
-      var loop = LoopContext(values, depth, render);
-
-      for (var value in loop) {
-        var data = getDataForTargets(targets, value);
-        var forContext = context.derived(data: data);
-        forContext.set('loop', loop);
-
+      String render(Object? iterable, [int depth = 0]) {
         try {
-          node.body.accept(this, forContext);
-        } on BreakException {
-          break;
-        } on ContinueException {
-          continue;
+          List<Object?> values;
+
+          if (iterable is Map) {
+            values = List<Object?>.of(iterable.entries);
+          } else {
+            values = list(iterable);
+          }
+
+          if (values.isEmpty) {
+            if (node.orElse case var orElse?) {
+              orElse.accept(this, context);
+            }
+
+            // Empty string prevents calling `finalize` on `null`.
+            return '';
+          }
+
+          if (node.test != null) {
+            var test = node.test!;
+            var filtered = <Object?>[];
+
+            for (var value in values) {
+              var data = getDataForTargets(targets, value);
+              var newContext = context.derived(data: data);
+
+              if (boolean(test.accept(this, newContext))) {
+                filtered.add(value);
+              }
+            }
+
+            values = filtered;
+          }
+
+          var loop = LoopContext(values, depth, render);
+
+          for (var value in loop) {
+            var data = getDataForTargets(targets, value);
+            var forContext = context.derived(data: data);
+            forContext.set('loop', loop);
+
+            try {
+              node.body.accept(this, forContext);
+            } on BreakException {
+              break;
+            } on ContinueException {
+              continue;
+            } on TemplateError {
+              // Re-throw template errors as-is (they already have context)
+              rethrow;
+            } catch (e, stackTrace) {
+              final contextSnapshot = captureContext(forContext);
+              final suggestions = <String>[
+                'Check if all variables in the loop body are defined',
+                'Verify expressions in the loop body are valid',
+                'Ensure filters and functions are called correctly',
+              ];
+              throw TemplateErrorWrapper(
+                e,
+                message: 'Error in for loop body: ${e.toString()}',
+                stackTrace: stackTrace,
+                node: node.body,
+                contextSnapshot: contextSnapshot,
+                operation: 'Rendering for loop body',
+                suggestions: suggestions,
+                templatePath: context.template,
+              );
+            }
+          }
+
+          // Empty string prevents calling `finalize` on `null`.
+          return '';
+        } on TemplateError {
+          rethrow;
+        } catch (e, stackTrace) {
+          final contextSnapshot = captureContext(context);
+          final suggestions = <String>[
+            'Check if the iterable can be converted to a list',
+            'Verify the iterable structure is correct',
+            'Ensure the iterable is not null',
+          ];
+          throw TemplateErrorWrapper(
+            e,
+            message: 'Error processing for loop iterable: ${e.toString()}',
+            stackTrace: stackTrace,
+            node: node.iterable,
+            contextSnapshot: contextSnapshot,
+            operation: 'Processing for loop iterable',
+            suggestions: suggestions,
+            templatePath: context.template,
+          );
         }
       }
 
-      // Empty string prevents calling `finalize` on `null`.
-      return '';
+      render(iterable);
+    } on TemplateError {
+      // Re-throw template errors as-is (they already have context)
+      rethrow;
+    } catch (e, stackTrace) {
+      final contextSnapshot = captureContext(context);
+      final suggestions = <String>[
+        'Check if the for loop target and iterable are valid',
+        'Verify the iterable expression evaluates correctly',
+        'Ensure all variables in the for loop are defined',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error rendering for loop: ${e.toString()}',
+        stackTrace: stackTrace,
+        node: node,
+        contextSnapshot: contextSnapshot,
+        operation: 'Rendering for loop',
+        suggestions: suggestions,
+        templatePath: context.template,
+      );
     }
-
-    render(iterable);
   }
 
   @override
@@ -791,33 +937,55 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   void visitInterpolation(Interpolation node, StringSinkRenderContext context) {
-    var value = node.value.accept(this, context);
-    var finalized = context.finalize(value);
+    try {
+      var value = node.value.accept(this, context);
+      var finalized = context.finalize(value);
 
-    if (finalized is Future) {
-      context.write(
-        finalized.then((value) {
-          if (value is SafeString) {
-            return value.toString();
-          }
-          if (context.autoEscape) {
-            return escape(value.toString());
-          }
-          return value;
-        }),
+      if (finalized is Future) {
+        context.write(
+          finalized.then((value) {
+            if (value is SafeString) {
+              return value.toString();
+            }
+            if (context.autoEscape) {
+              return escape(value.toString());
+            }
+            return value;
+          }),
+        );
+        return;
+      }
+
+      if (finalized is SafeString) {
+        context.write(finalized.toString());
+        return;
+      }
+
+      if (context.autoEscape) {
+        context.write(escape(finalized.toString()));
+      } else {
+        context.write(finalized);
+      }
+    } on TemplateError {
+      // Re-throw template errors as-is (they already have context)
+      rethrow;
+    } catch (e, stackTrace) {
+      final contextSnapshot = captureContext(context);
+      final suggestions = <String>[
+        'Check if the expression evaluates correctly',
+        'Verify all variables in the expression are defined',
+        'Ensure the expression returns a valid value for interpolation',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error rendering interpolation: ${e.toString()}',
+        stackTrace: stackTrace,
+        node: node.value,
+        contextSnapshot: contextSnapshot,
+        operation: 'Rendering interpolation expression',
+        suggestions: suggestions,
+        templatePath: context.template,
       );
-      return;
-    }
-
-    if (finalized is SafeString) {
-      context.write(finalized.toString());
-      return;
-    }
-
-    if (context.autoEscape) {
-      context.write(escape(finalized.toString()));
-    } else {
-      context.write(finalized);
     }
   }
 
@@ -829,73 +997,144 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   void visitOutput(Output node, StringSinkRenderContext context) {
-    for (var node in node.nodes) {
-      node.accept(this, context);
+    try {
+      for (var childNode in node.nodes) {
+        childNode.accept(this, context);
+      }
+    } on TemplateError {
+      // Re-throw template errors as-is (they already have context)
+      rethrow;
+    } catch (e, stackTrace) {
+      final contextSnapshot = captureContext(context);
+      final suggestions = <String>[
+        'Check if all expressions in the output block are valid',
+        'Verify variables are defined before use',
+        'Ensure filters and functions are called correctly',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error rendering output block: ${e.toString()}',
+        stackTrace: stackTrace,
+        node: node,
+        contextSnapshot: contextSnapshot,
+        operation: 'Rendering output block',
+        suggestions: suggestions,
+        templatePath: context.template,
+      );
     }
   }
 
   @override
   void visitTemplateNode(TemplateNode node, StringSinkRenderContext context) {
-    // TODO(renderer): add `TemplateReference`
-    var self = Namespace();
+    try {
+      // TODO(renderer): add `TemplateReference`
+      var self = Namespace();
 
-    for (var block in node.blocks) {
-      var blockName = block.name;
+      for (var block in node.blocks) {
+        var blockName = block.name;
 
-      // TODO(compiler): switch to `ContextCallback`
-      String render() {
-        var blocks = context.blocks[blockName];
+        // TODO(compiler): switch to `ContextCallback`
+        String render() {
+          var blocks = context.blocks[blockName];
 
-        if (blocks == null) {
-          throw UndefinedError("Block '$blockName' is not defined.");
-        }
-
-        // TODO(renderer): check if empty
-        blocks[0](context);
-        return '';
-      }
-
-      self[blockName] = render;
-
-      var blocks = context.blocks[blockName] ??= <ContextCallback>[];
-
-      if (block.required) {
-        Never callback(Context context) {
-          throw TemplateRuntimeError(
-            "Required block '${block.name}' not found.",
-          );
-        }
-
-        blocks.add(callback);
-      } else {
-        var parentIndex = blocks.length + 1;
-
-        void callback(Context context) {
-          var current = context.get('super');
-
-          // TODO(renderer): add `BlockReference`
-          String parent() {
-            var blocks = context.blocks[blockName]!;
-
-            if (parentIndex >= blocks.length) {
-              throw TemplateRuntimeError("Super block '$blockName' not found.");
-            }
-
-            blocks[parentIndex](context);
-            return '';
+          if (blocks == null) {
+            final suggestions = <String>[
+              'Check if the block \'$blockName\' is defined in a parent template',
+              'Verify the block name matches between parent and child templates',
+              'Ensure the block is defined before it is called',
+            ];
+            throw UndefinedError(
+              "Block '$blockName' is not defined.",
+              operationValue: 'Rendering block \'$blockName\'',
+              suggestionsValue: suggestions,
+              templatePathValue: context.template,
+            );
           }
 
-          context.set('super', parent);
-          block.body.accept(this, context);
-          context.set('super', current);
+          // TODO(renderer): check if empty
+          blocks[0](context);
+          return '';
         }
 
-        blocks.add(callback);
-      }
-    }
+        self[blockName] = render;
 
-    context.set('self', self);
-    node.body.accept(this, context);
+        var blocks = context.blocks[blockName] ??= <ContextCallback>[];
+
+        if (block.required) {
+          Never callback(Context context) {
+            final suggestions = <String>[
+              'Required block \'${block.name}\' must be defined in a child template',
+              'Add {% block ${block.name} %}...{% endblock %} in the child template',
+            ];
+            throw TemplateRuntimeError(
+              "Required block '${block.name}' not found.",
+              operationValue: 'Rendering required block \'${block.name}\'',
+              suggestionsValue: suggestions,
+              templatePathValue: context.template,
+            );
+          }
+
+          blocks.add(callback);
+        } else {
+          var parentIndex = blocks.length + 1;
+
+          void callback(Context context) {
+            var current = context.get('super');
+
+            // TODO(renderer): add `BlockReference`
+            String parent() {
+              var blocks = context.blocks[blockName]!;
+
+              if (parentIndex >= blocks.length) {
+                final suggestions = <String>[
+                  'Super block \'$blockName\' not found in parent template',
+                  'Check if the parent template defines this block',
+                  'Verify the block inheritance chain is correct',
+                ];
+                throw TemplateRuntimeError(
+                  "Super block '$blockName' not found.",
+                  operationValue: 'Calling super block \'$blockName\'',
+                  suggestionsValue: suggestions,
+                  templatePathValue: context.template,
+                );
+              }
+
+              blocks[parentIndex](context);
+              return '';
+            }
+
+            context.set('super', parent);
+            block.body.accept(this, context);
+            context.set('super', current);
+          }
+
+          blocks.add(callback);
+        }
+      }
+
+      context.set('self', self);
+      node.body.accept(this, context);
+    } on TemplateError {
+      // Re-throw template errors as-is (they already have context)
+      rethrow;
+    } catch (e, stackTrace) {
+      final contextSnapshot = captureContext(context);
+      final suggestions = <String>[
+        'Check if all blocks are properly defined',
+        'Verify the template structure is correct',
+        'Ensure block names match between templates',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error rendering template node: ${e.toString()}',
+        stackTrace: stackTrace,
+        node: node,
+        contextSnapshot: contextSnapshot,
+        operation: 'Rendering template node',
+        suggestions: suggestions,
+        templatePath: context.template,
+      );
+    }
   }
 
   @override
@@ -1053,15 +1292,75 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   Object? visitSlice(Slice node, StringSinkRenderContext context) {
-    var value = node.value.accept(this, context);
-    var start = node.start?.accept(this, context) ?? 0;
-    var stop = node.stop?.accept(this, context);
+    try {
+      var value = node.value.accept(this, context);
+      var start = node.start?.accept(this, context) ?? 0;
+      var stop = node.stop?.accept(this, context);
 
-    if (value is List && start is int && stop is int?) {
-      return value.sublist(start, stop);
+      if (value is List && start is int && stop is int?) {
+        if (start < 0 || (stop != null && stop < start)) {
+          final suggestions = <String>[
+            'Slice start must be >= 0',
+            'Slice stop must be >= start',
+            'Check if the slice indices are valid',
+          ];
+          throw TemplateRuntimeError(
+            'Invalid slice indices: start=$start, stop=$stop',
+            nodeValue: node,
+            operationValue: 'Slicing list',
+            suggestionsValue: suggestions,
+            templatePathValue: context.template,
+          );
+        }
+        if (start >= value.length) {
+          final suggestions = <String>[
+            'Slice start index ($start) is out of bounds for list of length ${value.length}',
+            'Use a start index between 0 and ${value.length - 1}',
+          ];
+          throw TemplateRuntimeError(
+            'Slice start index out of bounds: $start >= ${value.length}',
+            nodeValue: node,
+            operationValue: 'Slicing list',
+            suggestionsValue: suggestions,
+            templatePathValue: context.template,
+          );
+        }
+        return value.sublist(start, stop);
+      }
+
+      final suggestions = <String>[
+        'Slice operation only works on lists',
+        'Value type: ${value.runtimeType}, expected List',
+        'Start type: ${start.runtimeType}, expected int',
+        if (stop != null) 'Stop type: ${stop.runtimeType}, expected int',
+      ];
+      throw TemplateRuntimeError(
+        'Invalid slice operation: value is ${value.runtimeType}, not List.',
+        nodeValue: node,
+        operationValue: 'Slicing ${value.runtimeType}',
+        suggestionsValue: suggestions,
+        templatePathValue: context.template,
+      );
+    } on TemplateError {
+      rethrow;
+    } catch (e, stackTrace) {
+      final contextSnapshot = captureContext(context);
+      final suggestions = <String>[
+        'Check if the slice value is a list',
+        'Verify slice indices are integers',
+        'Ensure slice indices are within bounds',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error performing slice operation: ${e.toString()}',
+        stackTrace: stackTrace,
+        node: node,
+        contextSnapshot: contextSnapshot,
+        operation: 'Performing slice operation',
+        suggestions: suggestions,
+        templatePath: context.template,
+      );
     }
-
-    throw TemplateRuntimeError('Invalid slice operation.');
   }
 }
 
@@ -1117,11 +1416,26 @@ class _AsyncCollectingSink implements StringSink {
 
     // Await all collected Futures
     List<Object?> resolvedValues = [];
-    for (var future in _futures) {
+    for (int i = 0; i < _futures.length; i++) {
       try {
-        resolvedValues.add(await future);
-      } catch (e) {
-        resolvedValues.add('[Error: $e]');
+        resolvedValues.add(await _futures[i]);
+      } on TemplateError {
+        // Re-throw template errors as-is (they already have context)
+        rethrow;
+      } catch (e, stackTrace) {
+        // Wrap non-template exceptions with context
+        final suggestions = <String>[
+          'Check if the async function completes successfully',
+          'Verify the async function returns the expected type',
+          'Ensure the async function handles errors properly',
+        ];
+        throw TemplateErrorWrapper(
+          e,
+          message: 'Error resolving async Future at index $i: ${e.toString()}',
+          stackTrace: stackTrace,
+          operation: 'Resolving async Future value',
+          suggestions: suggestions,
+        );
       }
     }
 
@@ -1148,44 +1462,102 @@ base class AsyncRenderer {
 
   /// Renders a template node asynchronously, resolving all Future values in globals and during rendering.
   Future<void> render(TemplateNode node, AsyncRenderContext context) async {
-    // First, resolve all async values in parent (globals)
-    var resolvedGlobals = <String, Object?>{};
-    for (var entry in context.parent.entries) {
-      if (entry.value is Future) {
-        resolvedGlobals[entry.key] = await (entry.value as Future);
-      } else {
-        resolvedGlobals[entry.key] = entry.value;
+    try {
+      // First, resolve all async values in parent (globals)
+      var resolvedGlobals = <String, Object?>{};
+      for (var entry in context.parent.entries) {
+        if (entry.value is Future) {
+          try {
+            resolvedGlobals[entry.key] = await (entry.value as Future);
+          } on TemplateError {
+            rethrow;
+          } catch (e, stackTrace) {
+            final suggestions = <String>[
+              'Check if the async global \'${entry.key}\' completes successfully',
+              'Verify the async global returns the expected type',
+              'Ensure the async global handles errors properly',
+            ];
+            throw TemplateErrorWrapper(
+              e,
+              message: 'Error resolving async global \'${entry.key}\': ${e.toString()}',
+              stackTrace: stackTrace,
+              operation: 'Resolving async global \'${entry.key}\'',
+              suggestions: suggestions,
+              templatePath: context.template,
+            );
+          }
+        } else {
+          resolvedGlobals[entry.key] = entry.value;
+        }
       }
-    }
 
-    // Also resolve async values in context data
-    var resolvedData = <String, Object?>{};
-    for (var entry in context.context.entries) {
-      if (entry.value is Future) {
-        resolvedData[entry.key] = await (entry.value as Future);
-      } else {
-        resolvedData[entry.key] = entry.value;
+      // Also resolve async values in context data
+      var resolvedData = <String, Object?>{};
+      for (var entry in context.context.entries) {
+        if (entry.value is Future) {
+          try {
+            resolvedData[entry.key] = await (entry.value as Future);
+          } on TemplateError {
+            rethrow;
+          } catch (e, stackTrace) {
+            final suggestions = <String>[
+              'Check if the async variable \'${entry.key}\' completes successfully',
+              'Verify the async variable returns the expected type',
+              'Ensure the async variable handles errors properly',
+            ];
+            throw TemplateErrorWrapper(
+              e,
+              message: 'Error resolving async variable \'${entry.key}\': ${e.toString()}',
+              stackTrace: stackTrace,
+              operation: 'Resolving async variable \'${entry.key}\'',
+              suggestions: suggestions,
+              templatePath: context.template,
+            );
+          }
+        } else {
+          resolvedData[entry.key] = entry.value;
+        }
       }
+
+      // Create a custom sink that collects Futures
+      _AsyncCollectingSink collectingSink = _AsyncCollectingSink(context.sink);
+
+      // Create a sync context with the collecting sink
+      var syncContext = StringSinkRenderContext(
+        context.environment,
+        collectingSink,
+        template: context.template,
+        blocks: context.blocks,
+        parent: resolvedGlobals,
+        data: resolvedData,
+      );
+
+      // Use the base synchronous renderer
+      _baseRenderer.visitTemplateNode(node, syncContext);
+
+      // Get the resolved content and write it to the original sink
+      String resolvedContent = await collectingSink.getResolvedContent();
+      context.sink.write(resolvedContent);
+    } on TemplateError {
+      // Re-throw template errors as-is (they already have context)
+      rethrow;
+    } catch (e, stackTrace) {
+      // Wrap non-template exceptions with context
+      final contextSnapshot = captureContext(context);
+      final suggestions = <String>[
+        'Check if all async values resolve successfully',
+        'Verify async function calls complete without errors',
+        'Ensure async globals and variables are properly awaited',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error during async template rendering: ${e.toString()}',
+        stackTrace: stackTrace,
+        contextSnapshot: contextSnapshot,
+        operation: 'Rendering template asynchronously',
+        suggestions: suggestions,
+        templatePath: context.template,
+      );
     }
-
-    // Create a custom sink that collects Futures
-    _AsyncCollectingSink collectingSink = _AsyncCollectingSink(context.sink);
-
-    // Create a sync context with the collecting sink
-    var syncContext = StringSinkRenderContext(
-      context.environment,
-      collectingSink,
-      template: context.template,
-      blocks: context.blocks,
-      parent: resolvedGlobals,
-      data: resolvedData,
-    );
-
-    // Use the base synchronous renderer
-    _baseRenderer.visitTemplateNode(node, syncContext);
-
-    // Get the resolved content and write it to the original sink
-    String resolvedContent = await collectingSink.getResolvedContent();
-    context.sink.write(resolvedContent);
   }
 }
