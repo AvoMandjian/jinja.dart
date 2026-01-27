@@ -223,6 +223,20 @@ final class Parser {
 
     var target = parseAssignNameSpace(reader);
 
+    if (reader.current.test('comma')) {
+      var targets = <Expression>[target];
+
+      while (reader.skipIf('comma')) {
+        if (reader.current.test('assign') || reader.current.test('block_end')) {
+          break;
+        }
+
+        targets.add(parseAssignNameSpace(reader));
+      }
+
+      target = Tuple(values: targets);
+    }
+
     if (reader.skipIf('assign')) {
       var expression = parseTuple(reader);
       return Assign(target: target, value: expression);
@@ -860,7 +874,7 @@ final class Parser {
     if (reader.current.test('name', 'pluralize')) {
       reader.next();
       if (!reader.current.test('block_end')) {
-         pluralCount = parseExpression(reader);
+        pluralCount = parseExpression(reader);
       }
       pluralBody = parseStatements(reader, <(String, String?)>[('name', 'endtrans')]);
     }

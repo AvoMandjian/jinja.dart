@@ -25,7 +25,7 @@ abstract base class RenderContext extends Context {
   void assignTargets(Object? target, Object? current) {
     if (target is String) {
       set(target, current);
-    } else if (target is List<String>) {
+    } else if (target is List) {
       var values = list(current);
 
       if (values.length < target.length) {
@@ -37,7 +37,7 @@ abstract base class RenderContext extends Context {
       }
 
       for (var i = 0; i < target.length; i++) {
-        set(target[i], values[i]);
+        assignTargets(target[i], values[i]);
       }
     } else if (target is NamespaceValue) {
       var value = resolve(target.name);
