@@ -131,7 +131,7 @@ class RuntimeCompiler implements Visitor<void, Node> {
               Array(values: arguments.toList()),
               Dict(
                 pairs: <Pair>[
-                  for (var (:key, :value) in keywords) (key: Constant(value: key), value: value),
+                  for (var (:key, :value) in keywords) (key: Constant(value: Symbol(key)), value: value),
                 ],
               ),
             ],
@@ -153,7 +153,7 @@ class RuntimeCompiler implements Visitor<void, Node> {
               Array(values: arguments.toList()),
               Dict(
                 pairs: <Pair>[
-                  for (var (:key, :value) in keywords) (key: Constant(value: key), value: value),
+                  for (var (:key, :value) in keywords) (key: Constant(value: Symbol(key)), value: value),
                 ],
               ),
             ],

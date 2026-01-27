@@ -35,6 +35,18 @@ Object? getAttribute(String attribute, Object? object, {Object? node}) {
   }
 
   if (object is Map) {
+    if (attribute == 'entries') {
+      return object.entries;
+    }
+
+    if (attribute == 'keys') {
+      return object.keys;
+    }
+
+    if (attribute == 'values') {
+      return object.values;
+    }
+
     return object[attribute];
   }
 
@@ -144,7 +156,6 @@ class Cycler {
   Object? next() {
     if (values.isEmpty) return null;
     var res = current;
-    print('Cycler.next called: current=$res, index=$_index');
     _index = (_index + 1) % values.length;
     return res;
   }

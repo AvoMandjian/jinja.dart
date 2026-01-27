@@ -207,7 +207,8 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
       try {
         if (named.containsKey(#caller)) {
-          derived.set('caller', named[#caller]);
+          var caller = named[#caller];
+          derived.set('caller', caller);
           named.remove(#caller);
         }
 
@@ -241,17 +242,13 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
         if (remaining.remove(symbolKey)) {
           derived.set(key, named[symbolKey]);
+        } else if (defaultValue != null) {
+          // Evaluate default value in the macro's context (derived), not outer context
+          // This allows defaults like b=x to refer to macro parameters
+          var defaultValueResult = defaultValue.accept(this, derived);
+          derived.set(key, defaultValueResult);
         } else {
-          if (defaultValue is Name) {
-            var defaultValueSymbolKey = Symbol(defaultValue.name);
-            if (named.containsKey(defaultValueSymbolKey)) {
-              derived.set(key, named[defaultValueSymbolKey]);
-            } else {
-              derived.set(key, defaultValue.accept(this, context));
-            }
-          } else {
-            derived.set(key, defaultValue.accept(this, context));
-          }
+          derived.set(key, null);
         }
       }
 
@@ -260,7 +257,6 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
           for (var key in remaining) key: named[key],
         });
       } else if (remaining.isNotEmpty) {
-        print('remaining.isNotEmpty: remaining=$remaining, named keys=${named.keys}');
         throw TemplateRuntimeError('remaining.isNotEmpty: ${remaining.map((e) => e.toString()).join(', ')}');
       }
 
@@ -301,13 +297,87 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     var function = node.value.accept(this, context);
     var (positional, named) = node.calling.accept(this, context) as Parameters;
 
+    // If function is a Name object (shouldn't happen, but handle it)
+    if (function is Name) {
+      var resolved = context.resolve(function.name);
+      if (resolved is MacroFunction) {
+        function = resolved;
+      } else if (resolved != null) {
+        function = resolved;
+      } else {
+        // If resolution returns null, try to resolve as string
+        function = context.resolve(function.name);
+      }
+    }
+
+    // Check if this is a macro call (MacroFunction)
     if (function is MacroFunction) {
       // RuntimeCompiler packs macro arguments into [List, Map].
       // If positional looks like that, unpack it.
       if (positional.length == 2 && positional[0] is List && positional[1] is Map) {
-        return function(positional[0] as List<Object?>, positional[1] as Map<Object?, Object?>);
+        var namedArgs = positional[1] as Map<Object?, Object?>;
+        // Convert String keys to Symbol keys if needed
+        var symbolNamed = <Symbol, Object?>{};
+        namedArgs.forEach((key, value) {
+          if (key is Symbol) {
+            symbolNamed[key] = value;
+          } else if (key is String) {
+            symbolNamed[Symbol(key)] = value;
+          } else {
+            symbolNamed[Symbol(key.toString())] = value;
+          }
+        });
+        return function(positional[0] as List<Object?>, symbolNamed);
       }
       return function(positional, named);
+    }
+
+    // Check if function is a String (Name node resolved) that resolves to a MacroFunction (for caller())
+    if (function is String) {
+      var resolved = context.resolve(function);
+      if (resolved is MacroFunction) {
+        if (positional.length == 2 && positional[0] is List && positional[1] is Map) {
+          var namedArgs = positional[1] as Map<Object?, Object?>;
+          // Convert String keys to Symbol keys if needed
+          var symbolNamed = <Symbol, Object?>{};
+          namedArgs.forEach((key, value) {
+            if (key is Symbol) {
+              symbolNamed[key] = value;
+            } else if (key is String) {
+              symbolNamed[Symbol(key)] = value;
+            } else {
+              symbolNamed[Symbol(key.toString())] = value;
+            }
+          });
+          return resolved(positional[0] as List<Object?>, symbolNamed);
+        }
+        return resolved(positional, named);
+      }
+    }
+
+    // Handle regular functions that might have been incorrectly packed by compiler
+    // If positional is [List, Map] but function is not a MacroFunction, unpack it
+    if (positional.length == 2 && positional[0] is List && positional[1] is Map && function is! MacroFunction) {
+      // This shouldn't happen for regular functions, but if it does, unpack
+      var unpackedPositional = positional[0] as List<Object?>;
+      var unpackedNamed = positional[1] as Map<Object?, Object?>;
+      // Convert String keys to Symbol keys
+      var symbolNamed = <Symbol, Object?>{};
+      unpackedNamed.forEach((key, value) {
+        if (key is Symbol) {
+          symbolNamed[key] = value;
+        } else if (key is String) {
+          symbolNamed[Symbol(key)] = value;
+        } else {
+          symbolNamed[Symbol(key.toString())] = value;
+        }
+      });
+      return context.call(function, node, unpackedPositional, symbolNamed);
+    }
+
+    // Debug for Cycler/Macro issues
+    if (function.toString().contains('Cycler') || function.toString().contains('makeCycler')) {
+      print('Calling Cycler function: $function with positional=$positional');
     }
 
     var result = context.call(function, node, positional, named);
@@ -538,7 +608,20 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     // RuntimeCompiler packs macro arguments into [List, Map].
     // If positional looks like that, unpack it.
     if (positional.length == 2 && positional[0] is List && positional[1] is Map) {
-      context.write(function(positional[0] as List<Object?>, positional[1] as Map<Object?, Object?>));
+      var namedArgs = positional[1] as Map<Object?, Object?>;
+      // Convert String keys to Symbol keys if needed
+      var symbolNamed = <Symbol, Object?>{};
+      namedArgs.forEach((key, value) {
+        if (key is Symbol) {
+          symbolNamed[key] = value;
+        } else if (key is String) {
+          symbolNamed[Symbol(key)] = value;
+        } else {
+          symbolNamed[Symbol(key.toString())] = value;
+        }
+      });
+      symbolNamed[#caller] = getMacroFunction(node, context);
+      context.write(function(positional[0] as List<Object?>, symbolNamed));
       return;
     }
 
