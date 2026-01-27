@@ -205,7 +205,7 @@ void main() {
     test('loop errors', () {
       var tmpl = env.fromString('''{% for item in [1] if loop.index
                                       == 0 %}...{% endfor %}''');
-      expect(() => tmpl.render(), throwsA(isA<NoSuchMethodError>()));
+      expect(() => tmpl.render(), throwsA(isA<UndefinedError>()));
       tmpl = env.fromString('''{% for item in [] %}...{% else
             %}{{ loop }}{% endfor %}''');
       expect(tmpl.render(), equals(''));

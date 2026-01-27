@@ -80,7 +80,8 @@ Object? getItem(Object? key, Object? object, {Object? node}) {
     if (object.containsKey(key)) {
       return object[key];
     }
-    throw UndefinedError('Map does not contain key `$key`.');
+    // Return null (undefined) instead of throwing to match Jinja2 behavior
+    return null;
   }
 
   if (object is List) {

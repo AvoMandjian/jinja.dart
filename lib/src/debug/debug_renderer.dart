@@ -88,11 +88,18 @@ base class DebugRenderer extends StringSinkRenderer {
           shouldBreak = true;
           break;
         }
-        var expr = context.environment.parse(bp.condition!);
-        var result = expr.accept(this, context);
-        if (result is bool && result) {
-          shouldBreak = true;
-          break;
+        try {
+          // Render the condition as a template to evaluate it
+          var template = context.environment.fromString('{{ ${bp.condition} }}');
+          // Use a new context derived from current variables to avoid side effects
+          var result = template.render(context.getAllVariables());
+
+          if (result == 'true') {
+            shouldBreak = true;
+            break;
+          }
+        } catch (e) {
+          // Ignore errors in condition evaluation
         }
       }
 

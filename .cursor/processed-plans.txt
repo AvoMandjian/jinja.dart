@@ -6,3 +6,5 @@ implement_non-block_statements_after_extends_023febe3.plan.md
 implement-environment-test-methods_7b91ef6f.plan.md
 implement-environment-test-methods_663117e7.plan.md
 implement_dict_global_function_a3123a3a.plan.md
+implementation_plan_-_fix_jinja.dart_errors_145e2ca6.plan.md
+fix_test_failures_24cba45d.plan.md

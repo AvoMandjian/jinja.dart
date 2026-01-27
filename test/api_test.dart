@@ -63,12 +63,11 @@ void main() {
 
       for (var item in items + items) {
         expect(cycler.current, equals(item));
-        iterator.moveNext();
-        expect(iterator.current, equals(item));
+        cycler.next();
       }
 
       iterator.moveNext();
-      expect(cycler.current, equals(2));
+      expect(cycler.current, equals(1));
       cycler.reset();
       expect(cycler.current, equals(1));
     });

@@ -165,7 +165,11 @@ String doTitle(String value) {
   if (value.isEmpty) {
     return '';
   }
-  return value.split(_wordBeginningSplitRe).map<String>(utils.capitalize).join();
+  return value.splitMapJoin(
+    _wordBeginningSplitRe,
+    onMatch: (match) => match.group(0)!,
+    onNonMatch: (nonMatch) => utils.capitalize(nonMatch),
+  );
 }
 
 List<Object?> doDictSort(
@@ -510,6 +514,18 @@ dynamic doSum(
     var getter = makeAttributeGetter(environment, attribute);
     values = values.map(getter);
   }
+
+  // Check if we have futures in the values
+  if (values.any((v) => v is Future)) {
+    return Future(() async {
+      var resolvedValues = <Object?>[];
+      for (var v in values) {
+        resolvedValues.add(v is Future ? await v : v);
+      }
+      return resolvedValues.cast<dynamic>().fold<dynamic>(start, utils.sum);
+    });
+  }
+
   return values.cast<dynamic>().fold<dynamic>(start, utils.sum);
 }
 
@@ -528,13 +544,27 @@ Object? Function(Object? object) _prepareMap(
   Map<String, Object?> named,
 ) {
   if (positional.isEmpty) {
+    // Handle attribute parameter
     if (named.remove('attribute') case String attribute?) {
-      var defaultValue = named.remove('default');
+      var defaultValue = named.remove('defaultValue') ?? named.remove('default');
       if (named.isNotEmpty) {
         var first = named.keys.first;
         throw ArgumentError.value(named[first], first, 'Unexpected keyword argument.');
       }
       return makeAttributeGetter(context.environment, attribute, defaultValue: defaultValue);
+    }
+
+    // Handle item parameter
+    if (named.remove('item') case Object? item?) {
+      var defaultValue = named.remove('defaultValue') ?? named.remove('default');
+      if (named.isNotEmpty) {
+        var first = named.keys.first;
+        throw ArgumentError.value(named[first], first, 'Unexpected keyword argument.');
+      }
+      return (Object? object) {
+        var value = context.item(item, object, context.environment);
+        return value ?? defaultValue;
+      };
     }
   }
 
@@ -543,7 +573,8 @@ Object? Function(Object? object) _prepareMap(
     positional = positional.sublist(1);
     var symbols = <Symbol, Object?>{for (var MapEntry(:key, :value) in named.entries) Symbol(key): value};
 
-    Future<Object?>? getter(Object? object) async {
+    // Return a closure that handles both sync and async results from the filter
+    Object? getter(Object? object) {
       return context.filter(name, <Object?>[object, ...positional], symbols);
     }
 
@@ -1123,8 +1154,8 @@ List<Object?> doShuffle(Environment environment, Iterable<Object?> value) {
 }
 
 bool doBool(Object? value) => utils.boolean(value);
-int doInt(Object? value, [int defaultVal = 0, int base = 10]) => doInteger(value, defaultValue: defaultVal, base: base);
-double doFloatFilter(Object? value, [double defaultVal = 0.0]) => doFloat(value, defaultVal);
+int doInt(Object? value, {int defaultValue = 0, int base = 10}) => doInteger(value, defaultValue: defaultValue, base: base);
+double doFloatFilter(Object? value, [double defaultValue = 0.0]) => doFloat(value, defaultValue);
 
 String doRegexReplaceFilter(String value, String pattern, String replacement, {bool ignoreCase = false}) {
   return value.replaceAll(RegExp(pattern, caseSensitive: !ignoreCase), replacement);

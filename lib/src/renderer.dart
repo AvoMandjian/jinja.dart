@@ -206,6 +206,11 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       var length = node.positional.length;
 
       try {
+        if (named.containsKey(#caller)) {
+          derived.set('caller', named[#caller]);
+          named.remove(#caller);
+        }
+
         for (; index < length; index += 1) {
           var key = node.positional[index].accept(this, context) as String;
           derived.set(key, positional[index]);
@@ -232,12 +237,18 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
       for (var (argument, defaultValue) in node.named) {
         var key = argument.accept(this, context) as String;
+        var symbolKey = Symbol(key);
 
-        if (remaining.remove(key)) {
-          derived.set(key, named[key]);
+        if (remaining.remove(symbolKey)) {
+          derived.set(key, named[symbolKey]);
         } else {
           if (defaultValue is Name) {
-            derived.set(key, named[defaultValue.name]);
+            var defaultValueSymbolKey = Symbol(defaultValue.name);
+            if (named.containsKey(defaultValueSymbolKey)) {
+              derived.set(key, named[defaultValueSymbolKey]);
+            } else {
+              derived.set(key, defaultValue.accept(this, context));
+            }
           } else {
             derived.set(key, defaultValue.accept(this, context));
           }
@@ -288,16 +299,16 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   Object? visitCall(Call node, StringSinkRenderContext context) {
     var function = node.value.accept(this, context);
     var (positional, named) = node.calling.accept(this, context) as Parameters;
-    
+
     if (function is MacroFunction) {
       // RuntimeCompiler packs macro arguments into [List, Map].
       // If positional looks like that, unpack it.
       if (positional.length == 2 && positional[0] is List && positional[1] is Map) {
-         return function(positional[0] as List<Object?>, positional[1] as Map<Object?, Object?>);
+        return function(positional[0] as List<Object?>, positional[1] as Map<Object?, Object?>);
       }
       return function(positional, named);
     }
-    
+
     var result = context.call(function, node, positional, named);
     // If the result is a Future, we need to handle it in the async renderer
     // For now, return it as-is so the finalization layer can handle it
@@ -519,17 +530,17 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     var function = node.call.value.accept(this, context) as MacroFunction;
     var (positional, named) = node.call.calling.accept(this, context) as Parameters;
     named[#caller] = getMacroFunction(node, context);
-    
+
     // MacroFunction cannot be called via context.call (Function.apply) because it takes
     // the named arguments map as a positional argument.
-    
+
     // RuntimeCompiler packs macro arguments into [List, Map].
     // If positional looks like that, unpack it.
     if (positional.length == 2 && positional[0] is List && positional[1] is Map) {
-       context.write(function(positional[0] as List<Object?>, positional[1] as Map<Object?, Object?>));
-       return;
+      context.write(function(positional[0] as List<Object?>, positional[1] as Map<Object?, Object?>));
+      return;
     }
-    
+
     context.write(function(positional, named));
   }
 
@@ -547,14 +558,14 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   void visitDebug(Debug node, StringSinkRenderContext context) {
     var buffer = StringBuffer();
     buffer.writeln('Context:');
-    
+
     // Sort keys for consistent output
     var sortedKeys = context.context.keys.toList()..sort();
-    
+
     for (var key in sortedKeys) {
       buffer.writeln('$key: ${context.resolve(key)}');
     }
-    
+
     context.write(buffer.toString());
   }
 
@@ -656,7 +667,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         var data = getDataForTargets(targets, value);
         var forContext = context.derived(data: data);
         forContext.set('loop', loop);
-        
+
         try {
           node.body.accept(this, forContext);
         } on BreakException {
@@ -785,12 +796,22 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     var finalized = context.finalize(value);
 
     if (finalized is Future) {
-      context.write(finalized.then((value) {
-        if (context.autoEscape) {
-          return escape(value.toString());
-        }
-        return value;
-      }));
+      context.write(
+        finalized.then((value) {
+          if (value is SafeString) {
+            return value.toString();
+          }
+          if (context.autoEscape) {
+            return escape(value.toString());
+          }
+          return value;
+        }),
+      );
+      return;
+    }
+
+    if (finalized is SafeString) {
+      context.write(finalized.toString());
       return;
     }
 
@@ -888,7 +909,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
     // Check if plural
     var countValue = node.count?.accept(this, context);
-    
+
     String? pluralText;
     if (node.plural != null) {
       var pluralBuffer = StringBuffer();
@@ -899,13 +920,13 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
     // Prepare translations functions
     // We expect standard gettext functions to be available in the environment/context
-    
+
     Object? result;
-    
+
     if (countValue != null) {
       // Plural translation
       // ngettext(singular, plural, count) or npgettext(context, singular, plural, count)
-      
+
       if (node.context != null) {
         // Contextual plural
         try {
@@ -914,13 +935,13 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
           if (npgettext is Function) {
             result = Function.apply(npgettext, [node.context, bodyText, pluralText ?? bodyText, countValue]);
           } else {
-             // Fallback to ngettext if context not supported directly or npgettext not found, 
-             // but we really should use context if provided. 
-             // If neither exists, we just output raw strings.
-             var ngettext = context.resolve('ngettext');
-             if (ngettext is Function) {
-               result = Function.apply(ngettext, [bodyText, pluralText ?? bodyText, countValue]);
-             }
+            // Fallback to ngettext if context not supported directly or npgettext not found,
+            // but we really should use context if provided.
+            // If neither exists, we just output raw strings.
+            var ngettext = context.resolve('ngettext');
+            if (ngettext is Function) {
+              result = Function.apply(ngettext, [bodyText, pluralText ?? bodyText, countValue]);
+            }
           }
         } catch (e) {
           // ignore
@@ -936,28 +957,27 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
           // ignore
         }
       }
-      
+
       // Fallback if no translation function or it failed
       if (result == null) {
         var count = countValue is num ? countValue : 1;
         result = count == 1 ? bodyText : (pluralText ?? bodyText);
       }
-      
     } else {
       // Singular translation
       // gettext(msg) or pgettext(context, msg)
-      
+
       if (node.context != null) {
         try {
           var pgettext = context.resolve('pgettext');
           if (pgettext is Function) {
             result = Function.apply(pgettext, [node.context, bodyText]);
           } else {
-             // Fallback
-             var gettext = context.resolve('gettext');
-             if (gettext is Function) {
-               result = Function.apply(gettext, [bodyText]);
-             }
+            // Fallback
+            var gettext = context.resolve('gettext');
+            if (gettext is Function) {
+              result = Function.apply(gettext, [bodyText]);
+            }
           }
         } catch (e) {
           // ignore
@@ -968,20 +988,18 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
           if (gettext is Function) {
             result = Function.apply(gettext, [bodyText]);
           } else {
-             // Try underscore alias
-             var underscore = context.resolve('_');
-             if (underscore is Function) {
-                result = Function.apply(underscore, [bodyText]);
-             }
+            // Try underscore alias
+            var underscore = context.resolve('_');
+            if (underscore is Function) {
+              result = Function.apply(underscore, [bodyText]);
+            }
           }
         } catch (e) {
           // ignore
         }
       }
-      
-      if (result == null) {
-        result = bodyText;
-      }
+
+      result ??= bodyText;
     }
 
     // Apply trimming if requested
@@ -991,8 +1009,8 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       // and strip leading/trailing whitespace
       text = text.trim().replaceAll(RegExp(r'\s*\n\s*'), ' ');
     }
-    
-    // Perform interpolation on the result string? 
+
+    // Perform interpolation on the result string?
     // Jinja's trans tag usually treats the body as the message ID, and variable interpolation
     // happens *after* translation if using variable tags inside, OR passing vars to format.
     // However, in this implementation, we evaluated the body first (to get message ID/default).
@@ -1001,7 +1019,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     // Given the complexity, this simple implementation assumes the `trans` body is the translation key.
     // Ideally, for `{% trans %}`, variables are placeholders.
     // Supporting full Jinja i18n is complex. This matches basic usage.
-    
+
     context.write(text);
   }
 
