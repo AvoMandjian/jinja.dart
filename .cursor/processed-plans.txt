@@ -14,3 +14,4 @@ fix_example_59_and_add_error_logging_43ab4fc7.plan.md
 1._modify_lib_src_parser.dart_1857043d.plan.md
 add_extensive_error_logging_210f39db.plan.md
 comprehensive_error_logging_system_2fca162e.plan.md
+fix-break-loop-exception_ecc2be56.plan.md

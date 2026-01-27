@@ -209,6 +209,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         operationValue: 'Unpacking values for target',
         suggestionsValue: suggestions,
       );
+    } on BreakException {
+      rethrow;
+    } on ContinueException {
+      rethrow;
     } on TemplateError {
       rethrow;
     } catch (e, stackTrace) {
@@ -633,6 +637,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       };
 
       template.body.accept(this, context);
+    } on BreakException {
+      rethrow;
+    } on ContinueException {
+      rethrow;
     } on TemplateError {
       // Re-throw template errors as-is (they already have context)
       rethrow;
@@ -758,6 +766,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
               break;
             } on ContinueException {
               continue;
+            } on BreakException {
+              rethrow;
+            } on ContinueException {
+              rethrow;
             } on TemplateError {
               // Re-throw template errors as-is (they already have context)
               rethrow;
@@ -783,6 +795,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
           // Empty string prevents calling `finalize` on `null`.
           return '';
+        } on BreakException {
+          rethrow;
+        } on ContinueException {
+          rethrow;
         } on TemplateError {
           rethrow;
         } catch (e, stackTrace) {
@@ -806,6 +822,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       }
 
       render(iterable);
+    } on BreakException {
+      rethrow;
+    } on ContinueException {
+      rethrow;
     } on TemplateError {
       // Re-throw template errors as-is (they already have context)
       rethrow;
@@ -966,6 +986,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       } else {
         context.write(finalized);
       }
+    } on BreakException {
+      rethrow;
+    } on ContinueException {
+      rethrow;
     } on TemplateError {
       // Re-throw template errors as-is (they already have context)
       rethrow;
@@ -1001,6 +1025,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       for (var childNode in node.nodes) {
         childNode.accept(this, context);
       }
+    } on BreakException {
+      rethrow;
+    } on ContinueException {
+      rethrow;
     } on TemplateError {
       // Re-throw template errors as-is (they already have context)
       rethrow;
@@ -1114,6 +1142,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
       context.set('self', self);
       node.body.accept(this, context);
+    } on BreakException {
+      rethrow;
+    } on ContinueException {
+      rethrow;
     } on TemplateError {
       // Re-throw template errors as-is (they already have context)
       rethrow;
@@ -1265,6 +1297,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   void visitTryCatch(TryCatch node, StringSinkRenderContext context) {
     try {
       node.body.accept(this, context);
+    } on BreakException {
+      rethrow;
+    } on ContinueException {
+      rethrow;
     } catch (error) {
       if (node.exception case var exception?) {
         var taget = exception.accept(this, context);
@@ -1341,6 +1377,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         suggestionsValue: suggestions,
         templatePathValue: context.template,
       );
+    } on BreakException {
+      rethrow;
+    } on ContinueException {
+      rethrow;
     } on TemplateError {
       rethrow;
     } catch (e, stackTrace) {
@@ -1419,6 +1459,10 @@ class _AsyncCollectingSink implements StringSink {
     for (int i = 0; i < _futures.length; i++) {
       try {
         resolvedValues.add(await _futures[i]);
+      } on BreakException {
+        rethrow;
+      } on ContinueException {
+        rethrow;
       } on TemplateError {
         // Re-throw template errors as-is (they already have context)
         rethrow;
@@ -1469,6 +1513,10 @@ base class AsyncRenderer {
         if (entry.value is Future) {
           try {
             resolvedGlobals[entry.key] = await (entry.value as Future);
+          } on BreakException {
+            rethrow;
+          } on ContinueException {
+            rethrow;
           } on TemplateError {
             rethrow;
           } catch (e, stackTrace) {
@@ -1497,6 +1545,10 @@ base class AsyncRenderer {
         if (entry.value is Future) {
           try {
             resolvedData[entry.key] = await (entry.value as Future);
+          } on BreakException {
+            rethrow;
+          } on ContinueException {
+            rethrow;
           } on TemplateError {
             rethrow;
           } catch (e, stackTrace) {
@@ -1538,6 +1590,10 @@ base class AsyncRenderer {
       // Get the resolved content and write it to the original sink
       String resolvedContent = await collectingSink.getResolvedContent();
       context.sink.write(resolvedContent);
+    } on BreakException {
+      rethrow;
+    } on ContinueException {
+      rethrow;
     } on TemplateError {
       // Re-throw template errors as-is (they already have context)
       rethrow;
