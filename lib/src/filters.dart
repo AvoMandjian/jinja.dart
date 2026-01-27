@@ -541,25 +541,25 @@ Object? doReverse(Object? value) {
 Object? Function(Object? object) _prepareMap(
   Context context,
   List<Object?> positional,
-  Map<String, Object?> named,
+  Map<Object?, Object?> named,
 ) {
   if (positional.isEmpty) {
     // Handle attribute parameter
-    if (named.remove('attribute') case String attribute?) {
-      var defaultValue = named.remove('defaultValue') ?? named.remove('default');
+    if ((named.remove('attribute') ?? named.remove(#attribute)) case String attribute?) {
+      var defaultValue = named.remove('defaultValue') ?? named.remove('default') ?? named.remove(#defaultValue) ?? named.remove(Symbol('default'));
       if (named.isNotEmpty) {
         var first = named.keys.first;
-        throw ArgumentError.value(named[first], first, 'Unexpected keyword argument.');
+        throw ArgumentError.value(named[first], first.toString(), 'Unexpected keyword argument.');
       }
       return makeAttributeGetter(context.environment, attribute, defaultValue: defaultValue);
     }
 
     // Handle item parameter
-    if (named.remove('item') case Object? item?) {
-      var defaultValue = named.remove('defaultValue') ?? named.remove('default');
+    if ((named.remove('item') ?? named.remove(#item)) case Object? item?) {
+      var defaultValue = named.remove('defaultValue') ?? named.remove('default') ?? named.remove(#defaultValue) ?? named.remove(Symbol('default'));
       if (named.isNotEmpty) {
         var first = named.keys.first;
-        throw ArgumentError.value(named[first], first, 'Unexpected keyword argument.');
+        throw ArgumentError.value(named[first], first.toString(), 'Unexpected keyword argument.');
       }
       return (Object? object) {
         var value = context.item(item, object, context.environment);
@@ -571,7 +571,15 @@ Object? Function(Object? object) _prepareMap(
   try {
     var name = positional.first as String;
     positional = positional.sublist(1);
-    var symbols = <Symbol, Object?>{for (var MapEntry(:key, :value) in named.entries) Symbol(key): value};
+    var symbols = <Symbol, Object?>{};
+    
+    named.forEach((key, value) {
+        if (key is Symbol) {
+            symbols[key] = value;
+        } else if (key is String) {
+            symbols[Symbol(key)] = value;
+        }
+    });
 
     // Return a closure that handles both sync and async results from the filter
     Object? getter(Object? object) {
@@ -579,6 +587,8 @@ Object? Function(Object? object) _prepareMap(
     }
 
     return getter;
+  } on StateError {
+    throw ArgumentError('Map requires a filter argument.', 'filter');
   } on RangeError {
     throw ArgumentError('Map requires a filter argument.', 'filter');
   }
@@ -591,7 +601,7 @@ Iterable<Object?> doMap(
   Map<Object?, Object?> named,
 ) sync* {
   if (values != null) {
-    var func = _prepareMap(context, positional, named.cast<String, Object?>());
+    var func = _prepareMap(context, positional, Map.of(named));
     for (var value in values) {
       yield func(value);
     }

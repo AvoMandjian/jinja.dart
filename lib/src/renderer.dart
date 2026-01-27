@@ -260,7 +260,8 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
           for (var key in remaining) key: named[key],
         });
       } else if (remaining.isNotEmpty) {
-        throw TemplateRuntimeError('remaining.isNotEmpty');
+        print('remaining.isNotEmpty: remaining=$remaining, named keys=${named.keys}');
+        throw TemplateRuntimeError('remaining.isNotEmpty: ${remaining.map((e) => e.toString()).join(', ')}');
       }
 
       node.body.accept(this, derived);

@@ -144,12 +144,18 @@ class Cycler {
   Object? next() {
     if (values.isEmpty) return null;
     var res = current;
+    print('Cycler.next called: current=$res, index=$_index');
     _index = (_index + 1) % values.length;
     return res;
   }
 
   void reset() {
     _index = 0;
+  }
+
+  @override
+  String toString() {
+    return 'Cycler($values, $_index)';
   }
 }
 
