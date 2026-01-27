@@ -374,14 +374,30 @@ base class Environment {
           }
         }
 
-        final result = Function.apply(func, resolvedPositional, named);
-        return result is Future ? await result : result;
+        try {
+          final result = Function.apply(func, resolvedPositional, named);
+          return result is Future ? await result : result;
+        } catch (e, stackTrace) {
+          print('Error calling filter "$name": $e');
+          print('Positional args types: ${resolvedPositional.map((e) => e.runtimeType).toList()}');
+          print('Named args: $named');
+          print('Stack trace:\n$stackTrace');
+          rethrow;
+        }
       });
     } else {
       // No async args - call filter synchronously
-      final result = Function.apply(func, finalPositional, named);
-      // Return result as is (can be Future or value)
-      return result;
+      try {
+        final result = Function.apply(func, finalPositional, named);
+        // Return result as is (can be Future or value)
+        return result;
+      } catch (e, stackTrace) {
+        print('Error calling filter "$name": $e');
+        print('Positional args types: ${finalPositional.map((e) => e.runtimeType).toList()}');
+        print('Named args: $named');
+        print('Stack trace:\n$stackTrace');
+        rethrow;
+      }
     }
   }
 
@@ -408,12 +424,28 @@ base class Environment {
               resolvedPositional.add(arg);
           }
           // callCommon handles filter/env wrappers
-          var result = callCommon(test, resolvedPositional, named, context);
-          return result is Future ? await result : result;
+          try {
+            var result = callCommon(test, resolvedPositional, named, context);
+            return result is Future ? await result : result;
+          } catch (e, stackTrace) {
+            print('Error calling test "$name": $e');
+            print('Positional args types: ${resolvedPositional.map((e) => e.runtimeType).toList()}');
+            print('Named args: $named');
+            print('Stack trace:\n$stackTrace');
+            rethrow;
+          }
         });
       }
 
-      return callCommon(test, positional, named, context);
+      try {
+        return callCommon(test, positional, named, context);
+      } catch (e, stackTrace) {
+        print('Error calling test "$name": $e');
+        print('Positional args types: ${positional.map((e) => e.runtimeType).toList()}');
+        print('Named args: $named');
+        print('Stack trace:\n$stackTrace');
+        rethrow;
+      }
     }
 
     throw TemplateRuntimeError("No test named '$name'.");

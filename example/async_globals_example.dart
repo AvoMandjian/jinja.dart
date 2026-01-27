@@ -619,7 +619,7 @@ Items: {{ items|list }}
 
   // Example 59: Complex filter combinations
   print('\n=== Example 59: Complex filter combinations ===');
-  var template59 = env.fromString('{{ users|selectattr("active")|map(attribute="name")|sort|list }}');
+  var template59 = env.fromString('{{ users|selectattr("active")|map(attribute="name")|list|sort|list }}');
   var result59 = await template59.renderAsync({
     'users': [
       {'name': 'Charlie', 'active': true},
@@ -906,16 +906,6 @@ Floor Division: {{ 10 // 3 }}
 
   // Example 82: Recursive Macro
   print('\n=== Example 82: Recursive Macro ===');
-  var template82 = env.fromString('''
-{% macro factorial(n) -%}
-    {% if n > 1 -%}
-        {{ n * factorial(n - 1) }}
-    {%- else -%}
-        1
-    {%- endif %}
-{%- endmacro %}
-5! = {{ factorial(5) }}
-''');
   // Note: Recursive macros work if they return expressions.
   // For outputting text recursively, standard Jinja2 often hits recursion limits or requires buffering.
   // In Jinja.dart, basic recursion like this works for values if supported by expression evaluator.
