@@ -17,7 +17,10 @@ abstract base class RenderContext extends Context {
     super.blocks,
     super.parent,
     super.data,
-  });
+    bool? autoEscape,
+  }) : autoEscape = autoEscape ?? environment.autoEscape;
+
+  final bool autoEscape;
 
   void assignTargets(Object? target, Object? current) {
     if (target is String) {
@@ -67,6 +70,7 @@ base class StringSinkRenderContext extends RenderContext {
     super.blocks,
     super.parent,
     super.data,
+    super.autoEscape,
   });
 
   final StringSink sink;
@@ -77,6 +81,7 @@ base class StringSinkRenderContext extends RenderContext {
     String? template,
     Map<String, Object?>? data,
     bool withContext = true,
+    bool? autoEscape,
   }) {
     Map<String, Object?> parent;
 
@@ -93,6 +98,7 @@ base class StringSinkRenderContext extends RenderContext {
       blocks: blocks,
       parent: parent,
       data: data,
+      autoEscape: autoEscape ?? this.autoEscape,
     );
   }
 
@@ -111,6 +117,7 @@ base class AsyncRenderContext extends RenderContext {
     super.blocks,
     super.parent,
     super.data,
+    super.autoEscape,
   });
 
   final StringSink sink;
@@ -121,6 +128,7 @@ base class AsyncRenderContext extends RenderContext {
     String? template,
     Map<String, Object?>? data,
     bool withContext = true,
+    bool? autoEscape,
   }) {
     Map<String, Object?> parent;
 
@@ -137,6 +145,7 @@ base class AsyncRenderContext extends RenderContext {
       blocks: blocks,
       parent: parent,
       data: data,
+      autoEscape: autoEscape ?? this.autoEscape,
     );
   }
 
@@ -244,12 +253,17 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       }
 
       node.body.accept(this, derived);
-      
+
       // If buffer is an async collecting sink, return a Future that resolves it
       if (buffer is _AsyncCollectingSink) {
-        return buffer.getResolvedContent();
+        return buffer.getResolvedContent().then((content) {
+          // Macro output should be safe if auto-escaping was enabled during rendering
+          return SafeString(content);
+        });
       }
-      return buffer.toString();
+      // Macro output should be safe if auto-escaping was enabled during rendering
+      // This prevents double escaping when the macro result is used in an interpolation
+      return SafeString(buffer.toString());
     }
 
     return macro;
@@ -274,6 +288,16 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   Object? visitCall(Call node, StringSinkRenderContext context) {
     var function = node.value.accept(this, context);
     var (positional, named) = node.calling.accept(this, context) as Parameters;
+    
+    if (function is MacroFunction) {
+      // RuntimeCompiler packs macro arguments into [List, Map].
+      // If positional looks like that, unpack it.
+      if (positional.length == 2 && positional[0] is List && positional[1] is Map) {
+         return function(positional[0] as List<Object?>, positional[1] as Map<Object?, Object?>);
+      }
+      return function(positional, named);
+    }
+    
     var result = context.call(function, node, positional, named);
     // If the result is a Future, we need to handle it in the async renderer
     // For now, return it as-is so the finalization layer can handle it
@@ -475,8 +499,19 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   }
 
   @override
+  void visitAutoEscape(AutoEscape node, StringSinkRenderContext context) {
+    var newContext = context.derived(autoEscape: node.enable);
+    node.body.accept(this, newContext);
+  }
+
+  @override
   void visitBlock(Block node, StringSinkRenderContext context) {
     context.blocks[node.name]![0](context);
+  }
+
+  @override
+  void visitBreak(Break node, StringSinkRenderContext context) {
+    throw BreakException();
   }
 
   @override
@@ -484,12 +519,43 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     var function = node.call.value.accept(this, context) as MacroFunction;
     var (positional, named) = node.call.calling.accept(this, context) as Parameters;
     named[#caller] = getMacroFunction(node, context);
-    context.write(context.call(function, node, positional, named));
+    
+    // MacroFunction cannot be called via context.call (Function.apply) because it takes
+    // the named arguments map as a positional argument.
+    
+    // RuntimeCompiler packs macro arguments into [List, Map].
+    // If positional looks like that, unpack it.
+    if (positional.length == 2 && positional[0] is List && positional[1] is Map) {
+       context.write(function(positional[0] as List<Object?>, positional[1] as Map<Object?, Object?>));
+       return;
+    }
+    
+    context.write(function(positional, named));
+  }
+
+  @override
+  void visitContinue(Continue node, StringSinkRenderContext context) {
+    throw ContinueException();
   }
 
   @override
   void visitData(Data node, StringSinkRenderContext context) {
     context.write(node.data);
+  }
+
+  @override
+  void visitDebug(Debug node, StringSinkRenderContext context) {
+    var buffer = StringBuffer();
+    buffer.writeln('Context:');
+    
+    // Sort keys for consistent output
+    var sortedKeys = context.context.keys.toList()..sort();
+    
+    for (var key in sortedKeys) {
+      buffer.writeln('$key: ${context.resolve(key)}');
+    }
+    
+    context.write(buffer.toString());
   }
 
   @override
@@ -540,11 +606,11 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
     if (iterable == null) {
       if (node.iterable is Name) {
-        throw Exception(
+        throw ArgumentError(
           'Trying to access an undefined list: "${(node.iterable as Name).name}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Name).name} %} in one of the jinja script: (${context.blocks.keys.toList().join(',')})',
         );
       } else if (node.iterable is Attribute) {
-        throw Exception(
+        throw ArgumentError(
           'Trying to access an undefined list: "${(node.iterable as Attribute).attribute}" from the jinja data, in a for loop: it may be {% for $targets in ${(node.iterable as Attribute).attribute} %} in one of the jinja script: (${context.blocks.keys.toList().join(',')})',
         );
       }
@@ -590,7 +656,14 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         var data = getDataForTargets(targets, value);
         var forContext = context.derived(data: data);
         forContext.set('loop', loop);
-        node.body.accept(this, forContext);
+        
+        try {
+          node.body.accept(this, forContext);
+        } on BreakException {
+          break;
+        } on ContinueException {
+          continue;
+        }
       }
 
       // Empty string prevents calling `finalize` on `null`.
@@ -637,7 +710,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
           function = getMacroFunction(targetMacro, newContext);
         }
 
-        return function(positional, named.cast<Symbol, Object?>());
+        return function(positional, named);
       }
 
       context.set(alias ?? name, macro);
@@ -710,7 +783,22 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   void visitInterpolation(Interpolation node, StringSinkRenderContext context) {
     var value = node.value.accept(this, context);
     var finalized = context.finalize(value);
-    context.write(finalized);
+
+    if (finalized is Future) {
+      context.write(finalized.then((value) {
+        if (context.autoEscape) {
+          return escape(value.toString());
+        }
+        return value;
+      }));
+      return;
+    }
+
+    if (context.autoEscape) {
+      context.write(escape(finalized.toString()));
+    } else {
+      context.write(finalized);
+    }
   }
 
   @override
@@ -788,6 +876,133 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
     context.set('self', self);
     node.body.accept(this, context);
+  }
+
+  @override
+  void visitTrans(Trans node, StringSinkRenderContext context) {
+    // Collect the body content
+    var bodyBuffer = StringBuffer();
+    var bodyContext = context.derived(sink: bodyBuffer);
+    node.body.accept(this, bodyContext);
+    var bodyText = bodyBuffer.toString();
+
+    // Check if plural
+    var countValue = node.count?.accept(this, context);
+    
+    String? pluralText;
+    if (node.plural != null) {
+      var pluralBuffer = StringBuffer();
+      var pluralContext = context.derived(sink: pluralBuffer);
+      node.plural!.accept(this, pluralContext);
+      pluralText = pluralBuffer.toString();
+    }
+
+    // Prepare translations functions
+    // We expect standard gettext functions to be available in the environment/context
+    
+    Object? result;
+    
+    if (countValue != null) {
+      // Plural translation
+      // ngettext(singular, plural, count) or npgettext(context, singular, plural, count)
+      
+      if (node.context != null) {
+        // Contextual plural
+        try {
+          // Try npgettext
+          var npgettext = context.resolve('npgettext');
+          if (npgettext is Function) {
+            result = Function.apply(npgettext, [node.context, bodyText, pluralText ?? bodyText, countValue]);
+          } else {
+             // Fallback to ngettext if context not supported directly or npgettext not found, 
+             // but we really should use context if provided. 
+             // If neither exists, we just output raw strings.
+             var ngettext = context.resolve('ngettext');
+             if (ngettext is Function) {
+               result = Function.apply(ngettext, [bodyText, pluralText ?? bodyText, countValue]);
+             }
+          }
+        } catch (e) {
+          // ignore
+        }
+      } else {
+        // Standard plural
+        try {
+          var ngettext = context.resolve('ngettext');
+          if (ngettext is Function) {
+            result = Function.apply(ngettext, [bodyText, pluralText ?? bodyText, countValue]);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      
+      // Fallback if no translation function or it failed
+      if (result == null) {
+        var count = countValue is num ? countValue : 1;
+        result = count == 1 ? bodyText : (pluralText ?? bodyText);
+      }
+      
+    } else {
+      // Singular translation
+      // gettext(msg) or pgettext(context, msg)
+      
+      if (node.context != null) {
+        try {
+          var pgettext = context.resolve('pgettext');
+          if (pgettext is Function) {
+            result = Function.apply(pgettext, [node.context, bodyText]);
+          } else {
+             // Fallback
+             var gettext = context.resolve('gettext');
+             if (gettext is Function) {
+               result = Function.apply(gettext, [bodyText]);
+             }
+          }
+        } catch (e) {
+          // ignore
+        }
+      } else {
+        try {
+          var gettext = context.resolve('gettext');
+          if (gettext is Function) {
+            result = Function.apply(gettext, [bodyText]);
+          } else {
+             // Try underscore alias
+             var underscore = context.resolve('_');
+             if (underscore is Function) {
+                result = Function.apply(underscore, [bodyText]);
+             }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      
+      if (result == null) {
+        result = bodyText;
+      }
+    }
+
+    // Apply trimming if requested
+    var text = result.toString();
+    if (node.trimmed) {
+      // Basic trimming: replace newlines and surrounding whitespace with single space
+      // and strip leading/trailing whitespace
+      text = text.trim().replaceAll(RegExp(r'\s*\n\s*'), ' ');
+    }
+    
+    // Perform interpolation on the result string? 
+    // Jinja's trans tag usually treats the body as the message ID, and variable interpolation
+    // happens *after* translation if using variable tags inside, OR passing vars to format.
+    // However, in this implementation, we evaluated the body first (to get message ID/default).
+    // If the body contained variables, they are already interpolated in `bodyText`.
+    // Standard Jinja `{% trans %}` often disallows variables in body unless used for interpolation.
+    // Given the complexity, this simple implementation assumes the `trans` body is the translation key.
+    // Ideally, for `{% trans %}`, variables are placeholders.
+    // Supporting full Jinja i18n is complex. This matches basic usage.
+    
+    context.write(text);
   }
 
   @override

@@ -130,13 +130,6 @@ void main() {
   group('Globals', () {
     test('cycler', () async {
       var tmpl = env.fromString('{% set c = cycler("a", "b") %}{{ c.next() }}{{ c.next() }}{{ c.next() }}');
-      // Using .next() explicitly as .next property is not supported directly in Jinja syntax without () call usually,
-      // but in Python/Jinja2 `cycler` object has a `next()` method.
-      // Our implementation supports getAttribute('next') which returns the method.
-      // However, the test output showed `[Error: Exception: The function c is null at []]` previously,
-      // which implies `c.next` was resolved but `c.next()` failed or `c` itself was problematic.
-      // Actually, cycler in defaults.dart returns a Cycler object.
-      // In environment.dart getAttribute needs to handle Cycler.
       expect(await tmpl.renderAsync(), equals('aba'));
     });
 
@@ -158,6 +151,44 @@ void main() {
     test('zip', () async {
       var tmpl = env.fromString('{% for a, b in zip([1, 2], ["a", "b"]) %}{{ a }}{{ b }}{% endfor %}');
       expect(await tmpl.renderAsync(), equals('1a2b'));
+    });
+
+    test('dict', () async {
+      // Test keyword arguments
+      var tmpl = env.fromString('{{ dict(a=1, b=2)|tojson }}');
+      expect(await tmpl.renderAsync(), equals('{"a":1,"b":2}'));
+
+      // Test empty dict
+      tmpl = env.fromString('{{ dict()|tojson }}');
+      expect(await tmpl.renderAsync(), equals('{}'));
+
+      // Test positional map arguments
+      var data = {
+        'map1': {'a': 1, 'b': 2},
+        'map2': {'c': 3, 'd': 4},
+      };
+      tmpl = env.fromString('{{ dict(map1, map2)|tojson }}');
+      var result = await tmpl.renderAsync(data);
+      expect(result, contains('"a":1'));
+      expect(result, contains('"b":2'));
+      expect(result, contains('"c":3'));
+      expect(result, contains('"d":4'));
+
+      // Test iterable of pairs
+      tmpl = env.fromString('{{ dict([["a", 1], ["b", 2]])|tojson }}');
+      expect(await tmpl.renderAsync(), equals('{"a":1,"b":2}'));
+
+      // Test mixed arguments (positional map + keyword arguments)
+      tmpl = env.fromString('{{ dict(map1, c=3, d=4)|tojson }}');
+      result = await tmpl.renderAsync(data);
+      expect(result, contains('"a":1'));
+      expect(result, contains('"b":2'));
+      expect(result, contains('"c":3'));
+      expect(result, contains('"d":4'));
+
+      // Test that later values override earlier ones
+      tmpl = env.fromString('{{ dict(a=1, a=2)|tojson }}');
+      expect(await tmpl.renderAsync(), equals('{"a":2}'));
     });
   });
 

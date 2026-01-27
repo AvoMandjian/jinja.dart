@@ -12,6 +12,7 @@ import 'optimizer.dart';
 import 'parser.dart';
 import 'renderer.dart';
 import 'runtime.dart';
+import 'tests.dart' as tests_lib;
 import 'utils.dart';
 
 export 'package:jinja/src/exceptions.dart' show TemplateError;
@@ -102,6 +103,7 @@ base class Environment {
     this.newLine = '\n',
     this.keepTrailingNewLine = false,
     this.optimize = true,
+    this.autoEscape = false,
     Function finalize = defaults.finalize,
     this.loader,
     this.autoReload = true,
@@ -193,6 +195,9 @@ base class Environment {
   /// Should the optimizer be enabled?
   final bool optimize;
 
+  /// Should the variables be auto escaped?
+  final bool autoEscape;
+
   /// A Function that can be used to process the result of a variable
   /// expression before it is output.
   ///
@@ -260,6 +265,7 @@ base class Environment {
       lineCommentPrefix,
       trimBlocks,
       leftStripBlocks,
+      autoEscape,
     );
   }
 
@@ -280,7 +286,8 @@ base class Environment {
         lineStatementPrefix == other.lineStatementPrefix &&
         lineCommentPrefix == other.lineCommentPrefix &&
         trimBlocks == other.trimBlocks &&
-        leftStripBlocks == other.leftStripBlocks;
+        leftStripBlocks == other.leftStripBlocks &&
+        autoEscape == other.autoEscape;
   }
 
   /// Common filter and test caller.
@@ -410,6 +417,31 @@ base class Environment {
     }
 
     throw TemplateRuntimeError("No test named '$name'.");
+  }
+
+  /// Checks if a string matches a regex pattern (anchored to the start).
+  bool match(String value, String pattern, {bool ignoreCase = false}) {
+    return tests_lib.isMatch(value, pattern, ignoreCase: ignoreCase);
+  }
+
+  /// Checks if a string contains a regex pattern.
+  bool search(String value, String pattern, {bool ignoreCase = false}) {
+    return tests_lib.isSearch(value, pattern, ignoreCase: ignoreCase);
+  }
+
+  /// Checks if an iterable is a subset of another.
+  bool subsetOf(Iterable<Object?> value, Iterable<Object?> other) {
+    return tests_lib.isSubsetOf(value, other);
+  }
+
+  /// Checks if an iterable is a superset of another.
+  bool supersetOf(Iterable<Object?> value, Iterable<Object?> other) {
+    return tests_lib.isSupersetOf(value, other);
+  }
+
+  /// Performs version comparison (semantic versioning support).
+  bool version(String value, String version, [String operator = '==']) {
+    return tests_lib.isVersion(value, version, operator);
   }
 
   /// Lex the given source and return a list of tokens.
@@ -617,6 +649,7 @@ base class Template {
         newLine: newLine,
         keepTrailingNewLine: keepTrailingNewLine,
         optimize: optimize,
+        autoEscape: autoEscape,
         finalize: finalize,
         autoReload: false,
         globals: globals,

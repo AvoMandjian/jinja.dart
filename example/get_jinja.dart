@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:jinja/jinja.dart';
 import 'package:json_path/json_path.dart';
+import 'package:path/path.dart' as p;
+import 'package:textwrap/textwrap.dart';
 import 'package:uuid/uuid.dart';
 
 import 'async_globals_example.dart';
@@ -853,7 +855,14 @@ class GetJinja {
           }
         },
 
-        /// Filters a list to exclude items where an attribute is true.
+        'reduce': (List? list, String func, [dynamic start]) {
+          if (list == null || list.isEmpty) return start;
+          if (func == 'add') {
+            return list.fold(start ?? 0, (a, b) => (a as num) + (b as num));
+          }
+          return start;
+        },
+
         'reject': (List? value, String attribute) {
           try {
             return value?.where((e) => !e[attribute]).toList() ?? [];
@@ -1907,6 +1916,535 @@ class GetJinja {
             return value;
           }
         },
+
+        // --- NEW FILTERS IMPLEMENTED FROM JINJA_FILTERS.md ---
+
+        /// Return the absolute value of the argument.
+        'abs': (dynamic value) => value is num ? value.abs() : value,
+
+        /// Return true if none of the elements of the iterable are false.
+        'all': (List? list) {
+          if (list == null) return true;
+          return list.every((e) {
+            if (e == null || e == false || e == 0 || e == '') return false;
+            return true;
+          });
+        },
+
+        /// Returns true if any item in an iterable is true, otherwise false.
+        'any': (List? list) {
+          if (list == null) return false;
+          return list.any((e) {
+            if (e == null || e == false || e == 0 || e == '') return false;
+            return true;
+          });
+        },
+
+        /// Convert a datetime object to a different timezone.
+        'as_timezone': (dynamic val, String tz) {
+          // Placeholder: Timezone conversion requires 'timezone' package
+          return val;
+        },
+
+        /// Get an attribute of an object.
+        'attr': (dynamic obj, String name) {
+          if (obj is Map) return obj[name];
+          return null;
+        },
+
+        /// Encode a string in base64.
+        'base64': (String? value) => UtilFunctions.encodeToBase64(value),
+
+        /// Get the last name of a windows style file path.
+        'basename': (String path) => p.basename(path),
+
+        /// Batches items. Returns a list of lists with the given number of items.
+        'batch': (List list, int count, [dynamic fill]) {
+          List<List> result = [];
+          for (var i = 0; i < list.length; i += count) {
+            var end = (i + count < list.length) ? i + count : list.length;
+            var chunk = list.sublist(i, end);
+            if (fill != null && chunk.length < count) {
+              chunk.addAll(List.filled(count - chunk.length, fill));
+            }
+            result.add(chunk);
+          }
+          return result;
+        },
+
+        /// Capitalize a value. The first character will be uppercase, all others lowercase.
+        'capitalize': (String? s) {
+          if (s == null || s.isEmpty) return '';
+          return s[0].toUpperCase() + s.substring(1).toLowerCase();
+        },
+
+        /// Centers the value in a field of a given width.
+        'center': (String? s, int width, [String fill = ' ']) {
+          if (s == null) return '';
+          if (s.length >= width) return s;
+          int left = (width - s.length) ~/ 2;
+          int right = width - s.length - left;
+          return (fill * left) + s + (fill * right);
+        },
+
+        /// Convert an epoch timestamp to a datetime object.
+        'convert_from_epoch': (int? epoch) {
+          if (epoch == null) return null;
+          return DateTime.fromMillisecondsSinceEpoch(epoch * 1000).toString();
+        },
+
+        /// Dump a list of rows to CSV format.
+        'csv': (List? rows) {
+          if (rows == null) return '';
+          return rows.map((row) {
+            if (row is List) return row.join(',');
+            return row.toString();
+          }).join('\n');
+        },
+
+        /// Return the number of items in a container.
+        'count': (dynamic val, dynamic item) {
+          if (val is String) return val.split(item.toString()).length - 1;
+          if (val is List) return val.where((e) => e == item).length;
+          return 0;
+        },
+
+        /// Alias for default. If value is undefined, returns default value.
+        'd': (dynamic value, dynamic defaultValue) => value ?? defaultValue,
+
+        /// Add or subtract a number of years, months, weeks, or days from a datetime.
+        'datedelta': (
+          String? dateStr, {
+          int days = 0,
+          int hours = 0,
+          int minutes = 0,
+        }) {
+          if (dateStr == null) return null;
+          try {
+            final date = DateTime.parse(dateStr);
+            return date.add(Duration(days: days, hours: hours, minutes: minutes)).toString();
+          } catch (e) {
+            return dateStr;
+          }
+        },
+
+        /// Decode a base64-encoded string and return it as a UTF-8 string.
+        'decode_base64': (String? value) => UtilFunctions.decodeFromBase64(value ?? ''),
+
+        /// Transforms lists into dictionaries.
+        'dict': (dynamic value) {
+          if (value is List) {
+            try {
+              final map = <dynamic, dynamic>{};
+              for (var item in value) {
+                if (item is List && item.length >= 2) {
+                  map[item[0]] = item[1];
+                }
+              }
+              return map;
+            } catch (e) {
+              return {};
+            }
+          }
+          return {};
+        },
+
+        /// Get the directory from a path.
+        'dirname': (String path) => p.dirname(path),
+
+        /// Alias for escape. Replace characters with HTML-safe sequences.
+        'e': (String? s) => const HtmlEscape().convert(s ?? ''),
+
+        /// Replace characters with HTML-safe sequences.
+        'escape': (String? s) => const HtmlEscape().convert(s ?? ''),
+
+        /// Enforce HTML escaping.
+        'forceescape': (String? s) => const HtmlEscape().convert(s ?? ''),
+
+        /// Iterate with index and element.
+        'enumerate': (List? list) {
+          if (list == null) return [];
+          return list.asMap().entries.map((e) => [e.key, e.value]).toList();
+        },
+
+        /// Apply values to a printf-style format string.
+        'format': (
+          String? s, [
+          dynamic arg1,
+          dynamic arg2,
+          dynamic arg3,
+          dynamic arg4,
+        ]) {
+          if (s == null) return '';
+          String res = s;
+          List args = [arg1, arg2, arg3, arg4].where((e) => e != null).toList();
+          for (var arg in args) {
+            res = res.replaceFirst('{}', arg.toString());
+          }
+          return res;
+        },
+
+        /// Return a string representation of a datetime in a particular format.
+        'format_datetime': (String? dateStr, String fmt) {
+          if (dateStr == null) return '';
+          try {
+            final date = DateTime.parse(dateStr);
+            final dartFmt = convertPythonToDartDateFormat(fmt);
+            return DateFormat(dartFmt).format(date);
+          } catch (e) {
+            return dateStr;
+          }
+        },
+
+        /// Deserialize from a JSON-serialized string.
+        'from_json_string': (String? value) {
+          try {
+            return jsonDecode(value ?? '{}');
+          } catch (e) {
+            return {};
+          }
+        },
+
+        /// Returns hex representations of bytes objects and UTF-8 strings.
+        'hex': (dynamic val) {
+          if (val is int) return '0x${val.toRadixString(16)}';
+          if (val is String) {
+            return val.codeUnits.map((c) => c.toRadixString(16)).join();
+          }
+          return '';
+        },
+
+        /// Return the bytes digest of the HMAC.
+        'hmac': (String? str, String? secret) {
+          // Placeholder: HMAC requires 'crypto' package
+          return str ?? '';
+        },
+
+        /// Return a copy of the string with each line indented.
+        'indent': (String? s, int width, [bool first = false]) {
+          if (s == null) return '';
+          final indentStr = ' ' * width;
+          final lines = s.split('\n');
+          final res = lines.map((l) => '$indentStr$l').join('\n');
+          return first ? res : (lines.isNotEmpty ? '${lines.first}\n${lines.sublist(1).map((l) => '$indentStr$l').join('\n')}' : '');
+        },
+
+        /// Determines whether or not a string can be converted to a JSON object.
+        'is_json': (String? s) {
+          if (s == null) return false;
+          try {
+            jsonDecode(s);
+            return true;
+          } catch (e) {
+            return false;
+          }
+        },
+
+        /// Checks the type of the object.
+        'is_type': (dynamic val, String type) {
+          switch (type) {
+            case 'int':
+              return val is int;
+            case 'float':
+              return val is double;
+            case 'string':
+              return val is String;
+            case 'bool':
+              return val is bool;
+            case 'list':
+              return val is List;
+            case 'map':
+              return val is Map;
+            default:
+              return false;
+          }
+        },
+
+        /// Return an iterator over the (key, value) items of a mapping.
+        'items': (Map? m) => m?.entries.map((e) => [e.key, e.value]).toList() ?? [],
+
+        /// Parse a JSON-serialized string.
+        'json': (String? s) {
+          try {
+            return jsonDecode(s ?? '{}');
+          } catch (e) {
+            return {};
+          }
+        },
+
+        /// Serialize value to JSON.
+        'json_dump': (dynamic val) => jsonEncode(val),
+
+        /// Deserialize from a JSON-serialized string.
+        'json_parse': (String? s) {
+          try {
+            return jsonDecode(s ?? '{}');
+          } catch (e) {
+            return {};
+          }
+        },
+
+        /// Serialize value to JSON.
+        'json_stringify': (dynamic val) => jsonEncode(val),
+
+        /// Extracts data from an object value using a JSONPath query.
+        'jsonpath_query': (dynamic json, String query) {
+          if (json is! Map<String, dynamic>) return null;
+          try {
+            final jsonQuery = JsonPath(query);
+            final jsonPathMatch = jsonQuery.read(json);
+            return jsonPathMatch.map((e) => e.value).firstOrNull;
+          } catch (e) {
+            return null;
+          }
+        },
+
+        /// Parse a datetime string with a known format.
+        'load_datetime': (String? s) {
+          if (s == null) return null;
+          try {
+            return DateTime.parse(s).toString();
+          } catch (e) {
+            return null;
+          }
+        },
+
+        /// Convert a value to lowercase.
+        'lower': (String? s) => s?.toLowerCase() ?? '',
+
+        /// Parse a CSV string into a list of dicts.
+        'parse_csv': (String? csv) {
+          if (csv == null) return [];
+          final lines = csv.split('\n');
+          if (lines.isEmpty) return [];
+          final headers = lines.first.split(',');
+          final result = <Map<String, String>>[];
+          for (var i = 1; i < lines.length; i++) {
+            final values = lines[i].split(',');
+            if (values.length == headers.length) {
+              final row = <String, String>{};
+              for (var j = 0; j < headers.length; j++) {
+                row[headers[j].trim()] = values[j].trim();
+              }
+              result.add(row);
+            }
+          }
+          return result;
+        },
+
+        /// Parse a datetime string without knowing its format specification.
+        'parse_datetime': (String? s) {
+          if (s == null) return null;
+          try {
+            return DateTime.parse(s).toString();
+          } catch (e) {
+            return null;
+          }
+        },
+
+        /// Pretty print a variable.
+        'pprint': (dynamic val) => const JsonEncoder.withIndent('  ').convert(val),
+
+        /// Determine if a string matches a particular pattern.
+        'regex_match': (String? value, String pattern) {
+          if (value == null) return false;
+          return RegExp(pattern).hasMatch(value);
+        },
+
+        /// Find substrings match a pattern and return substring at index.
+        'regex_substring': (String? value, String pattern, [int group = 0]) {
+          if (value == null) return '';
+          final match = RegExp(pattern).firstMatch(value);
+          return match?.group(group) ?? '';
+        },
+
+        /// Replace occurrences of a substring with a new one.
+        'replace': (String? s, String from, String to) => s?.replaceAll(from, to) ?? '',
+
+        /// Reverse the object.
+        'reverse': (dynamic val) {
+          if (val is List) return val.reversed.toList();
+          if (val is String) return val.split('').reversed.join();
+          return val;
+        },
+
+        /// Mark the value as safe (no escaping).
+        'safe': (String? s) => s,
+
+        /// Create a set from an iterable.
+        'set': (Iterable? val) => val?.toSet().toList() ?? [],
+
+        /// Slice an iterator and return a list of lists.
+        'slice': (List? list, int slices) {
+          if (list == null) return [];
+          int length = list.length;
+          int itemsPerSlice = (length / slices).ceil();
+          List<List> res = [];
+          for (var i = 0; i < length; i += itemsPerSlice) {
+            res.add(list.sublist(i, min(i + itemsPerSlice, length)));
+          }
+          return res;
+        },
+
+        /// Convert an object to a string.
+        'string': (dynamic val) => val.toString(),
+
+        /// Strip SGML/XML tags.
+        'striptags': (String? s) => s?.replaceAll(RegExp(r'<[^>]*>'), '') ?? '',
+
+        /// Add a duration of time to a datetime.
+        'time_delta': (String? dateStr, {int days = 0, int hours = 0}) {
+          if (dateStr == null) return null;
+          try {
+            final date = DateTime.parse(dateStr);
+            return date.add(Duration(days: days, hours: hours)).toString();
+          } catch (e) {
+            return dateStr;
+          }
+        },
+
+        /// Return a titlecased version of the value.
+        'title': (String? s) {
+          if (s == null) return '';
+          return s
+              .split(' ')
+              .map(
+                (word) => word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}' : '',
+              )
+              .join(' ');
+        },
+
+        /// Transliterate a Unicode object into an ASCII string.
+        'to_ascii': (String? s) => s, // Placeholder
+
+        /// Transliterate Unicode to ASCII.
+        'unidecode': (String? s) => s, // Placeholder
+
+        /// Returns a fuzzy version of time from seconds.
+        'to_human_time_from_seconds': (int? seconds) {
+          if (seconds == null) return '';
+          final duration = Duration(seconds: seconds);
+          return duration.toString().split('.').first;
+        },
+
+        /// Serialize value to JSON.
+        'to_json_string': (dynamic val) => jsonEncode(val),
+
+        /// Strip leading and trailing whitespace.
+        'trim': (String? s) => s?.trim() ?? '',
+
+        /// Return a truncated copy of the string.
+        'truncate': (
+          String? s,
+          int length, [
+          bool killwords = false,
+          String end = '...',
+        ]) {
+          if (s == null) return '';
+          if (s.length <= length) return s;
+          if (killwords) {
+            return s.substring(0, length - end.length) + end;
+          }
+          return s.substring(0, length - end.length) + end;
+        },
+
+        /// Create a tuple from an iterable.
+        'tuple': (List? l) => l ?? [],
+
+        /// Convert a value to uppercase.
+        'upper': (String? s) => s?.toUpperCase() ?? '',
+
+        /// Convert URLs in text into clickable links.
+        'urlize': (String? s) {
+          if (s == null) return '';
+          final urlRegex = RegExp(r'https?://[^\s]+');
+          return s.replaceAllMapped(
+            urlRegex,
+            (match) => '<a href="${match.group(0)}">${match.group(0)}</a>',
+          );
+        },
+
+        /// Convert None value to magic string.
+        'use_none': (dynamic val) => val ?? 'None',
+
+        /// Increment major version.
+        'version_bump_major': (String? v) {
+          if (v == null) return null;
+          final parts = v.split('.');
+          if (parts.isNotEmpty) {
+            int major = int.tryParse(parts[0]) ?? 0;
+            return '${major + 1}.0.0';
+          }
+          return v;
+        },
+
+        /// Increment minor version.
+        'version_bump_minor': (String? v) {
+          if (v == null) return null;
+          final parts = v.split('.');
+          if (parts.length >= 2) {
+            int minor = int.tryParse(parts[1]) ?? 0;
+            return '${parts[0]}.${minor + 1}.0';
+          }
+          return v;
+        },
+
+        /// Increment patch version.
+        'version_bump_patch': (String? v) {
+          if (v == null) return null;
+          final parts = v.split('.');
+          if (parts.length >= 3) {
+            int patch = int.tryParse(parts[2]) ?? 0;
+            return '${parts[0]}.${parts[1]}.${patch + 1}';
+          }
+          return v;
+        },
+
+        /// Compare two version numbers.
+        'version_compare': (String? v1, String? v2) {
+          return (v1 ?? '').compareTo(v2 ?? '');
+        },
+
+        /// Check if version equals pattern.
+        'version_equal': (String? v1, String? v2) => v1 == v2,
+
+        /// Check if version is less than pattern.
+        'version_less_than': (String? v1, String? v2) => (v1 ?? '').compareTo(v2 ?? '') < 0,
+
+        /// Check if version is greater than pattern.
+        'version_more_than': (String? v1, String? v2) => (v1 ?? '').compareTo(v2 ?? '') > 0,
+
+        /// Remove patch version component.
+        'version_strip_patch': (String? v) {
+          if (v == null) return null;
+          final parts = v.split('.');
+          if (parts.length >= 2) return '${parts[0]}.${parts[1]}';
+          return v;
+        },
+
+        /// Count the words in the string.
+        'wordcount': (String? s) => s?.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length ?? 0,
+
+        /// Wrap a string to the given width.
+        'wordwrap': (String? s, int width) {
+          if (s == null) return '';
+          return wrap(s, width: width).join('\n');
+        },
+
+        /// Wrap text to a specified width with newlines.
+        'wrap_text': (String? s, int width) => wrap(s ?? '', width: width).join('\n'),
+
+        /// Create an SGML/XML attribute string from a dict.
+        'xmlattr': (Map? m) {
+          if (m == null) return '';
+          return m.entries.map((e) => '${e.key}="${e.value}"').join(' ');
+        },
+
+        /// Serialize to YAML.
+        'yaml_dump': (dynamic val) => val.toString(), // Placeholder
+
+        /// Deserialize from a YAML-serialized string.
+        'yaml_parse': (String? s) => s, // Placeholder
       },
     );
   }

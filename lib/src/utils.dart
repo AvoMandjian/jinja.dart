@@ -20,6 +20,18 @@ class EnvFilter {
   const EnvFilter(this.function);
 }
 
+/// A wrapper for string which should not be auto-escaped.
+class SafeString {
+  const SafeString(this._value);
+
+  final String _value;
+
+  @override
+  String toString() {
+    return _value;
+  }
+}
+
 /// Convert value to [bool]
 /// - [bool] returns as is
 /// - [num] returns `true` if `value` is not equal to `0.0`

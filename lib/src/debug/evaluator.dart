@@ -62,8 +62,18 @@ class ExpressionEvaluator extends Visitor<StringSinkRenderContext, Object?> {
   }
 
   @override
+  void visitAutoEscape(AutoEscape node, StringSinkRenderContext context) {
+    throw UnsupportedError('Cannot evaluate autoescape blocks in a breakpoint condition.');
+  }
+
+  @override
   void visitBlock(Block node, StringSinkRenderContext context) {
     throw UnsupportedError('Cannot evaluate blocks in a breakpoint condition.');
+  }
+
+  @override
+  void visitBreak(Break node, StringSinkRenderContext context) {
+    throw UnsupportedError('Cannot evaluate break statements in a breakpoint condition.');
   }
 
   @override
@@ -72,8 +82,18 @@ class ExpressionEvaluator extends Visitor<StringSinkRenderContext, Object?> {
   }
 
   @override
+  void visitContinue(Continue node, StringSinkRenderContext context) {
+    throw UnsupportedError('Cannot evaluate continue statements in a breakpoint condition.');
+  }
+
+  @override
   void visitData(Data node, StringSinkRenderContext context) {
     throw UnsupportedError('Cannot evaluate data nodes in a breakpoint condition.');
+  }
+
+  @override
+  void visitDebug(Debug node, StringSinkRenderContext context) {
+    throw UnsupportedError('Cannot evaluate debug statements in a breakpoint condition.');
   }
 
   @override
@@ -134,6 +154,11 @@ class ExpressionEvaluator extends Visitor<StringSinkRenderContext, Object?> {
   @override
   void visitTemplateNode(TemplateNode node, StringSinkRenderContext context) {
     throw UnsupportedError('Cannot evaluate template nodes in a breakpoint condition.');
+  }
+
+  @override
+  void visitTrans(Trans node, StringSinkRenderContext context) {
+    throw UnsupportedError('Cannot evaluate trans blocks in a breakpoint condition.');
   }
 
   @override

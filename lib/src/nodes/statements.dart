@@ -198,7 +198,7 @@ final class If extends Statement {
 
 typedef MacroFunction = Object? Function(
   List<Object?> positional,
-  Map<Symbol, Object?> named,
+  Map<Object?, Object?> named,
 );
 
 typedef MacroSignature = ({
@@ -827,6 +827,45 @@ final class Assign extends Statement {
   }
 }
 
+final class AutoEscape extends Statement {
+  const AutoEscape({required this.enable, required this.body});
+
+  final bool enable;
+
+  final Node body;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitAutoEscape(this, context);
+  }
+
+  @override
+  AutoEscape copyWith({bool? enable, Node? body}) {
+    return AutoEscape(
+      enable: enable ?? this.enable,
+      body: body ?? this.body,
+    );
+  }
+
+  @override
+  Iterable<T> findAll<T extends Node>() sync* {
+    if (body case T body) {
+      yield body;
+    }
+
+    yield* body.findAll<T>();
+  }
+
+  @override
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'class': 'AutoEscape',
+      'enable': enable,
+      'body': body.toJson(),
+    };
+  }
+}
+
 final class AssignBlock extends Statement {
   AssignBlock({
     required this.target,
@@ -890,6 +929,137 @@ final class AssignBlock extends Statement {
         for (var filter in filters) filter.toJson(),
       ],
       'body': body.toJson(),
+    };
+  }
+}
+
+final class Break extends Statement {
+  const Break();
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitBreak(this, context);
+  }
+
+  @override
+  Break copyWith() {
+    return this;
+  }
+
+  @override
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'class': 'Break',
+    };
+  }
+}
+
+final class Continue extends Statement {
+  const Continue();
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitContinue(this, context);
+  }
+
+  @override
+  Continue copyWith() {
+    return this;
+  }
+
+  @override
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'class': 'Continue',
+    };
+  }
+}
+
+final class Debug extends Statement {
+  const Debug();
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitDebug(this, context);
+  }
+
+  @override
+  Debug copyWith() {
+    return this;
+  }
+
+  @override
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'class': 'Debug',
+    };
+  }
+}
+
+final class Trans extends Statement {
+  Trans({
+    required this.body,
+    this.plural,
+    this.count,
+    this.context,
+    this.trimmed = false,
+  });
+
+  final Node body;
+  final Node? plural;
+  final Expression? count;
+  final String? context;
+  final bool trimmed;
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    return visitor.visitTrans(this, context);
+  }
+
+  @override
+  Trans copyWith({
+    Node? body,
+    Node? plural,
+    Expression? count,
+    String? context,
+    bool? trimmed,
+  }) {
+    return Trans(
+      body: body ?? this.body,
+      plural: plural ?? this.plural,
+      count: count ?? this.count,
+      context: context ?? this.context,
+      trimmed: trimmed ?? this.trimmed,
+    );
+  }
+
+  @override
+  Iterable<T> findAll<T extends Node>() sync* {
+    if (body case T body) {
+      yield body;
+    }
+    yield* body.findAll<T>();
+
+    if (plural case T plural) {
+      yield plural;
+    }
+    yield* (plural?.findAll<T>() ?? const []);
+
+    if (count case T count) {
+      yield count;
+    }
+    yield* (count?.findAll<T>() ?? const []);
+  }
+
+  @override
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'class': 'Trans',
+      'body': body.toJson(),
+      if (plural != null) 'plural': plural!.toJson(),
+      if (count != null) 'count': count!.toJson(),
+      if (context != null) 'context': context,
+      'trimmed': trimmed,
     };
   }
 }

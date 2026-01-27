@@ -166,3 +166,9 @@ class UndefinedError extends TemplateRuntimeError {
     return 'UndefinedError';
   }
 }
+
+/// Used internally for break statements in loops.
+class BreakException implements Exception {}
+
+/// Used internally for continue statements in loops.
+class ContinueException implements Exception {}

@@ -67,8 +67,18 @@ Object? Function(Object?) makeItemGetter(
   return getter;
 }
 
-String doEscape(String value) {
-  return utils.escape(value);
+Object? doSafe(Object? value) {
+  if (value is utils.SafeString) {
+    return value;
+  }
+  return utils.SafeString(value?.toString() ?? '');
+}
+
+String doEscape(Object? value) {
+  if (value is utils.SafeString) {
+    return value.toString();
+  }
+  return utils.escape(value?.toString() ?? '');
 }
 
 String doString(Object? value) {
@@ -237,10 +247,9 @@ int _compare(Object? a, Object? b, bool caseSensitive) {
   if (a is Comparable && b is Comparable) {
     try {
       return a.compareTo(b);
-    } catch (_) {
-    }
+    } catch (_) {}
   }
-  
+
   return a.toString().compareTo(b.toString());
 }
 
@@ -537,6 +546,7 @@ Object? Function(Object? object) _prepareMap(
     Future<Object?>? getter(Object? object) async {
       return context.filter(name, <Object?>[object, ...positional], symbols);
     }
+
     return getter;
   } on RangeError {
     throw ArgumentError('Map requires a filter argument.', 'filter');
@@ -722,7 +732,7 @@ String doIndent(String value, [int width = 4, bool first = false, bool blank = f
   var indent = ' ' * width;
   var lines = const LineSplitter().convert(value);
   var buffer = StringBuffer();
-  
+
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i];
     if (i == 0 && !first) {
@@ -808,9 +818,9 @@ Object doSelect(
 ]) {
   var test = context.environment.tests[testName];
   if (test == null) throw TemplateRuntimeError("No test named '$testName'.");
-  
+
   var positionalArgs = args ?? const [];
-  
+
   Function func;
   bool needsContext = false;
   bool needsEnvironment = false;
@@ -830,9 +840,9 @@ Object doSelect(
   List<Object?> getPositional(Object? item) {
     var positional = [item, ...positionalArgs];
     if (needsContext) {
-       return [context, ...positional];
+      return [context, ...positional];
     } else if (needsEnvironment) {
-       return [context.environment, ...positional];
+      return [context.environment, ...positional];
     }
     return positional;
   }
@@ -850,7 +860,7 @@ Object doSelect(
       results.add(item);
     }
   }
-  
+
   if (isAsync) {
     return _doSelectAsync(context, value, testName, args);
   }
@@ -866,8 +876,8 @@ Future<List<Object?>> _doSelectAsync(
   var test = context.environment.tests[testName]!;
   var results = <Object?>[];
   for (var item in value) {
-     var result = await context.environment.callCommon(test, [item, ...?args], const {}, context);
-     if (result == true) results.add(item);
+    var result = await context.environment.callCommon(test, [item, ...?args], const {}, context);
+    if (result == true) results.add(item);
   }
   return results;
 }
@@ -880,9 +890,9 @@ Object doReject(
 ]) {
   var test = context.environment.tests[testName];
   if (test == null) throw TemplateRuntimeError("No test named '$testName'.");
-  
+
   var positionalArgs = args ?? const [];
-  
+
   Function func;
   bool needsContext = false;
   bool needsEnvironment = false;
@@ -902,9 +912,9 @@ Object doReject(
   List<Object?> getPositional(Object? item) {
     var positional = [item, ...positionalArgs];
     if (needsContext) {
-       return [context, ...positional];
+      return [context, ...positional];
     } else if (needsEnvironment) {
-       return [context.environment, ...positional];
+      return [context.environment, ...positional];
     }
     return positional;
   }
@@ -922,7 +932,7 @@ Object doReject(
       results.add(item);
     }
   }
-  
+
   if (isAsync) {
     return _doRejectAsync(context, value, testName, args);
   }
@@ -938,8 +948,8 @@ Future<List<Object?>> _doRejectAsync(
   var test = context.environment.tests[testName]!;
   var results = <Object?>[];
   for (var item in value) {
-     var result = await context.environment.callCommon(test, [item, ...?args], const {}, context);
-     if (result == false) results.add(item);
+    var result = await context.environment.callCommon(test, [item, ...?args], const {}, context);
+    if (result == false) results.add(item);
   }
   return results;
 }
@@ -954,10 +964,10 @@ Object doSelectAttr(
   testName ??= 'defined';
   var test = context.environment.tests[testName];
   if (test == null) throw TemplateRuntimeError("No test named '$testName'.");
-  
+
   var getter = makeAttributeGetter(context.environment, attribute);
   var positionalArgs = args ?? const [];
-  
+
   Function func;
   bool needsContext = false;
   bool needsEnvironment = false;
@@ -977,9 +987,9 @@ Object doSelectAttr(
   List<Object?> getPositional(Object? attrVal) {
     var positional = [attrVal, ...positionalArgs];
     if (needsContext) {
-       return [context, ...positional];
+      return [context, ...positional];
     } else if (needsEnvironment) {
-       return [context.environment, ...positional];
+      return [context.environment, ...positional];
     }
     return positional;
   }
@@ -998,7 +1008,7 @@ Object doSelectAttr(
       results.add(item);
     }
   }
-  
+
   if (isAsync) {
     return _doSelectAttrAsync(context, value, attribute, testName, args);
   }
@@ -1016,9 +1026,9 @@ Future<List<Object?>> _doSelectAttrAsync(
   var getter = makeAttributeGetter(context.environment, attribute);
   var results = <Object?>[];
   for (var item in value) {
-     var attrVal = getter(item);
-     var result = await context.environment.callCommon(test, [attrVal, ...?args], const {}, context);
-     if (result == true) results.add(item);
+    var attrVal = getter(item);
+    var result = await context.environment.callCommon(test, [attrVal, ...?args], const {}, context);
+    if (result == true) results.add(item);
   }
   return results;
 }
@@ -1033,10 +1043,10 @@ Object doRejectAttr(
   testName ??= 'defined';
   var test = context.environment.tests[testName];
   if (test == null) throw TemplateRuntimeError("No test named '$testName'.");
-  
+
   var getter = makeAttributeGetter(context.environment, attribute);
   var positionalArgs = args ?? const [];
-  
+
   Function func;
   bool needsContext = false;
   bool needsEnvironment = false;
@@ -1056,9 +1066,9 @@ Object doRejectAttr(
   List<Object?> getPositional(Object? attrVal) {
     var positional = [attrVal, ...positionalArgs];
     if (needsContext) {
-       return [context, ...positional];
+      return [context, ...positional];
     } else if (needsEnvironment) {
-       return [context.environment, ...positional];
+      return [context.environment, ...positional];
     }
     return positional;
   }
@@ -1077,7 +1087,7 @@ Object doRejectAttr(
       results.add(item);
     }
   }
-  
+
   if (isAsync) {
     return _doRejectAttrAsync(context, value, attribute, testName, args);
   }
@@ -1095,9 +1105,9 @@ Future<List<Object?>> _doRejectAttrAsync(
   var getter = makeAttributeGetter(context.environment, attribute);
   var results = <Object?>[];
   for (var item in value) {
-     var attrVal = getter(item);
-     var result = await context.environment.callCommon(test, [attrVal, ...?args], const {}, context);
-     if (result == false) results.add(item);
+    var attrVal = getter(item);
+    var result = await context.environment.callCommon(test, [attrVal, ...?args], const {}, context);
+    if (result == false) results.add(item);
   }
   return results;
 }
@@ -1132,6 +1142,7 @@ List<String> doRegexFindall(String value, String pattern, {bool ignoreCase = fal
 final Map<String, Object> filters = <String, Object>{
   'e': doEscape,
   'escape': doEscape,
+  'safe': doSafe,
   'string': doString,
   'urlencode': doUrlEncode,
   'replace': doReplace,
@@ -1202,6 +1213,7 @@ final Map<String, Object> filters = <String, Object>{
   'regex_findall': doRegexFindall,
   'shuffle': utils.EnvFilter(doShuffle),
   'combine': doCombine,
-  'pluck': utils.ContextFilter((Context context, Iterable<Object?>? values, String attribute) => 
-      doMap(context, values, [attribute], {}),),
+  'pluck': utils.ContextFilter(
+    (Context context, Iterable<Object?>? values, String attribute) => doMap(context, values, [attribute], {}),
+  ),
 };

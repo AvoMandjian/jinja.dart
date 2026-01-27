@@ -1,2 +1,8 @@
 update_jinja_rendering_to_async_ba459e63.plan.md
 migrate_jinja_globals_filters_fa7cdfe0.plan.md
+implement_jinja_control_structures_and_extensions_bd871b51.plan.md
+implement_jinja_control_structures_and_extensions_5f64290f.plan.md
+implement_non-block_statements_after_extends_023febe3.plan.md
+implement-environment-test-methods_7b91ef6f.plan.md
+implement-environment-test-methods_663117e7.plan.md
+implement_dict_global_function_a3123a3a.plan.md

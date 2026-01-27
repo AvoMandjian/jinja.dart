@@ -11,6 +11,7 @@ export 'package:jinja/src/tests.dart' show tests;
 
 const Map<String, Object?> globals = <String, Object?>{
   'namespace': Namespace.factory,
+  'dict': dict,
   'list': list,
   'print': print,
   'range': range,
@@ -134,7 +135,9 @@ class Cycler {
   Object? get current => values.isEmpty ? null : values[_index];
 
   Object? call() {
-    return next();
+    var res = current;
+    next();
+    return res;
   }
 
   Object? next() {
@@ -231,4 +234,46 @@ Iterable<List<Object?>> zip(Iterable<Object?> i1, [Iterable<Object?>? i2, Iterab
 /// Current time.
 DateTime now() {
   return DateTime.now();
+}
+
+/// Creates a dictionary from keyword arguments or positional arguments.
+///
+/// Accepts:
+/// - Keyword arguments: `dict(a=1, b=2)` creates `{'a': 1, 'b': 2}`
+/// - Positional maps: `dict(map1, map2)` merges maps
+/// - Positional iterables of pairs: `dict([['a', 1], ['b', 2]])` creates `{'a': 1, 'b': 2}`
+///
+/// Multiple arguments are merged left to right, with later values overriding earlier ones.
+Map<Object?, Object?> dict([List<Object?>? args]) {
+  var result = <Object?, Object?>{};
+
+  if (args == null || args.isEmpty) {
+    return result;
+  }
+
+  for (var arg in args) {
+    if (arg is Map) {
+      result.addAll(arg);
+    } else if (arg is Iterable) {
+      // Handle iterables of pairs like [['key', 'value'], ...]
+      for (var item in arg) {
+        if (item is List && item.length == 2) {
+          result[item[0]] = item[1];
+        } else if (item is MapEntry) {
+          result[item.key] = item.value;
+        } else {
+          throw TemplateRuntimeError(
+            'dict() argument must be a map or iterable of pairs, '
+            'got iterable containing ${item.runtimeType}',
+          );
+        }
+      }
+    } else {
+      throw TemplateRuntimeError(
+        'dict() argument must be a map or iterable, got ${arg.runtimeType}',
+      );
+    }
+  }
+
+  return result;
 }

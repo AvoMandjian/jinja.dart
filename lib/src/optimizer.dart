@@ -164,9 +164,7 @@ class Optimizer implements Visitor<Context, Node> {
 
   @override
   Filter visitFilter(Filter node, Context context) {
-    return node.copyWith(
-      calling: visitNode<Calling>(node.calling, context),
-    );
+    return node.copyWith(calling: visitNode<Calling>(node.calling, context));
   }
 
   @override
@@ -295,8 +293,18 @@ class Optimizer implements Visitor<Context, Node> {
   }
 
   @override
+  Node visitAutoEscape(AutoEscape node, Context context) {
+    return node.copyWith(body: visitNode<Node>(node.body, context));
+  }
+
+  @override
   Block visitBlock(Block node, Context context) {
     return node.copyWith(body: visitNode<Node>(node.body, context));
+  }
+
+  @override
+  Node visitBreak(Break node, Context context) {
+    return node.copyWith();
   }
 
   @override
@@ -316,8 +324,18 @@ class Optimizer implements Visitor<Context, Node> {
   }
 
   @override
+  Node visitContinue(Continue node, Context context) {
+    return node.copyWith();
+  }
+
+  @override
   Data visitData(Data node, Context context) {
     return node;
+  }
+
+  @override
+  Node visitDebug(Debug node, Context context) {
+    return node.copyWith();
   }
 
   @override
@@ -410,6 +428,15 @@ class Optimizer implements Visitor<Context, Node> {
   @override
   TemplateNode visitTemplateNode(TemplateNode node, Context context) {
     return node.copyWith(body: visitNode<Node>(node.body, context));
+  }
+
+  @override
+  Node visitTrans(Trans node, Context context) {
+    return node.copyWith(
+      body: visitNode<Node>(node.body, context),
+      plural: visitNode<Node?>(node.plural, context),
+      count: visitNode<Expression?>(node.count, context),
+    );
   }
 
   @override

@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'debug_controller.dart';
 import '../nodes.dart';
 import '../renderer.dart';
 import '../runtime.dart';
+import 'debug_controller.dart';
 
 /// Debug version of StringSinkRenderContext that tracks execution
 base class DebugRenderContext extends StringSinkRenderContext {
@@ -19,6 +19,7 @@ base class DebugRenderContext extends StringSinkRenderContext {
     super.blocks,
     super.parent,
     super.data,
+    super.autoEscape,
     StringBuffer? outputBuffer,
   }) : _outputBuffer = outputBuffer ?? StringBuffer();
 
@@ -28,6 +29,7 @@ base class DebugRenderContext extends StringSinkRenderContext {
     String? template,
     Map<String, Object?>? data,
     bool withContext = true,
+    bool? autoEscape,
   }) {
     var parent = withContext ? {...this.parent, ...context} : this.parent;
     return DebugRenderContext(
@@ -39,6 +41,7 @@ base class DebugRenderContext extends StringSinkRenderContext {
       parent: parent,
       data: data,
       outputBuffer: _outputBuffer,
+      autoEscape: autoEscape ?? this.autoEscape,
     );
   }
 
@@ -147,6 +150,17 @@ base class DebugRenderer extends StringSinkRenderer {
       });
     } else {
       super.visitIf(node, context);
+    }
+  }
+
+  @override
+  Future<void> visitAutoEscape(AutoEscape node, StringSinkRenderContext context) async {
+    if (context is DebugRenderContext) {
+      await _checkBreakpoint(node, context).then((_) {
+        super.visitAutoEscape(node, context);
+      });
+    } else {
+      super.visitAutoEscape(node, context);
     }
   }
 

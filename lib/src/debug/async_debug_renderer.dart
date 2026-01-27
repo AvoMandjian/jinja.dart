@@ -5,7 +5,6 @@ import '../renderer.dart';
 import '../runtime.dart';
 import '../utils.dart';
 import '../visitor.dart';
-
 import 'debug_controller.dart';
 import 'debug_renderer.dart';
 import 'evaluator.dart';
@@ -16,10 +15,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   /// Set to track which lines have already triggered breakpoints during this render
   final Set<int> _linesHitThisRender = {};
-  
+
   /// Track if we're currently inside a for loop iteration
   final bool _inForIteration = false;
-  
+
   /// Track the line number of the current for statement
   int? _currentForLine;
 
@@ -86,9 +85,8 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
         var totalOutput = context.outputSoFar;
         var current = currentOutput ?? '';
-        var soFar = (current.isNotEmpty && totalOutput.endsWith(current))
-            ? totalOutput.substring(0, totalOutput.length - current.length)
-            : totalOutput;
+        var soFar =
+            (current.isNotEmpty && totalOutput.endsWith(current)) ? totalOutput.substring(0, totalOutput.length - current.length) : totalOutput;
 
         var info = BreakpointInfo(
           nodeType: nodeType,
@@ -280,6 +278,12 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
+  Future<void> visitAutoEscape(AutoEscape node, DebugRenderContext context) async {
+    await _checkBreakpoint(node, context, 'AutoEscape');
+    _baseRenderer.visitAutoEscape(node, context);
+  }
+
+  @override
   Future<void> visitBlock(Block node, DebugRenderContext context) async {
     if (node.line != null) {
       context.setLine(node.line!);
@@ -289,9 +293,21 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
+  Future<void> visitBreak(Break node, DebugRenderContext context) async {
+    await _checkBreakpoint(node, context, 'Break');
+    _baseRenderer.visitBreak(node, context);
+  }
+
+  @override
   Future<void> visitCallBlock(CallBlock node, DebugRenderContext context) async {
     await _checkBreakpoint(node, context, 'CallBlock');
     _baseRenderer.visitCallBlock(node, context);
+  }
+
+  @override
+  Future<void> visitContinue(Continue node, DebugRenderContext context) async {
+    await _checkBreakpoint(node, context, 'Continue');
+    _baseRenderer.visitContinue(node, context);
   }
 
   @override
@@ -302,6 +318,12 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     if (!(_inForIteration && node.line == _currentForLine)) {
       await _checkBreakpoint(node, context, 'Data', nodeData: node.data, currentOutput: node.data);
     }
+  }
+
+  @override
+  Future<void> visitDebug(Debug node, DebugRenderContext context) async {
+    await _checkBreakpoint(node, context, 'Debug');
+    _baseRenderer.visitDebug(node, context);
   }
 
   @override
@@ -484,6 +506,12 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     }
 
     await node.body.accept(this, context);
+  }
+
+  @override
+  Future<void> visitTrans(Trans node, DebugRenderContext context) async {
+    await _checkBreakpoint(node, context, 'Trans');
+    _baseRenderer.visitTrans(node, context);
   }
 
   @override

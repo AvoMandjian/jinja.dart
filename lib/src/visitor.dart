@@ -47,11 +47,19 @@ abstract class Visitor<C, R> {
 
   R visitAssignBlock(AssignBlock node, C context);
 
+  R visitAutoEscape(AutoEscape node, C context);
+
   R visitBlock(Block node, C context);
+
+  R visitBreak(Break node, C context);
 
   R visitCallBlock(CallBlock node, C context);
 
+  R visitContinue(Continue node, C context);
+
   R visitData(Data node, C context);
+
+  R visitDebug(Debug node, C context);
 
   R visitDo(Do node, C context);
 
@@ -76,6 +84,8 @@ abstract class Visitor<C, R> {
   R visitOutput(Output node, C context);
 
   R visitTemplateNode(TemplateNode node, C context);
+
+  R visitTrans(Trans node, C context);
 
   R visitTryCatch(TryCatch node, C context);
 
@@ -194,7 +204,17 @@ class ThrowingVisitor<C, R> implements Visitor<C, R> {
   }
 
   @override
+  R visitAutoEscape(AutoEscape node, C context) {
+    throw UnimplementedError();
+  }
+
+  @override
   R visitBlock(Block node, C context) {
+    throw UnimplementedError();
+  }
+
+  @override
+  R visitBreak(Break node, C context) {
     throw UnimplementedError();
   }
 
@@ -204,7 +224,17 @@ class ThrowingVisitor<C, R> implements Visitor<C, R> {
   }
 
   @override
+  R visitContinue(Continue node, C context) {
+    throw UnimplementedError();
+  }
+
+  @override
   R visitData(Data node, C context) {
+    throw UnimplementedError();
+  }
+
+  @override
+  R visitDebug(Debug node, C context) {
     throw UnimplementedError();
   }
 
@@ -265,6 +295,11 @@ class ThrowingVisitor<C, R> implements Visitor<C, R> {
 
   @override
   R visitTemplateNode(TemplateNode node, C context) {
+    throw UnimplementedError();
+  }
+
+  @override
+  R visitTrans(Trans node, C context) {
     throw UnimplementedError();
   }
 
