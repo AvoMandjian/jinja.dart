@@ -729,6 +729,321 @@ Count: {{ ns.count }}
   var result65 = await template65.renderAsync();
   print(result65.trim());
 
+  // Example 66: Filter block
+  print('\n=== Example 66: Filter block ===');
+  var template66 = env.fromString('''
+{% filter upper %}
+    hello world
+{% endfilter %}
+''');
+  var result66 = await template66.renderAsync();
+  print(result66.trim());
+
+  // Example 67: Autoescape
+  print('\n=== Example 67: Autoescape ===');
+  var template67 = env.fromString('''
+{% autoescape true %}
+    {{ "<b>Safe</b>" }}
+{% endautoescape %}
+{% autoescape false %}
+    {{ "<b>Unsafe</b>" }}
+{% endautoescape %}
+''');
+  var result67 = await template67.renderAsync();
+  print(result67.trim());
+
+  // Example 68: Recursive for loop
+  print('\n=== Example 68: Recursive for loop ===');
+  var template68 = env.fromString('''
+{% for item in items recursive %}
+    {{ item.name }}
+    {% if item.children %}
+        <ul>{{ loop(item.children) }}</ul>
+    {% endif %}
+{% endfor %}
+''');
+  var result68 = await template68.renderAsync({
+    'items': [
+      {
+        'name': 'Root',
+        'children': [
+          {'name': 'Child 1'},
+          {
+            'name': 'Child 2',
+            'children': [
+              {'name': 'Grandchild 1'},
+            ],
+          }
+        ],
+      }
+    ],
+  });
+  print(result68.trim());
+
+  // Example 69: Raw block
+  print('\n=== Example 69: Raw block ===');
+  var template69 = env.fromString('''
+{% raw %}
+    {{ variable }}
+    {% if condition %}
+{% endraw %}
+''');
+  var result69 = await template69.renderAsync();
+  print(result69.trim());
+
+  // Example 70: Operators (Power and Concat)
+  print('\n=== Example 70: Operators ===');
+  var template70 = env.fromString('{{ 2 ** 3 }} ~ {{ "hello" ~ " " ~ "world" }}');
+  var result70 = await template70.renderAsync();
+  print(result70.trim());
+
+  // Example 71: More tests
+  print('\n=== Example 71: More tests ===');
+  var template71 = env.fromString('''
+{{ 10 is divisibleby 2 }}
+{{ [1, 2] is iterable }}
+{{ {"a": 1} is mapping }}
+{{ none is none }}
+''');
+  var result71 = await template71.renderAsync();
+  print(result71.trim());
+
+  // Example 72: Inline If (Ternary Operator)
+  print('\n=== Example 72: Inline If (Ternary) ===');
+  var template72 = env.fromString('{{ "Yes" if true else "No" }} | {{ "Yes" if false else "No" }}');
+  var result72 = await template72.renderAsync();
+  print(result72.trim());
+
+  // Example 73: Membership Operators
+  print('\n=== Example 73: Membership Operators ===');
+  var template73 = env.fromString('{{ 1 in [1, 2, 3] }} | {{ 4 not in [1, 2, 3] }}');
+  var result73 = await template73.renderAsync();
+  print(result73.trim());
+
+  // Example 74: Debug statement
+  print('\n=== Example 74: Debug statement ===');
+  // Debug usually prints to stdout/console directly
+  var template74 = env.fromString('{% debug %}');
+  await template74.renderAsync();
+
+  // Example 75: Tuple Unpacking
+  print('\n=== Example 75: Tuple Unpacking ===');
+  var template75 = env.fromString('''
+{% set a, b = [10, 20] %}
+a: {{ a }}, b: {{ b }}
+{% for x, y in points %}
+  Point: {{ x }}, {{ y }}
+{% endfor %}
+''');
+  var result75 = await template75.renderAsync({
+    'points': [
+      [1, 2],
+      [3, 4],
+      [5, 6],
+    ],
+  });
+  print(result75.trim());
+
+  // Example 76: Macro varargs and kwargs
+  print('\n=== Example 76: Macro varargs and kwargs ===');
+  // Note: support for varargs/kwargs syntax depends on parser, but accessing them if passed is standard
+  var template76 = env.fromString('''
+{% macro dump_extras() -%}
+  Args: {{ varargs|list }}
+  Kwargs: {{ kwargs|dictsort }}
+{%- endmacro %}
+{{ dump_extras(1, 2, a=3, b=4) }}
+''');
+  var result76 = await template76.renderAsync();
+  print(result76.trim());
+
+  // Example 77: Complex Logic
+  print('\n=== Example 77: Complex Logic ===');
+  var template77 = env.fromString('{{ (true and false) or (true and true) }}');
+  var result77 = await template77.renderAsync();
+  print(result77.trim());
+
+  // Example 78: Inheritance with super()
+  print('\n=== Example 78: Inheritance with super() ===');
+  var template78 = env.fromString('''
+{% extends "base.html" %}
+{% block header %}
+    {{ super() }} - Extended
+{% endblock %}
+''');
+  var result78 = await template78.renderAsync();
+  print(result78.trim());
+
+  // Example 79: Jinja Comments and Math
+  print('\n=== Example 79: Jinja Comments and Math ===');
+  var template79 = env.fromString('''
+{# This is a comment and will not be rendered #}
+Modulo: {{ 10 % 3 }}
+Floor Division: {{ 10 // 3 }}
+''');
+  var result79 = await template79.renderAsync();
+  print(result79.trim());
+
+  // Example 80: Loop Cycle
+  print('\n=== Example 80: Loop Cycle ===');
+  var template80 = env.fromString('''
+{% for i in range(4) %}
+    {{ i }} is {{ loop.cycle('even', 'odd') }}
+{% endfor %}
+''');
+  var result80 = await template80.renderAsync();
+  print(result80.trim());
+
+  // Example 81: Dynamic Inheritance
+  print('\n=== Example 81: Dynamic Inheritance ===');
+  var template81 = env.fromString('''
+{% extends layout %}
+{% block title %}Dynamic Page{% endblock %}
+{% block content %}Page content with dynamic parent{% endblock %}
+''');
+  var result81 = await template81.renderAsync({'layout': 'base.html'});
+  print(result81.trim());
+
+  // Example 82: Recursive Macro
+  print('\n=== Example 82: Recursive Macro ===');
+  var template82 = env.fromString('''
+{% macro factorial(n) -%}
+    {% if n > 1 -%}
+        {{ n * factorial(n - 1) }}
+    {%- else -%}
+        1
+    {%- endif %}
+{%- endmacro %}
+5! = {{ factorial(5) }}
+''');
+  // Note: Recursive macros work if they return expressions.
+  // For outputting text recursively, standard Jinja2 often hits recursion limits or requires buffering.
+  // In Jinja.dart, basic recursion like this works for values if supported by expression evaluator.
+  // Actually, macros return string output. Let's try a simple render recursion.
+  var template82b = env.fromString('''
+{% macro walk_tree(item) -%}
+    {{ item.name }}
+    {%- if item.children -%}
+        <ul>
+        {%- for child in item.children -%}
+            <li>{{ walk_tree(child) }}</li>
+        {%- endfor -%}
+        </ul>
+    {%- endif -%}
+{%- endmacro %}
+{{ walk_tree(root) }}
+''');
+  var result82 = await template82b.renderAsync({
+    'root': {
+      'name': 'Root',
+      'children': [
+        {'name': 'A'},
+        {
+          'name': 'B',
+          'children': [
+            {'name': 'B1'},
+          ],
+        },
+      ],
+    },
+  });
+  print(result82.trim());
+
+  // Example 83: Self Block Access
+  print('\n=== Example 83: Self Block Access ===');
+  var template83 = env.fromString('''
+{% block warning %}
+    WARNING: {{ message }}
+{% endblock %}
+
+<div class="alert">
+    {{ self.warning() }}
+</div>
+<div class="footer-warning">
+    {{ self.warning() }}
+</div>
+''');
+  var result83 = await template83.renderAsync({'message': 'System Failure'});
+  print(result83.trim());
+
+  // Example 84: Safe and Escape Filters
+  print('\n=== Example 84: Safe and Escape Filters ===');
+  var template84 = env.fromString('''
+Safe: {{ "<b>Bold</b>"|safe }}
+Escaped: {{ "<b>Bold</b>"|e }}
+Force Escaped: {{ "<b>Bold</b>"|forceescape }}
+''');
+  var result84 = await template84.renderAsync();
+  print(result84.trim());
+
+  // Example 85: Format Filter
+  print('\n=== Example 85: Format Filter ===');
+  var template85 = env.fromString('{{ "Hello %s! You have %d new messages."|format("User", 5) }}');
+  var result85 = await template85.renderAsync();
+  print(result85.trim());
+
+  // Example 86: Macro with Context
+  print('\n=== Example 86: Macro with Context ===');
+  // By default, imports might not have context, but defined macros do.
+  // Here we show a macro accessing a global variable 'app_name'.
+  var template86 = env.fromString('''
+{% macro footer() %}
+    &copy; 2023 {{ app_name }}
+{% endmacro %}
+{{ footer() }}
+''');
+  var result86 = await template86.renderAsync({'app_name': 'My Super App'});
+  print(result86.trim());
+
+  // Example 87: Include with ignore missing
+  print('\n=== Example 87: Include with ignore missing ===');
+  var template87 = env.fromString('''
+Start
+{% include "non_existent_template.html" ignore missing %}
+End
+''');
+  var result87 = await template87.renderAsync();
+  print(result87.trim());
+
+  // Example 88: Import with Context
+  print('\n=== Example 88: Import with Context ===');
+  // We need a template that uses a context variable
+  var loaderWithContext = MapLoader({
+    'context_macros.html': '''
+    {% macro print_user() %}
+      User: {{ user_name }}
+    {% endmacro %}
+    ''',
+  });
+  var envWithContext = Environment(loader: loaderWithContext);
+  var template88 = envWithContext.fromString('''
+{% import "context_macros.html" as m with context %}
+{{ m.print_user() }}
+''');
+  // Note: renderAsync is on the template, we need to pass data
+  var result88 = await template88.renderAsync({'user_name': 'Admin'});
+  print(result88.trim());
+
+  // Example 89: Environment Introspection (Lexing & Parsing)
+  print('\n=== Example 89: Environment Introspection ===');
+  var source89 = 'Hello {{ name }}!';
+  // Lexing: Convert source to tokens
+  var tokens = env.lex(source89);
+  print('Tokens: ${tokens.map((t) => t.type).join(", ")}');
+  // Parsing: Convert source to Abstract Syntax Tree (AST)
+  var ast = env.parse(source89);
+  print('AST: ${ast.runtimeType}');
+
+  // Example 90: Custom Finalizer
+  print('\n=== Example 90: Custom Finalizer ===');
+  // Create an environment that prints "N/A" for null values instead of empty string
+  var envFinalizer = Environment(
+    finalize: (context, value) => value ?? 'N/A',
+  );
+  var template90 = envFinalizer.fromString('Value: {{ val }}');
+  var result90 = await template90.renderAsync({'val': null});
+  print(result90.trim());
+
   if (errors.isNotEmpty) {
     print('\nErrors encountered:');
     errors.forEach(print);
