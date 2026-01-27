@@ -4,18 +4,22 @@
 [![Test Status][test_ci_icon]][test_ci]
 [![CodeCov][codecov_icon]][codecov]
 
-[Jinja][jinja] (3.x) server-side template engine port for Dart 2.
+[Jinja][jinja] (3.x) server-side template engine port for Dart 3.
 Variables, expressions, control structures and template inheritance.
 
 ## Table of Contents
 
 - [Installation](#installation)
+- [Library Organization](#library-organization)
 - [Getting Started](#getting-started)
 - [Template Loaders](#template-loaders)
 - [Rendering](#rendering)
+- [Template Introspection](#template-introspection)
 - [Core Concepts](#core-concepts)
 - [Built-ins & Extensions](#built-ins--extensions)
 - [Debugging & Error Handling](#debugging--error-handling)
+- [Advanced Configuration](#advanced-configuration)
+- [Best Practices](#best-practices)
 - [Differences from Python Jinja2](#differences-from-python-jinja2)
 - [Contributing](#contributing)
 - [Support](#support)
@@ -35,6 +39,32 @@ Then run:
 dart pub get
 ```
 
+## Library Organization
+
+The package is organized into several libraries:
+
+- **`package:jinja/jinja.dart`** - Main library (exports core functionality)
+- **`package:jinja/loaders.dart`** - Template loaders (FileSystemLoader, MapLoader)
+- **`package:jinja/debug.dart`** - Debug functionality (DebugController, DebugEnvironment)
+
+Most users only need:
+
+```dart
+import 'package:jinja/jinja.dart';
+```
+
+For loaders:
+
+```dart
+import 'package:jinja/loaders.dart';
+```
+
+For debugging:
+
+```dart
+import 'package:jinja/debug.dart';
+```
+
 ## Getting Started
 
 ### Basic Usage
@@ -48,10 +78,41 @@ var environment = Environment();
 // Load a template from a string
 var template = environment.fromString('Hello {{ name }}!');
 
+// Load with custom globals (merged with environment globals)
+var template = environment.fromString(
+  'Hello {{ name }}!',
+  globals: {'app_name': 'MyApp'},
+);
+
 // Render with data
 var result = template.render({'name': 'World'});
 print(result); // Output: Hello World!
 ```
+
+**Alternative: Direct Template Creation**
+
+You can also create templates directly without an Environment (creates a temporary Environment internally):
+
+```dart
+import 'package:jinja/jinja.dart';
+
+// Create template directly
+var template = Template('Hello {{ name }}!');
+
+// Render with data
+var result = template.render({'name': 'World'});
+print(result); // Output: Hello World!
+
+// With custom configuration
+var template = Template(
+  'Hello {{ name }}!',
+  blockStart: '{%',
+  blockEnd: '%}',
+  filters: {'upper': (value) => value.toString().toUpperCase()},
+);
+```
+
+**Note**: For multiple templates or advanced features, prefer using `Environment` for better performance and shared configuration.
 
 ### Environment Configuration
 
@@ -67,6 +128,18 @@ var env = Environment(
   commentStart: '{#',
   commentEnd: '#}',
   
+  // Line statement prefix (e.g., '#' for # if condition)
+  lineStatementPrefix: null,
+  
+  // Line comment prefix (for line-based comments)
+  lineCommentPrefix: null,
+  
+  // Newline character (default: '\n')
+  newLine: '\n',
+  
+  // Keep trailing newline in templates
+  keepTrailingNewLine: false,
+  
   // Auto-escaping (disabled by default in v0.6.0+)
   autoEscape: false,
   
@@ -74,11 +147,20 @@ var env = Environment(
   trimBlocks: true,
   leftStripBlocks: true,
   
-  // Template optimization
+  // Template optimization (simplifies AST for better performance)
   optimize: true,
   
   // Auto-reload templates (useful for development)
   autoReload: false,
+  
+  // Custom finalizer for undefined values
+  finalize: (context, value) => value ?? '',
+  
+  // Custom attribute getter (for object.attribute access)
+  getAttribute: defaults.getAttribute,
+  
+  // Custom item getter (for object[key] access)
+  getItem: defaults.getItem,
 );
 ```
 
@@ -160,9 +242,65 @@ var loader = FileSystemLoader(
   followLinks: true,
 );
 
+// Web compatibility: provide template content directly
+var loader = FileSystemLoader(
+  baseString: templateContent, // Template content as string
+  paths: ['templates/'],
+);
+
 var env = Environment(loader: loader);
 var template = env.getTemplate('users.html');
 ```
+<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
+read_file
+
+**Template Caching**: Templates are automatically cached by the environment. With `autoReload: true` (default), templates are reloaded if the source changes. Set `autoReload: false` for better performance in production.
+
+### Custom Loaders
+
+Create custom loaders by extending the `Loader` abstract class:
+
+```dart
+import 'package:jinja/loaders.dart';
+import 'package:jinja/jinja.dart';
+
+class DatabaseLoader extends Loader {
+  final Database database;
+  
+  DatabaseLoader(this.database);
+  
+  @override
+  String getSource(String path) {
+    var template = database.findTemplate(path);
+    if (template == null) {
+      throw TemplateNotFound(name: path);
+    }
+    return template.content;
+  }
+  
+  @override
+  List<String> listTemplates() {
+    return database.getAllTemplateNames();
+  }
+  
+  @override
+  Template load(
+    Environment environment,
+    String path, {
+    Map<String, Object?>? globals,
+  }) {
+    var source = getSource(path);
+    return environment.fromString(source, path: path, globals: globals);
+  }
+}
+
+// Use custom loader
+var loader = DatabaseLoader(myDatabase);
+var env = Environment(loader: loader);
+var template = env.getTemplate('users.html');
+```
+
+**Note**: For web compatibility, `FileSystemLoader` supports a `baseString` parameter to provide template content directly instead of reading from the filesystem.
 
 ## Rendering
 
@@ -231,6 +369,59 @@ var result = await template.renderAsync();
 print(result); // Output: fetched data
 ```
 
+## Template Introspection
+
+The Environment provides methods for inspecting templates:
+
+### Lexing
+
+Convert template source to tokens:
+
+```dart
+var env = Environment();
+var source = 'Hello {{ name }}!';
+var tokens = env.lex(source);
+for (var token in tokens) {
+  print('${token.type}: ${token.value}');
+}
+```
+
+### Parsing
+
+Convert template source to Abstract Syntax Tree (AST):
+
+```dart
+var env = Environment();
+var source = 'Hello {{ name }}!';
+var ast = env.parse(source);
+print('AST Type: ${ast.runtimeType}');
+```
+
+### Listing Templates
+
+Get all available templates from the loader:
+
+```dart
+var loader = FileSystemLoader('templates/');
+var env = Environment(loader: loader);
+var templates = env.listTemplates();
+print('Available templates: $templates');
+```
+
+### Selecting Templates
+
+Try multiple template names and return the first found:
+
+```dart
+var env = Environment(loader: loader);
+try {
+  var template = env.selectTemplate(['mobile.html', 'desktop.html', 'default.html']);
+  print(template.render());
+} on TemplatesNotFound catch (e) {
+  print('None of the templates found: ${e.names}');
+}
+```
+
 ## Core Concepts
 
 ### Variables and Expressions
@@ -284,6 +475,22 @@ Power: {{ 2 ** 3 }}
 ''');
 ```
 
+### String Concatenation
+
+Concatenate strings using the `~` operator:
+
+```dart
+var template = env.fromString('''
+{{ "Hello" ~ " " ~ "World" }}
+{{ name ~ " is " ~ age ~ " years old" }}
+{{ 2 ** 3 ~ " = " ~ 8 }}
+''');
+// Output:
+// Hello World
+// Alice is 25 years old
+// 8 = 8
+```
+
 ### Comparisons
 
 ```dart
@@ -307,6 +514,56 @@ Not: {{ not false }}
 Grouping: {{ (true and false) or (true and true) }}
 ''');
 ```
+
+### Array and List Access
+
+Access elements by index:
+
+```dart
+var template = env.fromString('''
+First item: {{ items[0] }}
+Second item: {{ items[1] }}
+Map value: {{ user['name'] }}
+Map dot notation: {{ user.name }}
+''');
+```
+
+### List Slices
+
+Slice lists using `[start:stop]` syntax:
+
+```dart
+var template = env.fromString('''
+{% set items = [0, 1, 2, 3, 4] %}
+First 3: {{ items[:3] }}
+From index 2: {{ items[2:] }}
+Range: {{ items[1:4] }}
+''');
+// Output:
+// First 3: [0, 1, 2]
+// From index 2: [2, 3, 4]
+// Range: [1, 2, 3]
+```
+
+**Note**: 
+- List slices are supported (positive indexes only: `0, 1, 2, ...`)
+- String slices are NOT supported
+- Negative indexes are NOT supported (e.g., `items[-1]` won't work)
+
+### Function Calls
+
+Call functions and methods:
+
+```dart
+var template = env.fromString('''
+{{ greet("World") }}
+{{ user.getName() }}
+{{ list.add(item) }}
+{{ format("Hello %s", name) }}
+''');
+```
+
+**Note**: Objects with a `call` method can be called directly. Functions passed in the context are callable.
 
 ### Conditional Expressions
 
@@ -350,6 +607,24 @@ var template = env.fromString('''
     <div>{{ user.name }} - {{ user.email }}</div>
 {% else %}
     <p>No users found.</p>
+{% endfor %}
+''');
+```
+
+#### For Loop with Test Filter
+
+Filter items during iteration:
+
+```dart
+var template = env.fromString('''
+{% for item in range(10) if item is even %}
+    [{{ item }}]
+{% endfor %}
+''');
+// Output: [0][2][4][6][8]
+
+{% for user in users if user.active %}
+    {{ user.name }}
 {% endfor %}
 ''');
 ```
@@ -446,6 +721,18 @@ var template = env.fromString('''
     {% set count = count + 1 %}
 {% endfor %}
 Count: {{ count }}
+''');
+```
+
+**Note**: Variables set inside loops are scoped to the loop. To modify outer variables, use `namespace()`:
+
+```dart
+var template = env.fromString('''
+{% set ns = namespace(count=0) %}
+{% for i in range(5) %}
+    {% set ns.count = ns.count + 1 %}
+{% endfor %}
+Count: {{ ns.count }}
 ''');
 ```
 
@@ -580,6 +867,46 @@ var template = env.fromString('''
 {% block content required %}
     This block must be defined in child templates
 {% endblock %}
+''');
+```
+
+#### Scoped Blocks
+
+Scoped blocks create a new scope for variables, useful in loops:
+
+```dart
+// Base template
+var baseTemplate = '''
+{% for item in seq %}
+    [{% block item scoped %}{{ item }}{% endblock %}]
+{% endfor %}
+''';
+
+// Child template
+var childTemplate = '''
+{% extends "base.html" %}
+{% block item %}{{ item|upper }}{% endblock %}
+''';
+```
+
+Scoped blocks allow the block to access loop variables from the parent template.
+
+#### Self Block Access
+
+Access blocks from within the same template:
+
+```dart
+var template = env.fromString('''
+{% block warning %}
+    WARNING: {{ message }}
+{% endblock %}
+
+<div class="alert">
+    {{ self.warning() }}
+</div>
+<div class="footer-warning">
+    {{ self.warning() }}
+</div>
 ''');
 ```
 
@@ -736,6 +1063,40 @@ var template = env.fromString('''
     {{ "<b>Unsafe</b>" }}
 {% endautoescape %}
 ''');
+```
+
+### Escaping and Safe Strings
+
+Since auto-escaping was removed in v0.6.0+, you need to manually escape values:
+
+```dart
+import 'package:jinja/jinja.dart';
+import 'package:jinja/src/utils.dart';
+
+var template = env.fromString('''
+{{ user_input|escape }}
+{{ safe_html|safe }}
+''');
+
+// Mark strings as safe to prevent escaping
+var safeHtml = SafeString('<b>Bold</b>');
+var result = template.render({
+  'user_input': '<script>alert("xss")</script>',
+  'safe_html': safeHtml,
+});
+```
+
+**SafeString**: Wrap strings that should not be escaped:
+
+```dart
+import 'package:jinja/src/utils.dart';
+
+// Create a safe string
+var safe = SafeString('<div>Safe HTML</div>');
+
+// Use in template - won't be escaped even if escape filter is applied
+var template = env.fromString('{{ content }}');
+template.render({'content': safe});
 ```
 
 ### Tests
@@ -913,16 +1274,24 @@ var env = Environment(
     'ngettext': (String singular, String plural, int count) {
       return count == 1 ? singular : plural;
     },
+    'pgettext': (String context, String msg) => msg, // Contextual translation
+    'npgettext': (String context, String singular, String plural, int count) {
+      return count == 1 ? singular : plural;
+    },
   },
 );
 
 var template = env.fromString('''
 {% trans %}Hello World{% endtrans %}
+
 {% trans count=items|length %}
     One item
 {% plural %}
     {{ count }} items
 {% endtrans %}
+
+{% trans "button" %}Save{% endtrans %}
+{% trans "button" count=1 %}One file{% plural %}Many files{% endtrans %}
 ''');
 ```
 
@@ -956,6 +1325,41 @@ var template = env.fromString('''
 {% endraw %}
 ''');
 // Output: {{ variable }} {% if condition %}
+```
+
+### Comments
+
+Comments are not rendered in the output:
+
+```dart
+var template = env.fromString('''
+{# This is a comment and will not be rendered #}
+Hello World
+
+{# Multi-line
+   comment
+   block #}
+''');
+```
+
+### Line Statements
+
+Use line statements for more compact syntax:
+
+```dart
+var env = Environment(
+  lineStatementPrefix: '#',
+);
+
+var template = env.fromString('''
+# if condition
+    Content
+# endif
+
+# for item in items
+    {{ item }}
+# endfor
+''');
 ```
 
 ## Debugging & Error Handling
@@ -1094,7 +1498,7 @@ For advanced debugging with breakpoints:
 
 ```dart
 import 'package:jinja/jinja.dart';
-import 'package:jinja/src/debug/debug_controller.dart';
+import 'package:jinja/debug.dart'; // Or: import 'package:jinja/src/debug/debug_controller.dart';
 
 var debugController = DebugController();
 debugController.enabled = true;
@@ -1124,6 +1528,198 @@ var result = await template.renderDebug(
 );
 ```
 
+## Advanced Configuration
+
+### Custom Finalizers
+
+Customize how undefined/null values are handled:
+
+```dart
+var env = Environment(
+  finalize: (context, value) {
+    if (value == null) {
+      return 'N/A';
+    }
+    return value.toString().toUpperCase();
+  },
+);
+
+var template = env.fromString('Value: {{ val }}');
+print(template.render({'val': null})); // Output: Value: N/A
+```
+
+### Custom Attribute and Item Getters
+
+Customize how object attributes and items are accessed:
+
+```dart
+import 'package:jinja/src/defaults.dart';
+
+// Custom attribute getter
+Object? customGetAttribute(String attribute, Object? object, {Object? node}) {
+  if (object is Map) {
+    return object[attribute];
+  }
+  // Fall back to default behavior
+  return defaults.getAttribute(attribute, object, node: node);
+}
+
+var env = Environment(
+  getAttribute: customGetAttribute,
+);
+
+// If getAttribute is not provided, getItem is used for both
+// This allows {{ map.key }} to work as {{ map['key'] }}
+```
+
+### Custom Undefined Handler
+
+Customize behavior when variables are undefined:
+
+```dart
+import 'package:jinja/src/defaults.dart';
+
+Object? customUndefined(String name, {Object? node}) {
+  // Return a default value instead of throwing
+  return 'UNDEFINED: $name';
+  // Or throw a custom error
+  // throw CustomUndefinedError(name);
+}
+
+var env = Environment(
+  undefined: customUndefined,
+);
+```
+
+### Context-Aware Filters and Functions
+
+Make filters, tests, or functions receive the rendering context or environment:
+
+```dart
+import 'package:jinja/jinja.dart';
+import 'package:jinja/src/runtime.dart';
+
+// Filter that receives Context
+var contextAwareFilter = passContext((Context context, Object? value) {
+  // Access context variables
+  var user = context.resolve('user');
+  return '$value (processed by ${user?.name ?? "anonymous"})';
+});
+
+// Filter that receives Environment
+var envAwareFilter = passEnvironment((Environment env, Object? value) {
+  // Access environment configuration
+  return '${env.autoEscape ? "escaped" : "raw"}: $value';
+});
+
+var env = Environment(
+  filters: {
+    'contextual': contextAwareFilter,
+    'envaware': envAwareFilter,
+  },
+);
+
+var template = env.fromString('''
+{{ "test"|contextual }}
+{{ "test"|envaware }}
+''');
+```
+
+**Note**: Some built-in filters (`map`, `select`, `reject`, `selectattr`, `rejectattr`, `pluck`) automatically receive Context when needed.
+
+### Template Modifiers
+
+Modify the template AST before rendering:
+
+```dart
+import 'package:jinja/src/nodes.dart';
+
+// Example modifier: Add a prefix to all text nodes
+Node addPrefix(Node node) {
+  // This is a simplified example - actual implementation would traverse the AST
+  return node;
+}
+
+var env = Environment(
+  modifiers: [addPrefix],
+);
+```
+
+### Custom Random Generator
+
+Provide a custom random generator for filters that use randomness:
+
+```dart
+import 'dart:math';
+
+var seededRandom = Random(42); // Seed for reproducible results
+
+var env = Environment(
+  random: seededRandom,
+);
+
+// Filters like 'random' will use this generator
+var template = env.fromString('{{ [1, 2, 3, 4, 5]|random }}');
+```
+
+## Best Practices
+
+### Performance Tips
+
+1. **Disable auto-reload in production**:
+   ```dart
+   var env = Environment(
+     loader: loader,
+     autoReload: false, // Better performance
+   );
+   ```
+
+2. **Enable template optimization**:
+   ```dart
+   var env = Environment(
+     optimize: true, // Default, simplifies AST
+   );
+   ```
+
+3. **Reuse Environment instances**: Create one Environment and reuse it across requests.
+
+4. **Use `renderTo` for large outputs**: Write directly to StringSink instead of building strings:
+   ```dart
+   template.renderTo(response, data); // Better for large outputs
+   ```
+
+5. **Cache templates**: Templates are automatically cached. Avoid recreating Environment instances unnecessarily.
+
+### Common Patterns
+
+**Pattern 1: Template with default values**
+```dart
+var template = env.fromString('{{ value|default("N/A") }}');
+```
+
+**Pattern 2: Conditional rendering**
+```dart
+var template = env.fromString('''
+{% if items %}
+    {% for item in items %}
+        {{ item }}
+    {% endfor %}
+{% else %}
+    <p>No items found.</p>
+{% endif %}
+''');
+```
+
+**Pattern 3: Nested data access**
+```dart
+var template = env.fromString('{{ user.profile.name|default("Anonymous") }}');
+```
+
+**Pattern 4: Filter chaining**
+```dart
+var template = env.fromString('{{ text|trim|upper|truncate(50) }}');
+```
+
 ## Differences from Python Jinja2
 
 ### Behavioral Differences
@@ -1134,7 +1730,9 @@ var result = await template.renderDebug(
   - Use `attribute` and `item` filters for `object.attribute` and `object[item]` expressions
 - If `Environment({getAttribute})` is not passed, the `getItem` method will be used
   - This allows you to use `{{ map.key }}` as an expression equivalent to `{{ map['key'] }}`
-- String slices and negative indexes are not supported
+- List slices are supported (`list[start:stop]`, `list[:stop]`, `list[start:]`)
+- String slices are NOT supported
+- Negative indexes are NOT supported (only positive indexes 0, 1, 2, ...)
 - Macro arguments without default values are required
 
 ### Not Supported

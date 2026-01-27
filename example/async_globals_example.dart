@@ -1037,6 +1037,47 @@ End
     var result90 = await template90.renderAsync({'val': null});
     print(result90.trim());
 
+    // ========== README.md ASYNC EXAMPLES ==========
+
+    // Example 91: Basic Async Rendering (from README.md lines 320-330)
+    print('\n=== Example 91: Basic Async Rendering (README.md) ===');
+    Future<String> getUserName() async {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      return 'Alice';
+    }
+
+    var template91 = env.fromString('Welcome, {{ user }}!');
+    var result91 = await template91.renderAsync({
+      'user': getUserName(), // Future<String> is automatically awaited
+    });
+    print(result91); // Output: Welcome, Alice!
+
+    // Example 92: Async Globals (from README.md lines 333-346)
+    print('\n=== Example 92: Async Globals (README.md) ===');
+    Future<Map<String, dynamic>> getUserFromReadme() async {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      return {'name': 'Bob', 'age': 30};
+    }
+
+    var template92 = env.fromString('User: {{ user.name }}, Age: {{ user.age }}');
+    var result92 = await template92.renderAsync({'user': getUserFromReadme()});
+    print(result92); // Output: User: Bob, Age: 30
+
+    // Example 93: Async Filters and Tests (from README.md lines 348-370)
+    print('\n=== Example 93: Async Filters and Tests (README.md) ===');
+    var envWithAsyncFilter = Environment(
+      filters: {
+        'fetch': (value) async {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          return fetchData();
+        },
+      },
+    );
+
+    var template93 = envWithAsyncFilter.fromString('{{ "trigger"|fetch }}');
+    var result93 = await template93.renderAsync();
+    print(result93); // Output: fetched data
+
     if (errors.isNotEmpty) {
       print('\nErrors encountered:');
       errors.forEach(print);
