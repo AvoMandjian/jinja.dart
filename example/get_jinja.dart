@@ -811,16 +811,6 @@ class GetJinja {
           }
         },
 
-        /// Extracts a specific attribute from a list of objects.
-        'map': (List? value, String attribute) {
-          try {
-            return value?.map((e) => e[attribute]).toList() ?? [];
-          } catch (e) {
-            valueListenableJinjaError(e.toString());
-            return [];
-          }
-        },
-
         /// Returns the maximum value from a list.
         'max': (List? value) {
           try {
@@ -861,35 +851,6 @@ class GetJinja {
             return list.fold(start ?? 0, (a, b) => (a as num) + (b as num));
           }
           return start;
-        },
-
-        'reject': (List? value, String attribute) {
-          try {
-            return value?.where((e) => !e[attribute]).toList() ?? [];
-          } catch (e) {
-            valueListenableJinjaError(e.toString());
-            return [];
-          }
-        },
-
-        /// Filters a list to exclude items where an attribute is true (same as reject).
-        'rejectattr': (List? value, String attribute) {
-          try {
-            return value?.where((e) => !e[attribute]).toList() ?? [];
-          } catch (e) {
-            valueListenableJinjaError(e.toString());
-            return [];
-          }
-        },
-
-        /// Filters a list to include items where an attribute is true.
-        'select': (List? value, String attribute) {
-          try {
-            return value?.where((e) => e[attribute] == true).toList() ?? [];
-          } catch (e) {
-            valueListenableJinjaError(e.toString());
-            return [];
-          }
         },
 
         /// Sorts a list, optionally by an attribute and in reverse order.
@@ -1588,51 +1549,6 @@ class GetJinja {
               return true; // All conditions were met
             }).toList();
 
-            return result;
-          } catch (e) {
-            valueListenableJinjaError(e.toString());
-            return list;
-          }
-        },
-
-        /// Filters a list where a single attribute matches an operator/value condition.
-        'selectattr': (dynamic list, dynamic key, dynamic operator, dynamic value) {
-          try {
-            // the function needs to loop through the list, check the key with the operator against the value
-            final List result = [];
-            for (final item in list) {
-              // if (item[key] == null) {
-              //   continue;
-              // }
-              switch (operator) {
-                case '==':
-                  if (item[key] == value) {
-                    result.add(item);
-                  }
-                case '!=':
-                  if (item[key] != value) {
-                    result.add(item);
-                  }
-                case '>':
-                  if (item[key] > value) {
-                    result.add(item);
-                  }
-                case '<':
-                  if (item[key] < value) {
-                    result.add(item);
-                  }
-                case '>=':
-                  if (item[key] >= value) {
-                    result.add(item);
-                  }
-                case '<=':
-                  if (item[key] <= value) {
-                    result.add(item);
-                  }
-                default:
-                  break;
-              }
-            }
             return result;
           } catch (e) {
             valueListenableJinjaError(e.toString());

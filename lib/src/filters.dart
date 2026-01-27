@@ -545,8 +545,9 @@ Object? Function(Object? object) _prepareMap(
 ) {
   if (positional.isEmpty) {
     // Handle attribute parameter
-    if ((named.remove('attribute') ?? named.remove(#attribute)) case String attribute?) {
-      var defaultValue = named.remove('defaultValue') ?? named.remove('default') ?? named.remove(#defaultValue) ?? named.remove(Symbol('default'));
+    if (named.remove('attribute') ?? named.remove(#attribute) case String attribute?) {
+      var defaultValue =
+          named.remove('defaultValue') ?? named.remove('default') ?? named.remove(#defaultValue) ?? named.remove(Symbol('default'));
       if (named.isNotEmpty) {
         var first = named.keys.first;
         throw ArgumentError.value(named[first], first.toString(), 'Unexpected keyword argument.');
@@ -555,8 +556,9 @@ Object? Function(Object? object) _prepareMap(
     }
 
     // Handle item parameter
-    if ((named.remove('item') ?? named.remove(#item)) case Object? item?) {
-      var defaultValue = named.remove('defaultValue') ?? named.remove('default') ?? named.remove(#defaultValue) ?? named.remove(Symbol('default'));
+    if (named.remove('item') ?? named.remove(#item) case Object? item?) {
+      var defaultValue =
+          named.remove('defaultValue') ?? named.remove('default') ?? named.remove(#defaultValue) ?? named.remove(Symbol('default'));
       if (named.isNotEmpty) {
         var first = named.keys.first;
         throw ArgumentError.value(named[first], first.toString(), 'Unexpected keyword argument.');
@@ -572,13 +574,13 @@ Object? Function(Object? object) _prepareMap(
     var name = positional.first as String;
     positional = positional.sublist(1);
     var symbols = <Symbol, Object?>{};
-    
+
     named.forEach((key, value) {
-        if (key is Symbol) {
-            symbols[key] = value;
-        } else if (key is String) {
-            symbols[Symbol(key)] = value;
-        }
+      if (key is Symbol) {
+        symbols[key] = value;
+      } else if (key is String) {
+        symbols[Symbol(key)] = value;
+      }
     });
 
     // Return a closure that handles both sync and async results from the filter
@@ -601,7 +603,24 @@ Iterable<Object?> doMap(
   Map<Object?, Object?> named,
 ) sync* {
   if (values != null) {
-    var func = _prepareMap(context, positional, Map.of(named));
+    // Handle case where compiler transformation puts keyword arguments
+    // as a Map in positional arguments (backward compatibility)
+    var finalNamed = Map<Object?, Object?>.from(named);
+    var finalPositional = List<Object?>.from(positional);
+
+    // Check if any positional argument is a Map that should be merged into named
+    // This handles the case where the compiler puts keywords as Dict in arguments
+    // When Function.apply calls doMap, if the Map is the 4th positional arg,
+    // it becomes the 'named' parameter. But if it's nested in the 'positional' list,
+    // we need to extract it here.
+    for (var i = finalPositional.length - 1; i >= 0; i--) {
+      if (finalPositional[i] is Map<Object?, Object?>) {
+        finalNamed.addAll(finalPositional[i] as Map<Object?, Object?>);
+        finalPositional.removeAt(i);
+      }
+    }
+
+    var func = _prepareMap(context, finalPositional, finalNamed.cast<String, Object?>());
     for (var value in values) {
       yield func(value);
     }

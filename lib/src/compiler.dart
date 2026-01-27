@@ -218,8 +218,10 @@ class RuntimeCompiler implements Visitor<void, Node> {
 
   @override
   Filter visitFilter(Filter node, void context) {
-    // Modifies Template AST from `map('filter', key=value)`
+    // Modifies Template AST from `map('filter', key=value)` or `map(attribute="name")`
     // to `map(values, ['filter'], {'key': value})` to match [doMap] definition.
+    // Note: Keyword arguments are converted to a Dict in positional arguments.
+    // The [doMap] function handles extracting the Map from positional and merging into named.
     if (node.name == 'map') {
       var calling = node.calling;
 
