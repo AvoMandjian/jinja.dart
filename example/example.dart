@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 import 'package:jinja/jinja.dart';
-import 'package:jinja/src/debug/debug_template.dart';
+import 'package:jinja/src/debug/debug_controller.dart';
+import 'package:jinja/src/debug/debug_environment.dart';
 
 Map<String, dynamic> dataToPassToJinja = {
   'subcategory_title': 'Su',
@@ -89,11 +90,12 @@ Future<void> main() async {
   debugController.onBreakpoint = (info) async {
     // print('Variables: ${info.variables}');
     print('Output: ${info.lineNumber}');
+    return DebugAction.resume;
   };
 
   await templateOfJinja
       .renderDebug(
-        dataToPassToJinja,
+        data: dataToPassToJinja,
         debugController: debugController,
       )
       .then(

@@ -119,6 +119,7 @@ Future<void> runDebugTest(String template, Map<String, Object?> data, List<int> 
     if (loopVars.isNotEmpty) {
       print('  Loop vars: $loopVars');
     }
+    return DebugAction.resume;
   };
 
   // Parse and render

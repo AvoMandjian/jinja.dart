@@ -17,3 +17,4 @@ comprehensive_error_logging_system_2fca162e.plan.md
 fix-break-loop-exception_ecc2be56.plan.md
 update_readme_documentation_8a8f2d88.plan.md
 add_readme_async_examples_to_async_globals_example.dart_718babfd.plan.md
+enhance_debug_environment_d2ec35db.plan.md

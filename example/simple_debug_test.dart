@@ -30,6 +30,7 @@ HELLO
     print('Current output: "${info.currentOutput}"');
 
     // Execution continues automatically after this handler completes.
+    return DebugAction.resume;
   };
 
   debugController.addBreakpoint(line: 0);

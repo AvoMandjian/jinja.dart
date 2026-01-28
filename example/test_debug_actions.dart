@@ -1,5 +1,6 @@
 import 'package:jinja/jinja.dart';
-import 'package:jinja/src/debug/debug_template.dart';
+import 'package:jinja/src/debug/debug_controller.dart';
+import 'package:jinja/src/debug/debug_environment.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -19,10 +20,10 @@ void main() {
 
       controller.onBreakpoint = (info) {
         hit = true;
-        return Future.value(info);
+        return Future.value(DebugAction.stop);
       };
 
-      var result = await template.renderDebug({'name': 'World'}, debugController: controller);
+      var result = await template.renderDebug(data: {'name': 'World'}, debugController: controller);
       expect(hit, isTrue);
       expect(result, isNot(contains('End')));
     });
@@ -34,11 +35,13 @@ void main() {
 
       controller.onBreakpoint = (info) {
         steps.add(info.lineNumber);
-        return Future.value(info);
+        return Future.value(DebugAction.stepOver);
       };
 
-      await template.renderDebug({'a': 1, 'b': 2, 'c': 3}, debugController: controller);
-      expect(steps, orderedEquals([1, 2, 3]));
+      await template.renderDebug(data: {'a': 1, 'b': 2, 'c': 3}, debugController: controller);
+      // Remove duplicates as stepping might stop multiple times on same line (e.g. Data and Interpolation)
+      var uniqueSteps = steps.toSet().toList()..sort();
+      expect(uniqueSteps, orderedEquals([1, 2, 3]));
     });
 
     test('step in and step out actions', () async {
@@ -48,11 +51,12 @@ void main() {
 
       controller.onBreakpoint = (info) {
         steps.add(info.lineNumber);
-        return Future.value(info);
+        return Future.value(DebugAction.stepIn);
       };
 
-      await template.renderDebug({}, debugController: controller);
-      expect(steps, orderedEquals([1, 2]));
+      await template.renderDebug(data: {}, debugController: controller);
+      var uniqueSteps = steps.toSet().toList()..sort();
+      expect(uniqueSteps, orderedEquals([1, 2]));
     });
   });
 }

@@ -501,6 +501,7 @@ Future<void> main() async {
   debugController.onBreakpoint = (info) async {
     // print('Variables: ${info.variables}');
     print('Output: ${info.lineNumber}');
+    return DebugAction.resume;
   };
 
   await templateOfJinja

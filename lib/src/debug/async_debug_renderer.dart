@@ -9,6 +9,11 @@ import 'debug_controller.dart';
 import 'debug_renderer.dart';
 import 'evaluator.dart';
 
+/// Exception thrown when debug execution is stopped.
+class DebugStopException implements Exception {
+  DebugStopException();
+}
+
 /// Async version of the renderer for debugging
 class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   AsyncDebugRenderer();
@@ -21,6 +26,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   /// Track the line number of the current for statement
   int? _currentForLine;
+
+  /// Current recursion depth for stepping logic
+  int _currentDepth = 0;
 
   final StringSinkRenderer _baseRenderer = const StringSinkRenderer();
 
@@ -60,21 +68,61 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     // Use actual source line from node if available, otherwise use context line
     int currentLine = node.line ?? context.currentLine;
 
-    var breakpoints = context.debugController.getBreakpoints(currentLine);
+    // Check stepping logic first
+    var stepMode = context.debugController.stepMode;
+    if (stepMode != null) {
+      var stepDepth = context.debugController.stepDepth;
+      switch (stepMode) {
+        case DebugAction.stepOver:
+          // Break only if we're at or above the step depth
+          if (_currentDepth > stepDepth) {
+            return; // Don't break, continue stepping
+          }
+          break;
+        case DebugAction.stepIn:
+          // Always break on step in
+          break;
+        case DebugAction.stepOut:
+          // Break only if we're below the step depth (closer to surface)
+          if (_currentDepth >= stepDepth) {
+            return; // Don't break, continue stepping out
+          }
+          break;
+        case DebugAction.resume:
+        case DebugAction.stop:
+          // These are handled elsewhere
+          break;
+      }
+    }
 
-    if (breakpoints.isNotEmpty && !_linesHitThisRender.contains(currentLine)) {
+    var breakpoints = context.debugController.getBreakpoints(currentLine);
+    var shouldCheckBreakpoints = breakpoints.isNotEmpty && !_linesHitThisRender.contains(currentLine);
+
+    // Also check if we're stepping and should break
+    if (stepMode == DebugAction.stepIn || stepMode == DebugAction.stepOver || stepMode == DebugAction.stepOut) {
+      shouldCheckBreakpoints = true;
+    }
+
+    if (shouldCheckBreakpoints) {
       var shouldBreak = false;
-      for (var bp in breakpoints) {
-        if (bp.condition == null) {
-          shouldBreak = true;
-          break;
+
+      // Check breakpoint conditions
+      if (breakpoints.isNotEmpty) {
+        for (var bp in breakpoints) {
+          if (bp.condition == null) {
+            shouldBreak = true;
+            break;
+          }
+          var expr = context.environment.parse(bp.condition!);
+          var result = expr.accept(const ExpressionEvaluator(), context);
+          if (result is bool && result) {
+            shouldBreak = true;
+            break;
+          }
         }
-        var expr = context.environment.parse(bp.condition!);
-        var result = expr.accept(const ExpressionEvaluator(), context);
-        if (result is bool && result) {
-          shouldBreak = true;
-          break;
-        }
+      } else if (stepMode != null) {
+        // Stepping without breakpoint - always break
+        shouldBreak = true;
       }
 
       if (shouldBreak) {
@@ -96,9 +144,28 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
           lineNumber: currentLine,
           nodeName: nodeName,
           nodeData: nodeData,
+          availableFilters: context.getAvailableFilters(),
+          availableTests: context.getAvailableTests(),
+          callStack: context.callStack,
         );
 
-        await context.debugController.handleBreakpoint(info);
+        var action = await context.debugController.handleBreakpoint(info);
+
+        // Check for state updates
+        var updates = context.debugController.popPendingStateUpdates();
+        if (updates != null) {
+          context.applyUpdates(updates);
+        }
+
+        // Update step mode based on action
+        if (action == DebugAction.stepOver || action == DebugAction.stepIn) {
+          context.debugController.setStepMode(action, _currentDepth);
+        } else if (action == DebugAction.stepOut) {
+          // Step out from current depth
+          context.debugController.setStepMode(action, _currentDepth);
+        } else if (action == DebugAction.stop) {
+          throw DebugStopException();
+        }
       }
     }
   }
@@ -124,19 +191,35 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   Future<Object?> visitCall(Call node, DebugRenderContext context) async {
     await _checkBreakpoint(node, context, 'Call');
     var function = await node.value.accept(this, context);
-    var params = await node.calling.accept(this, context) as Parameters;
-    var (positional, named) = params;
-    return context.call(function, node, positional, named);
+    var params = await node.calling.accept(this, context);
+
+    // Use dynamic for safety
+    List<Object?> positional;
+    Map<Symbol, dynamic> named;
+
+    if (params is (List<Object?>, Map<Symbol, dynamic>)) {
+      positional = params.$1;
+      named = params.$2;
+    } else if (params is (List<Object?>, Map)) {
+      positional = params.$1;
+      named = params.$2.cast<Symbol, dynamic>();
+    } else {
+      // Should not happen
+      positional = [];
+      named = {};
+    }
+
+    return context.call(function, node, positional, Map<Symbol, dynamic>.from(named));
   }
 
   @override
-  Future<Parameters> visitCalling(Calling node, DebugRenderContext context) async {
+  Future<(List<Object?>, Map<Symbol, dynamic>)> visitCalling(Calling node, DebugRenderContext context) async {
     var positional = <Object?>[];
     for (var argument in node.arguments) {
       positional.add(await argument.accept(this, context));
     }
 
-    var named = <Symbol, Object?>{};
+    var named = <Symbol, dynamic>{};
     for (var (:key, :value) in node.keywords) {
       named[Symbol(key)] = await value.accept(this, context);
     }
@@ -288,8 +371,15 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     if (node.line != null) {
       context.setLine(node.line!);
     }
-    await _checkBreakpoint(node, context, 'Block', nodeName: node.name);
-    _baseRenderer.visitBlock(node, context);
+
+    var label = 'Block: ${node.name}';
+    context.debugController.startTimer(label);
+    try {
+      await _checkBreakpoint(node, context, 'Block', nodeName: node.name);
+      _baseRenderer.visitBlock(node, context);
+    } finally {
+      context.debugController.stopTimer(label);
+    }
   }
 
   @override
@@ -300,8 +390,21 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitCallBlock(CallBlock node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'CallBlock');
-    _baseRenderer.visitCallBlock(node, context);
+    _currentDepth++;
+    try {
+      await _checkBreakpoint(node, context, 'CallBlock');
+
+      var line = node.line ?? context.currentLine;
+      context.pushFrame('callblock', line);
+
+      try {
+        _baseRenderer.visitCallBlock(node, context);
+      } finally {
+        context.popFrame();
+      }
+    } finally {
+      _currentDepth--;
+    }
   }
 
   @override
@@ -346,74 +449,99 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitFor(For node, DebugRenderContext context) async {
-    if (node.line != null) {
-      context.setLine(node.line!);
-    }
+    _currentDepth++;
+
     String nodeName;
     if (node.target is Name) {
       nodeName = (node.target as Name).name;
     } else {
       nodeName = node.target.toString();
     }
-    await _checkBreakpoint(node, context, 'For', nodeName: nodeName);
 
-    var targets = await node.target.accept(this, context);
-    var iterable = await node.iterable.accept(this, context);
+    var label = 'For: $nodeName';
+    context.debugController.startTimer(label);
 
-    List<Object?> values;
-    if (iterable is Map) {
-      values = List<Object?>.of(iterable.entries);
-    } else {
-      values = list(iterable);
-    }
+    try {
+      if (node.line != null) {
+        context.setLine(node.line!);
+      }
+      await _checkBreakpoint(node, context, 'For', nodeName: nodeName);
 
-    if (values.isEmpty && node.orElse != null) {
-      await node.orElse!.accept(this, context);
-      return;
-    }
+      var targets = await node.target.accept(this, context);
+      var iterable = await node.iterable.accept(this, context);
 
-    for (var i = 0; i < values.length; i++) {
-      var value = values[i];
-      // When iterating, we clear the lines hit inside the loop body so that
-      // breakpoints can be triggered again for each iteration.
-      // But we need to be careful not to clear lines that shouldn't be repeated
-      if (i > 0) {
-        // Only clear lines after the first iteration
-        var (minLine, maxLine) = _getNodeLineRange(node.body);
-        if (minLine != null && maxLine != null) {
-          _linesHitThisRender.removeWhere((line) {
-            // Never clear line 2 (the for statement line) from the hit list
-            // This prevents Data nodes on the for line from re-triggering
-            if (line == 2) return false;
-            // Only clear lines strictly within the loop body range
-            return line >= minLine && line <= maxLine;
-          });
+      List<Object?> values;
+      if (iterable is Map) {
+        values = List<Object?>.of(iterable.entries);
+      } else {
+        values = list(iterable);
+      }
+
+      if (values.isEmpty && node.orElse != null) {
+        await node.orElse!.accept(this, context);
+        return;
+      }
+
+      for (var i = 0; i < values.length; i++) {
+        var value = values[i];
+        // When iterating, we clear the lines hit inside the loop body so that
+        // breakpoints can be triggered again for each iteration.
+        // But we need to be careful not to clear lines that shouldn't be repeated
+        if (i > 0) {
+          // Only clear lines after the first iteration
+          var (minLine, maxLine) = _getNodeLineRange(node.body);
+          if (minLine != null && maxLine != null) {
+            _linesHitThisRender.removeWhere((line) {
+              // Never clear line 2 (the for statement line) from the hit list
+              // This prevents Data nodes on the for line from re-triggering
+              if (line == 2) return false;
+              // Only clear lines strictly within the loop body range
+              return line >= minLine && line <= maxLine;
+            });
+          }
+        }
+        var data = _baseRenderer.getDataForTargets(targets, value);
+        var forContext = context.derived(data: data);
+
+        var outputBeforeIteration = context.outputSoFar;
+        await node.body.accept(this, forContext);
+        var outputAfterIteration = context.outputSoFar;
+
+        if (outputAfterIteration.length > outputBeforeIteration.length) {
+          var currentOutput = outputAfterIteration.substring(outputBeforeIteration.length);
+          // This is a bit of a hack, but we need to manually trigger the breakpoint
+          // for the content generated inside the loop, as the nodes inside won't
+          // be aware that they are part of a loop's output.
+          var info = BreakpointInfo(
+            nodeType: 'ForLoopIteration',
+            variables: forContext.getAllVariables(),
+            outputSoFar: outputBeforeIteration,
+            currentOutput: currentOutput,
+            lineNumber: node.line ?? context.currentLine,
+            nodeName: nodeName,
+            availableFilters: forContext.getAvailableFilters(),
+            availableTests: forContext.getAvailableTests(),
+            callStack: forContext.callStack,
+          );
+
+          if (context.debugController.breakOnLoopIteration) {
+            var action = await context.debugController.handleBreakpoint(info);
+
+            // Check for state updates
+            var updates = context.debugController.popPendingStateUpdates();
+            if (updates != null) {
+              context.applyUpdates(updates);
+            }
+
+            if (action == DebugAction.stop) {
+              throw DebugStopException();
+            }
+          }
         }
       }
-      var data = _baseRenderer.getDataForTargets(targets, value);
-      var forContext = context.derived(data: data);
-
-      var outputBeforeIteration = context.outputSoFar;
-      await node.body.accept(this, forContext);
-      var outputAfterIteration = context.outputSoFar;
-
-      if (outputAfterIteration.length > outputBeforeIteration.length) {
-        var currentOutput = outputAfterIteration.substring(outputBeforeIteration.length);
-        // This is a bit of a hack, but we need to manually trigger the breakpoint
-        // for the content generated inside the loop, as the nodes inside won't
-        // be aware that they are part of a loop's output.
-        var info = BreakpointInfo(
-          nodeType: 'ForLoopIteration',
-          variables: forContext.getAllVariables(),
-          outputSoFar: outputBeforeIteration,
-          currentOutput: currentOutput,
-          lineNumber: node.line ?? context.currentLine,
-          nodeName: nodeName,
-        );
-        if (context.debugController.breakOnLoopIteration) {
-          await context.debugController.handleBreakpoint(info);
-        }
-      }
+    } finally {
+      _currentDepth--;
+      context.debugController.stopTimer(label);
     }
   }
 
@@ -425,16 +553,21 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitIf(If node, DebugRenderContext context) async {
-    if (node.line != null) {
-      context.setLine(node.line!);
-    }
-    await _checkBreakpoint(node, context, 'If');
+    _currentDepth++;
+    try {
+      if (node.line != null) {
+        context.setLine(node.line!);
+      }
+      await _checkBreakpoint(node, context, 'If');
 
-    var testResult = await node.test.accept(this, context);
-    if (boolean(testResult)) {
-      await node.body.accept(this, context);
-    } else if (node.orElse != null) {
-      await node.orElse!.accept(this, context);
+      var testResult = await node.test.accept(this, context);
+      if (boolean(testResult)) {
+        await node.body.accept(this, context);
+      } else if (node.orElse != null) {
+        await node.orElse!.accept(this, context);
+      }
+    } finally {
+      _currentDepth--;
     }
   }
 
@@ -446,8 +579,23 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitInclude(Include node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Include');
-    _baseRenderer.visitInclude(node, context);
+    _currentDepth++;
+    try {
+      await _checkBreakpoint(node, context, 'Include');
+
+      // Try to get the template name from the node if available
+      var templateName = 'include:${node.template}';
+      var line = node.line ?? context.currentLine;
+      context.pushFrame(templateName, line);
+
+      try {
+        _baseRenderer.visitInclude(node, context);
+      } finally {
+        context.popFrame();
+      }
+    } finally {
+      _currentDepth--;
+    }
   }
 
   @override
@@ -455,35 +603,138 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     if (node.line != null) {
       context.setLine(node.line!);
     }
-    var value = await node.value.accept(this, context);
-    var finalized = context.finalize(value);
-    var outputBefore = context.outputSoFar;
-    context.write(finalized);
-    var currentOutput = finalized.toString();
 
-    // Check breakpoint after writing output so "Output so far" includes this interpolation
-    // Force the line number to match the current context line if node.line is null
+    // Check breakpoint before execution to allow state modification
     var currentLine = node.line ?? context.currentLine;
-    var info = BreakpointInfo(
-      nodeType: 'Interpolation',
-      variables: context.getAllVariables(),
-      outputSoFar: outputBefore,
-      currentOutput: currentOutput,
-      lineNumber: currentLine,
-      nodeData: finalized.toString(),
-    );
+
+    // Check stepping logic (same as _checkBreakpoint)
+    var stepMode = context.debugController.stepMode;
+    var shouldCheck = false;
+    if (stepMode != null) {
+      var stepDepth = context.debugController.stepDepth;
+      switch (stepMode) {
+        case DebugAction.stepOver:
+          if (_currentDepth <= stepDepth) shouldCheck = true;
+          break;
+        case DebugAction.stepIn:
+          shouldCheck = true;
+          break;
+        case DebugAction.stepOut:
+          if (_currentDepth < stepDepth) shouldCheck = true;
+          break;
+        default:
+          break;
+      }
+    }
 
     var breakpoints = context.debugController.getBreakpoints(currentLine);
-    if (breakpoints.isNotEmpty && !_linesHitThisRender.contains(currentLine)) {
+    if ((breakpoints.isNotEmpty && !_linesHitThisRender.contains(currentLine)) || shouldCheck) {
       _linesHitThisRender.add(currentLine);
-      await context.debugController.handleBreakpoint(info);
+
+      var info = BreakpointInfo(
+        nodeType: 'Interpolation',
+        variables: context.getAllVariables(),
+        outputSoFar: context.outputSoFar,
+        lineNumber: currentLine,
+        availableFilters: context.getAvailableFilters(),
+        availableTests: context.getAvailableTests(),
+        callStack: context.callStack,
+      );
+
+      var action = await context.debugController.handleBreakpoint(info);
+
+      // Check for state updates
+      var updates = context.debugController.popPendingStateUpdates();
+      if (updates != null) {
+        context.applyUpdates(updates);
+      }
+
+      if (action == DebugAction.stepOver || action == DebugAction.stepIn) {
+        context.debugController.setStepMode(action, _currentDepth);
+      } else if (action == DebugAction.stepOut) {
+        context.debugController.setStepMode(action, _currentDepth);
+      } else if (action == DebugAction.stop) {
+        throw DebugStopException();
+      }
     }
+
+    var value = await node.value.accept(this, context);
+    var finalized = context.finalize(value);
+    context.write(finalized);
   }
 
   @override
   Future<void> visitMacro(Macro node, DebugRenderContext context) async {
+    // Definition only, execution via _getMacroFunction
     await _checkBreakpoint(node, context, 'Macro', nodeName: node.name);
-    _baseRenderer.visitMacro(node, context);
+
+    // Register the macro in the context using our async-compatible function
+    context.set(node.name, _getMacroFunction(node, context));
+  }
+
+  /// Create an async macro function that uses this renderer for execution.
+  /// This allows breakpoints and debugging inside the macro body.
+  Function _getMacroFunction(MacroCall node, DebugRenderContext context) {
+    Future<Object?> macro(List<Object?> positional, Map<Object?, Object?> named) async {
+      // Create a derived context for the macro execution
+      var buffer = StringBuffer();
+      // We need to create a derived context that captures the variables but writes to a new buffer
+      // However, DebugRenderContext expects _outputBuffer to be the same if not passed.
+      // We must pass a new buffer.
+      // Also, macros should not inherit variables unless configured?
+      // Standard behavior: macros don't inherit context variables by default.
+      // But they do if `with context` (ImportContext) - but Macro definition doesn't have that.
+      // Macros are closures.
+      // In StringSinkRenderer, it uses derived(sink: buffer).
+
+      var derived = context.derived(sink: buffer, outputBuffer: buffer);
+
+      var index = 0;
+      var mandatoryLength = node.positional.length;
+
+      // Argument handling (simplified from StringSinkRenderer for brevity but functional)
+      try {
+        // 1. Mandatory positional arguments
+        for (; index < mandatoryLength; index += 1) {
+          var key = await node.positional[index].accept(this, context) as String;
+          derived.set(key, positional.length > index ? positional[index] : null);
+        }
+
+        // 2. Named arguments (simplified)
+        for (var (argument, defaultValue) in node.named) {
+          var key = await argument.accept(this, context) as String;
+          if (named.containsKey(Symbol(key))) {
+            derived.set(key, named[Symbol(key)]);
+          } else {
+            // Evaluate default
+            var defaultVal = await defaultValue.accept(this, context);
+            derived.set(key, defaultVal);
+          }
+        }
+      } catch (e) {
+        // Fallback or rethrow
+      }
+
+      // Track stack frame
+      _currentDepth++;
+      var label = 'MacroCall: ${node.name}';
+      context.debugController.startTimer(label);
+
+      // Push frame to the ORIGINAL context's controller (derived shares it)
+      var line = node.body.line ?? node.line ?? context.currentLine;
+      context.pushFrame('macro:${node.name}', line);
+
+      try {
+        await node.body.accept(this, derived);
+        return SafeString(buffer.toString());
+      } finally {
+        context.popFrame();
+        _currentDepth--;
+        context.debugController.stopTimer(label);
+      }
+    }
+
+    return macro;
   }
 
   @override
@@ -495,17 +746,35 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitTemplateNode(TemplateNode node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Template');
+    _currentDepth++;
 
-    // Set up blocks
-    for (var block in node.blocks) {
-      context.blocks[block.name] ??= [];
-      context.blocks[block.name]!.add((ctx) {
-        block.body.accept(_baseRenderer, ctx);
-      });
+    var label = 'Template';
+    context.debugController.startTimer(label);
+
+    try {
+      await _checkBreakpoint(node, context, 'Template');
+
+      var templateName = context.template ?? '<template>';
+      var line = node.line ?? context.currentLine;
+      context.pushFrame(templateName, line);
+
+      try {
+        // Set up blocks
+        for (var block in node.blocks) {
+          context.blocks[block.name] ??= [];
+          context.blocks[block.name]!.add((ctx) {
+            block.body.accept(_baseRenderer, ctx);
+          });
+        }
+
+        await node.body.accept(this, context);
+      } finally {
+        context.popFrame();
+      }
+    } finally {
+      _currentDepth--;
+      context.debugController.stopTimer(label);
     }
-
-    await node.body.accept(this, context);
   }
 
   @override

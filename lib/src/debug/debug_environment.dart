@@ -53,7 +53,11 @@ extension DebugTemplateExtension on Template {
 
     // Render with async debug renderer
     final debugRenderer = AsyncDebugRenderer();
-    await templateToRender.body.accept(debugRenderer, context);
+    try {
+      await templateToRender.body.accept(debugRenderer, context);
+    } on DebugStopException {
+      return;
+    }
   }
 }
 

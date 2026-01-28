@@ -1,5 +1,5 @@
 import 'package:jinja/jinja.dart';
-import 'package:jinja/src/debug/debug_template.dart';
+import 'package:jinja/src/debug/debug_environment.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -31,10 +31,10 @@ void main() {
         hit = true;
         expect(info.lineNumber, bp.line);
         expect(info.variables['name'], 'World');
-        return Future.value(info);
+        return Future.value(DebugAction.resume);
       };
 
-      await template.renderDebug({'name': 'World'}, debugController: controller);
+      await template.renderDebug(data: {'name': 'World'}, debugController: controller);
       expect(hit, isTrue);
     });
 
@@ -47,10 +47,10 @@ void main() {
         hitCount++;
         expect(info.lineNumber, bp.line);
         // expect(info.variables['i'], 2); // Skipped: variable resolution issue
-        return Future.value(info);
+        return Future.value(DebugAction.resume);
       };
 
-      await template.renderDebug({'i': 0}, debugController: controller);
+      await template.renderDebug(data: {'i': 0}, debugController: controller);
       expect(hitCount, 1);
     });
 
@@ -61,10 +61,10 @@ void main() {
 
       controller.onBreakpoint = (info) {
         hit = true;
-        return Future.value(info);
+        return Future.value(DebugAction.resume);
       };
 
-      await template.renderDebug({'i': 0}, debugController: controller);
+      await template.renderDebug(data: {'i': 0}, debugController: controller);
       // expect(hit, isFalse); // Skipped: conditional logic needs investigation
     });
   });

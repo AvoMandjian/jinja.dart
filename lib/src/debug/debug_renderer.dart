@@ -10,6 +10,7 @@ base class DebugRenderContext extends StringSinkRenderContext {
   final DebugController debugController;
   final StringBuffer _outputBuffer;
   int _currentLine = 0;
+  final List<StackFrame> _callStack;
 
   DebugRenderContext(
     super.environment,
@@ -21,7 +22,9 @@ base class DebugRenderContext extends StringSinkRenderContext {
     super.data,
     super.autoEscape,
     StringBuffer? outputBuffer,
-  }) : _outputBuffer = outputBuffer ?? StringBuffer();
+    List<StackFrame>? callStack,
+  })  : _outputBuffer = outputBuffer ?? StringBuffer(),
+        _callStack = callStack ?? [];
 
   @override
   DebugRenderContext derived({
@@ -30,6 +33,8 @@ base class DebugRenderContext extends StringSinkRenderContext {
     Map<String, Object?>? data,
     bool withContext = true,
     bool? autoEscape,
+    List<StackFrame>? callStack,
+    StringBuffer? outputBuffer,
   }) {
     var parent = withContext ? {...this.parent, ...context} : this.parent;
     return DebugRenderContext(
@@ -40,8 +45,9 @@ base class DebugRenderContext extends StringSinkRenderContext {
       blocks: blocks,
       parent: parent,
       data: data,
-      outputBuffer: _outputBuffer,
+      outputBuffer: outputBuffer ?? _outputBuffer,
       autoEscape: autoEscape ?? this.autoEscape,
+      callStack: callStack ?? _callStack,
     );
   }
 
@@ -62,11 +68,58 @@ base class DebugRenderContext extends StringSinkRenderContext {
     for (var entry in allVars.entries) {
       if (entry.value is Namespace) {
         allVarsToSend.addAll((entry.value as Namespace).context);
-      } else if (entry.value is! Function) {
+      } else {
+        // Include functions in debug variables
         allVarsToSend[entry.key] = entry.value;
       }
     }
     return allVarsToSend;
+  }
+
+  /// Get list of available filter names from the environment.
+  List<String> getAvailableFilters() {
+    return environment.filters.keys.toList();
+  }
+
+  /// Get list of available test names from the environment.
+  List<String> getAvailableTests() {
+    return environment.tests.keys.toList();
+  }
+
+  /// Push a frame onto the call stack.
+  void pushFrame(String name, int line, [Map<String, Object?>? variables]) {
+    _callStack.add(
+      StackFrame(
+        name: name,
+        line: line,
+        variables: variables ?? getAllVariables(),
+      ),
+    );
+  }
+
+  /// Pop a frame from the call stack.
+  void popFrame() {
+    if (_callStack.isNotEmpty) {
+      _callStack.removeLast();
+    }
+  }
+
+  /// Get the current call stack.
+  List<StackFrame> get callStack => List.unmodifiable(_callStack);
+
+  /// Apply state updates to the context.
+  void applyUpdates(Map<String, Object?> updates) {
+    for (var entry in updates.entries) {
+      // Update in context if exists, otherwise try parent, otherwise add to context
+      if (context.containsKey(entry.key)) {
+        context[entry.key] = entry.value;
+      } else if (parent.containsKey(entry.key)) {
+        // We can't easily update parent (it's unmodifiable usually), so we shadow it in context
+        context[entry.key] = entry.value;
+      } else {
+        context[entry.key] = entry.value;
+      }
+    }
   }
 }
 
@@ -109,9 +162,18 @@ base class DebugRenderer extends StringSinkRenderer {
           variables: context.getAllVariables(),
           outputSoFar: context.outputSoFar,
           lineNumber: context.currentLine,
+          availableFilters: context.getAvailableFilters(),
+          availableTests: context.getAvailableTests(),
+          callStack: context.callStack,
         );
 
         await context.debugController.handleBreakpoint(info);
+
+        // Check for state updates
+        var updates = context.debugController.popPendingStateUpdates();
+        if (updates != null) {
+          context.applyUpdates(updates);
+        }
       }
     }
   }

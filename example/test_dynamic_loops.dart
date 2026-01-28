@@ -1,5 +1,6 @@
 import 'package:jinja/jinja.dart';
-import 'package:jinja/src/debug/debug_template.dart';
+import 'package:jinja/src/debug/debug_controller.dart';
+import 'package:jinja/src/debug/debug_environment.dart';
 
 void main() async {
   // Test 1: Simple loop
@@ -82,6 +83,7 @@ Future<void> testLoop(String testName, String templateSource, Map<String, Object
     if (loopVars.isNotEmpty) {
       print('  Loop variables: $loopVars');
     }
+    return DebugAction.resume;
   };
 
   // Parse and render
@@ -90,9 +92,8 @@ Future<void> testLoop(String testName, String templateSource, Map<String, Object
   );
 
   await template.renderDebug(
-    data,
+    data: data,
     debugController: debugController,
-    templateSource: templateSource.replaceAll(RegExp(r'Line \d+: '), ''),
   );
 
   print('\nTotal breakpoints hit: $breakpointCount');

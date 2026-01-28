@@ -1,4 +1,5 @@
 import 'package:jinja/jinja.dart';
+import 'package:jinja/src/debug/debug_controller.dart';
 import 'package:jinja/src/debug/debug_environment.dart';
 
 void main() async {
@@ -65,6 +66,8 @@ void main() async {
     print('─' * 40);
     print(info.outputSoFar);
     print('─' * 40);
+
+    return DebugAction.resume;
 
     // Ask user what to do
     // print('\nWhat would you like to do?');
