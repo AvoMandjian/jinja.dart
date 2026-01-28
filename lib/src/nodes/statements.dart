@@ -26,6 +26,11 @@ final class Extends extends Statement {
       'template': template.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '{% extends ${template.toSource()} %}';
+  }
 }
 
 final class For extends Statement {
@@ -129,6 +134,11 @@ final class For extends Statement {
       if (orElse case var orElse?) 'orElse': orElse.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '{% for ${target.toSource()} in ${iterable.toSource()} %}';
+  }
 }
 
 final class If extends Statement {
@@ -193,6 +203,11 @@ final class If extends Statement {
       'body': body.toJson(),
       if (orElse case var orElse?) 'orElse': orElse.toJson(),
     };
+  }
+
+  @override
+  String toSource() {
+    return '{% if ${test.toSource()} %}';
   }
 }
 
@@ -320,6 +335,11 @@ final class Macro extends MacroCall {
       'body': body.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '{% macro $name %}';
+  }
 }
 
 final class CallBlock extends MacroCall {
@@ -385,6 +405,11 @@ final class CallBlock extends MacroCall {
       'body': body.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '{% call ${call.toSource()} %}';
+  }
 }
 
 final class FilterBlock extends Statement {
@@ -433,6 +458,11 @@ final class FilterBlock extends Statement {
       ],
       'body': body.toJson(),
     };
+  }
+
+  @override
+  String toSource() {
+    return '{% filter ${filters.map((f) => f.name).join('|')} %}';
   }
 }
 
@@ -505,6 +535,11 @@ final class With extends Statement {
       'body': body.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '{% with %}';
+  }
 }
 
 final class Block extends Statement {
@@ -562,6 +597,11 @@ final class Block extends Statement {
       'body': body.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '{% block $name %}';
+  }
 }
 
 final class Include extends Statement implements ImportContext {
@@ -604,6 +644,11 @@ final class Include extends Statement implements ImportContext {
       if (ignoreMissing) 'ignoreMissing': ignoreMissing,
       if (withContext) 'withContext': withContext,
     };
+  }
+
+  @override
+  String toSource() {
+    return '{% include ${template.toSource()} %}';
   }
 }
 
@@ -648,6 +693,11 @@ final class Import extends Statement implements ImportContext {
       if (withContext) 'withContext': withContext,
     };
   }
+
+  @override
+  String toSource() {
+    return '{% import ${template.toSource()} as $target %}';
+  }
 }
 
 final class FromImport extends Statement implements ImportContext {
@@ -691,6 +741,11 @@ final class FromImport extends Statement implements ImportContext {
       if (withContext) 'withContext': withContext,
     };
   }
+
+  @override
+  String toSource() {
+    return '{% from ${template.toSource()} import ... %}';
+  }
 }
 
 final class Do extends Statement {
@@ -725,6 +780,11 @@ final class Do extends Statement {
       'class': 'Do',
       'value': value,
     };
+  }
+
+  @override
+  String toSource() {
+    return '{% do ${value.toSource()} %}';
   }
 }
 
@@ -780,6 +840,11 @@ final class TryCatch extends Statement {
       'catchBody': catchBody.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '{% try %}';
+  }
 }
 
 final class Assign extends Statement {
@@ -825,6 +890,11 @@ final class Assign extends Statement {
       'value': value.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '{% set ${target.toSource()} = ${value.toSource()} %}';
+  }
 }
 
 final class AutoEscape extends Statement {
@@ -863,6 +933,11 @@ final class AutoEscape extends Statement {
       'enable': enable,
       'body': body.toJson(),
     };
+  }
+
+  @override
+  String toSource() {
+    return '{% autoescape $enable %}';
   }
 }
 
@@ -931,6 +1006,11 @@ final class AssignBlock extends Statement {
       'body': body.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '{% set ${target.toSource()} %}';
+  }
 }
 
 final class Break extends Statement {
@@ -951,6 +1031,11 @@ final class Break extends Statement {
     return <String, Object?>{
       'class': 'Break',
     };
+  }
+
+  @override
+  String toSource() {
+    return '{% break %}';
   }
 }
 
@@ -973,6 +1058,11 @@ final class Continue extends Statement {
       'class': 'Continue',
     };
   }
+
+  @override
+  String toSource() {
+    return '{% continue %}';
+  }
 }
 
 final class Debug extends Statement {
@@ -993,6 +1083,11 @@ final class Debug extends Statement {
     return <String, Object?>{
       'class': 'Debug',
     };
+  }
+
+  @override
+  String toSource() {
+    return '{% debug %}';
   }
 }
 
@@ -1043,12 +1138,12 @@ final class Trans extends Statement {
     if (plural case T plural) {
       yield plural;
     }
-    yield* (plural?.findAll<T>() ?? const []);
+    yield* plural?.findAll<T>() ?? const [];
 
     if (count case T count) {
       yield count;
     }
-    yield* (count?.findAll<T>() ?? const []);
+    yield* count?.findAll<T>() ?? const [];
   }
 
   @override
@@ -1061,5 +1156,10 @@ final class Trans extends Statement {
       if (context != null) 'context': context,
       'trimmed': trimmed,
     };
+  }
+
+  @override
+  String toSource() {
+    return '{% trans %}';
   }
 }

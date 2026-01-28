@@ -16,6 +16,8 @@ abstract base class Node {
   Iterable<T> findAll<T extends Node>() sync* {}
 
   Map<String, Object?> toJson();
+
+  String toSource();
 }
 
 final class Data extends Node {
@@ -51,6 +53,11 @@ final class Data extends Node {
       'class': 'Data',
       'data': data,
     };
+  }
+
+  @override
+  String toSource() {
+    return data;
   }
 }
 
@@ -110,6 +117,13 @@ final class Slice extends Expression {
       'value': value.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    var startStr = start?.toSource() ?? '';
+    var stopStr = stop?.toSource() ?? '';
+    return '${value.toSource()}[$startStr:$stopStr]';
+  }
 }
 
 final class Interpolation extends Node {
@@ -147,6 +161,11 @@ final class Interpolation extends Node {
       'value': value.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '{{ ${value.toSource()} }}';
+  }
 }
 
 final class Output extends Node {
@@ -183,6 +202,11 @@ final class Output extends Node {
         for (var node in nodes) node.toJson(),
       ],
     };
+  }
+
+  @override
+  String toSource() {
+    return nodes.map((n) => n.toSource()).join();
   }
 }
 
@@ -238,5 +262,10 @@ final class TemplateNode extends Node {
       ],
       'body': body.toJson(),
     };
+  }
+
+  @override
+  String toSource() {
+    return body.toSource();
   }
 }

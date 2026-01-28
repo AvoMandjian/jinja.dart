@@ -35,6 +35,11 @@ final class Name extends Expression {
       'context': context.name,
     };
   }
+
+  @override
+  String toSource() {
+    return name;
+  }
 }
 
 final class NamespaceRef extends Expression {
@@ -65,6 +70,11 @@ final class NamespaceRef extends Expression {
       'attribute': attribute,
     };
   }
+
+  @override
+  String toSource() {
+    return '$name.$attribute';
+  }
 }
 
 abstract base class Literal extends Expression {
@@ -92,6 +102,14 @@ final class Constant extends Literal {
       'class': 'Constant',
       'value': value,
     };
+  }
+
+  @override
+  String toSource() {
+    if (value is String) {
+      return "'$value'";
+    }
+    return value.toString();
   }
 }
 
@@ -132,6 +150,11 @@ final class Tuple extends Literal {
       ],
     };
   }
+
+  @override
+  String toSource() {
+    return '(${values.map((v) => v.toSource()).join(', ')})';
+  }
 }
 
 final class Array extends Literal {
@@ -168,6 +191,11 @@ final class Array extends Literal {
         for (var value in values) value.toJson(),
       ],
     };
+  }
+
+  @override
+  String toSource() {
+    return '[${values.map((v) => v.toSource()).join(', ')}]';
   }
 }
 
@@ -220,6 +248,11 @@ final class Dict extends Literal {
           },
       ],
     };
+  }
+
+  @override
+  String toSource() {
+    return '{${pairs.map((p) => '${p.key.toSource()}: ${p.value.toSource()}').join(', ')}}';
   }
 }
 
@@ -285,6 +318,14 @@ final class Condition extends Expression {
       'trueValue': trueValue.toJson(),
       if (falseValue case Expression falseValue?) 'falseValue': falseValue.toJson(),
     };
+  }
+
+  @override
+  String toSource() {
+    if (falseValue != null) {
+      return '${trueValue.toSource()} if ${test.toSource()} else ${falseValue!.toSource()}';
+    }
+    return '${trueValue.toSource()} if ${test.toSource()}';
   }
 }
 
@@ -355,6 +396,13 @@ final class Calling extends Expression {
       ],
     };
   }
+
+  @override
+  String toSource() {
+    var args = arguments.map((a) => a.toSource()).toList();
+    var kwargs = keywords.map((k) => '${k.key}=${k.value.toSource()}').toList();
+    return '(${[...args, ...kwargs].join(', ')})';
+  }
 }
 
 final class Call extends Expression {
@@ -403,6 +451,11 @@ final class Call extends Expression {
       'calling': calling.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '${value.toSource()}()';
+  }
 }
 
 final class Filter extends Expression {
@@ -442,6 +495,11 @@ final class Filter extends Expression {
       'calling': calling.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '| $name';
+  }
 }
 
 final class Test extends Expression {
@@ -480,6 +538,11 @@ final class Test extends Expression {
       'name': name,
       'calling': calling.toJson(),
     };
+  }
+
+  @override
+  String toSource() {
+    return 'is $name';
   }
 }
 
@@ -523,6 +586,11 @@ final class Item extends Expression {
       'value': value.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '${value.toSource()}[${key.toSource()}]';
+  }
 }
 
 final class Attribute extends Expression {
@@ -562,6 +630,11 @@ final class Attribute extends Expression {
       'value': value.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '${value.toSource()}.$attribute';
+  }
 }
 
 final class Concat extends Expression {
@@ -598,6 +671,11 @@ final class Concat extends Expression {
         for (var value in values) value.toJson(),
       ],
     };
+  }
+
+  @override
+  String toSource() {
+    return values.map((v) => v.toSource()).join(' ~ ');
   }
 }
 
@@ -690,6 +768,15 @@ final class Compare extends Expression {
       ],
     };
   }
+
+  @override
+  String toSource() {
+    var buffer = StringBuffer(value.toSource());
+    for (var (op, operand) in operands) {
+      buffer.write(' ${op.symbol} ${operand.toSource()}');
+    }
+    return buffer.toString();
+  }
 }
 
 enum UnaryOperator {
@@ -738,6 +825,11 @@ final class Unary extends Expression {
       'operator': operator.symbol,
       'value': value.toJson(),
     };
+  }
+
+  @override
+  String toSource() {
+    return '${operator.symbol} ${value.toSource()}';
   }
 }
 
@@ -821,6 +913,11 @@ final class Scalar extends Binary<ScalarOperator> {
       'right': right.toJson(),
     };
   }
+
+  @override
+  String toSource() {
+    return '${left.toSource()} ${operator.symbol} ${right.toSource()}';
+  }
 }
 
 enum LogicalOperator {
@@ -861,5 +958,10 @@ final class Logical extends Binary<LogicalOperator> {
       'left': left.toJson(),
       'right': right.toJson(),
     };
+  }
+
+  @override
+  String toSource() {
+    return '${left.toSource()} ${operator.name} ${right.toSource()}';
   }
 }

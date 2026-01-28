@@ -39,11 +39,7 @@ base class Context {
       if (object == null) {
         String? functionName;
         if (node is Call) {
-          if (node.value is Attribute) {
-            functionName = ((node.value as Attribute).value as Name).name;
-          } else {
-            functionName = node.value.toString();
-          }
+          functionName = node.value.toSource();
         }
         final suggestions = <String>[
           'Check if the function is defined before calling it',
