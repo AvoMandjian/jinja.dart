@@ -47,6 +47,7 @@ extension DebugTemplateExtension on Template {
       sink,
       debugController: debugController,
       template: path,
+      source: source,
       parent: globals,
       data: data,
     );

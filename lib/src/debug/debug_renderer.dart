@@ -16,6 +16,7 @@ base class DebugRenderContext extends StringSinkRenderContext {
     super.sink, {
     required this.debugController,
     super.template,
+    super.source,
     super.blocks,
     super.parent,
     super.data,
@@ -37,6 +38,7 @@ base class DebugRenderContext extends StringSinkRenderContext {
       sink ?? this.sink,
       debugController: debugController,
       template: template ?? this.template,
+      source: source,
       blocks: blocks,
       parent: parent,
       data: data,

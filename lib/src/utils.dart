@@ -411,3 +411,36 @@ String _valueToString(Object? value) {
   final str = value.toString();
   return str.length > 100 ? '${str.substring(0, 100)}...' : str;
 }
+
+/// Helper to extract a context snippet with a caret for error display.
+String errorContextSnippet(
+  String source,
+  int line,
+  int column, {
+  int contextLines = 1,
+}) {
+  var lines = source.split('\n');
+  var buffer = StringBuffer();
+  if (lines.isEmpty) {
+    return '';
+  }
+  // Clamp line and column to valid ranges
+  // Ensure line is at least 1 (1-based index)
+  var safeLine = line < 1 ? 1 : line;
+  if (safeLine > lines.length) safeLine = lines.length;
+
+  var start = (safeLine - contextLines - 1).clamp(0, lines.length - 1);
+  var end = (safeLine + contextLines - 1).clamp(0, lines.length - 1);
+
+  for (var i = start; i <= end; i++) {
+    var lineNum = i + 1;
+    buffer.writeln('$lineNum: ${lines[i]}');
+    if (lineNum == safeLine && column > 0) {
+      var caretPos = column - 1;
+      if (caretPos <= lines[i].length) {
+        buffer.writeln('${' ' * (lineNum.toString().length + 3 + caretPos)}^');
+      }
+    }
+  }
+  return buffer.toString();
+}

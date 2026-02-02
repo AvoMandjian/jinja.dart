@@ -9,6 +9,7 @@ base class Context {
   Context(
     this.environment, {
     this.template,
+    this.source,
     Map<String, List<ContextCallback>>? blocks,
     this.parent = const <String, Object?>{},
     Map<String, Object?>? data,
@@ -18,6 +19,8 @@ base class Context {
   final Environment environment;
 
   String? template;
+
+  final String? source;
 
   final Map<String, List<ContextCallback>> blocks;
 
@@ -50,6 +53,9 @@ base class Context {
           nodeValue: node is Node ? node : null,
           operationValue: 'Calling null function',
           suggestionsValue: suggestions,
+          contextSnippetValue: (source != null && node is Node && node.line != null && node.column != null)
+              ? errorContextSnippet(source!, node.line!, node.column!)
+              : null,
         );
       }
 
@@ -102,6 +108,9 @@ base class Context {
         operation: 'Calling function with ${positional.length} positional and ${named.length} named arguments',
         suggestions: suggestions,
         templatePath: template,
+        contextSnippet: (source != null && node is Node && node.line != null && node.column != null)
+            ? errorContextSnippet(source!, node.line!, node.column!)
+            : null,
       );
     }
   }
@@ -113,6 +122,7 @@ base class Context {
     return Context(
       environment,
       template: template ?? this.template,
+      source: source,
       blocks: blocks,
       parent: parent,
       data: data,
@@ -206,7 +216,7 @@ base class Context {
 
   Object? attribute(String name, Object? value, Object? node) {
     try {
-      return environment.getAttribute(name, value, node: node);
+      return environment.getAttribute(name, value, node: node, source: source);
     } on TemplateError {
       // Re-throw template errors as-is (they already have context from defaults.dart)
       rethrow;
@@ -227,13 +237,16 @@ base class Context {
         operation: 'Accessing attribute \'$name\' on ${value.runtimeType}',
         suggestions: suggestions,
         templatePath: template,
+        contextSnippet: (source != null && node is Node && node.line != null && node.column != null)
+            ? errorContextSnippet(source!, node.line!, node.column!)
+            : null,
       );
     }
   }
 
   Object? item(Object? name, Object? value, Object? node) {
     try {
-      return environment.getItem(name, value, node: node);
+      return environment.getItem(name, value, node: node, source: source);
     } on TemplateError {
       // Re-throw template errors as-is (they already have context from defaults.dart)
       rethrow;
@@ -255,6 +268,9 @@ base class Context {
         operation: 'Accessing item \'$name\' on ${value.runtimeType}',
         suggestions: suggestions,
         templatePath: template,
+        contextSnippet: (source != null && node is Node && node.line != null && node.column != null)
+            ? errorContextSnippet(source!, node.line!, node.column!)
+            : null,
       );
     }
   }

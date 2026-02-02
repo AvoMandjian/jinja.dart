@@ -95,8 +95,7 @@ abstract final class Token {
     'tilde': '~',
   };
 
-  const factory Token(int line, int column, String type, String value) =
-      ValueToken;
+  const factory Token(int line, int column, String type, String value) = ValueToken;
 
   const factory Token.simple(int line, int column, String type) = SimpleToken;
 
@@ -120,11 +119,7 @@ abstract final class Token {
       return true;
     }
 
-    return other is Token &&
-        type == other.type &&
-        line == other.line &&
-        column == other.column &&
-        value == other.value;
+    return other is Token && type == other.type && line == other.line && column == other.column && value == other.value;
   }
 
   Token change({int? line, int? column, String? type, String? value});
@@ -132,29 +127,6 @@ abstract final class Token {
   bool test(String type, [String? value]);
 
   bool testAny(Iterable<(String, String?)> expressions);
-}
-
-/// Helper to extract a context snippet with a caret for error display.
-String errorContextSnippet(String source, int line, int column,
-    {int contextLines = 1,}) {
-  var lines = source.split('\n');
-  var buffer = StringBuffer();
-  if (lines.isEmpty) {
-    return '';
-  }
-  // Clamp line and column to valid ranges
-  var safeLine = line.clamp(1, lines.length);
-  var start = (safeLine - contextLines - 1).clamp(0, lines.length - 1);
-  var end = (safeLine + contextLines - 1).clamp(0, lines.length - 1);
-  for (int i = start; i <= end; i++) {
-    buffer.writeln('${i + 1}: ${lines[i]}');
-    if (i == safeLine - 1 && column > 0) {
-      var caretPos = column - 1;
-      var safeCaret = caretPos.clamp(0, lines[i].length);
-      buffer.writeln('    ${' ' * safeCaret}^');
-    }
-  }
-  return buffer.toString();
 }
 
 abstract final class BaseToken implements Token {

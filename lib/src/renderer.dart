@@ -14,6 +14,7 @@ abstract base class RenderContext extends Context {
   RenderContext(
     super.environment, {
     super.template,
+    super.source,
     super.blocks,
     super.parent,
     super.data,
@@ -67,6 +68,7 @@ base class StringSinkRenderContext extends RenderContext {
     super.environment,
     this.sink, {
     super.template,
+    super.source,
     super.blocks,
     super.parent,
     super.data,
@@ -114,6 +116,7 @@ base class AsyncRenderContext extends RenderContext {
     super.environment,
     this.sink, {
     super.template,
+    super.source,
     super.blocks,
     super.parent,
     super.data,
@@ -465,10 +468,57 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   Object? visitName(Name node, StringSinkRenderContext context) {
-    return switch (node.context) {
-      AssignContext.load => context.resolve(node.name),
-      _ => node.name,
-    };
+    try {
+      return switch (node.context) {
+        AssignContext.load => context.resolve(node.name),
+        _ => node.name,
+      };
+    } on UndefinedError catch (e) {
+      throw UndefinedError(
+        e.message,
+        stackTraceValue: e.stackTrace,
+        nodeValue: node,
+        contextSnapshotValue: e.contextSnapshot,
+        operationValue: e.operation,
+        suggestionsValue: e.suggestions,
+        templatePathValue: context.template,
+        callStackValue: e.callStack,
+        contextSnippetValue: (context.source != null && node.line != null && node.column != null)
+            ? errorContextSnippet(context.source!, node.line!, node.column!)
+            : null,
+        variableNameValue: e.variableName,
+        similarNamesValue: e.similarNames,
+      );
+    } on TemplateError {
+      rethrow;
+    } catch (e, stackTrace) {
+      final contextSnapshot = captureContext(context);
+      final availableKeys = <String>[
+        ...context.context.keys,
+        ...context.parent.keys,
+      ];
+      final similarNames = getSimilarNames(node.name, availableKeys);
+      final suggestions = <String>[
+        'Check if \'${node.name}\' is defined before using it: {% if ${node.name} %}...{% endif %}',
+        if (similarNames.isNotEmpty) 'Did you mean one of these? ${similarNames.join(', ')}',
+        'Ensure \'${node.name}\' is passed to the template context',
+        if (availableKeys.isNotEmpty)
+          'Available variables: ${availableKeys.take(10).join(', ')}${availableKeys.length > 10 ? '...' : ''}',
+      ];
+      throw TemplateErrorWrapper(
+        e,
+        message: 'Error resolving variable \'${node.name}\': ${e.toString()}',
+        stackTrace: stackTrace,
+        node: node,
+        contextSnapshot: contextSnapshot,
+        operation: 'Resolving variable \'${node.name}\'',
+        suggestions: suggestions,
+        templatePath: context.template,
+        contextSnippet: (context.source != null && node.line != null && node.column != null)
+            ? errorContextSnippet(context.source!, node.line!, node.column!)
+            : null,
+      );
+    }
   }
 
   @override

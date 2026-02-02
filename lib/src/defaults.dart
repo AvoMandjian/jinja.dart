@@ -30,7 +30,7 @@ Object finalize(Context context, Object? value) {
 /// Default attribute getter used for `.` access.
 ///
 /// Handles `Map`, `List` methods, `LoopContext`, and `Namespace` objects.
-Object? getAttribute(String attribute, Object? object, {Object? node}) {
+Object? getAttribute(String attribute, Object? object, {Object? node, String? source}) {
   if (object == null) {
     // Collect available attributes for suggestions
     final suggestions = <String>[
@@ -43,6 +43,9 @@ Object? getAttribute(String attribute, Object? object, {Object? node}) {
       nodeValue: node is Node ? node : null,
       operationValue: 'Accessing attribute \'$attribute\' on null object',
       suggestionsValue: suggestions,
+      contextSnippetValue: (source != null && node is Node && node.line != null && node.column != null)
+          ? errorContextSnippet(source, node.line!, node.column!)
+          : null,
     );
   }
 
@@ -118,7 +121,7 @@ Object? getAttribute(String attribute, Object? object, {Object? node}) {
 /// Default item getter used for `[]` access.
 ///
 /// Handles `Map`, `List`, `MapEntry`, `LoopContext`, and `Namespace` objects.
-Object? getItem(Object? key, Object? object, {Object? node}) {
+Object? getItem(Object? key, Object? object, {Object? node, String? source}) {
   if (object == null) {
     final suggestions = <String>[
       'Check if the object is null before accessing items',
@@ -129,6 +132,9 @@ Object? getItem(Object? key, Object? object, {Object? node}) {
       nodeValue: node is Node ? node : null,
       operationValue: 'Accessing item \'$key\' on null object',
       suggestionsValue: suggestions,
+      contextSnippetValue: (source != null && node is Node && node.line != null && node.column != null)
+          ? errorContextSnippet(source, node.line!, node.column!)
+          : null,
     );
   }
 

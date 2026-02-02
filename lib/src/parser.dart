@@ -5,6 +5,7 @@ import 'exceptions.dart';
 import 'lexer.dart';
 import 'nodes.dart';
 import 'reader.dart';
+import 'utils.dart';
 
 final class Parser {
   Parser(this.environment, this.templateSource, {this.path})
@@ -1170,7 +1171,11 @@ final class Parser {
             break;
 
           default:
-            expression = Name(name: current.value);
+            expression = Name(
+              name: current.value,
+              line: current.line,
+              column: current.column,
+            );
         }
 
         reader.next();
@@ -1363,13 +1368,21 @@ final class Parser {
   }
 
   Expression parseSubscript(TokenReader reader, Expression value) {
-    var token = reader.next();
+    var token = reader.current;
+    var line = token.line;
+    var column = token.column;
+    reader.next();
 
     if (token.test('dot')) {
       var attributeToken = reader.next();
 
       if (attributeToken.test('name')) {
-        return Attribute(attribute: attributeToken.value, value: value);
+        return Attribute(
+          attribute: attributeToken.value,
+          value: value,
+          line: line,
+          column: column,
+        );
       }
 
       if (!attributeToken.test('integer')) {
@@ -1381,27 +1394,54 @@ final class Parser {
       }
 
       var key = Constant(value: int.parse(attributeToken.value));
-      return Item(key: key, value: value);
+      return Item(
+        key: key,
+        value: value,
+        line: line,
+        column: column,
+      );
     }
 
     if (token.test('lbracket')) {
       if (reader.nextIf('colon') != null) {
         var stop = parseExpression(reader);
         reader.expect('rbracket');
-        return Slice(start: null, stop: stop, value: value);
+        return Slice(
+          start: null,
+          stop: stop,
+          value: value,
+          line: line,
+          column: column,
+        );
       }
       var key = parseExpression(reader);
       if (reader.nextIf('colon') != null) {
         if (reader.skipIf('rbracket')) {
-          return Slice(start: key, value: value);
+          return Slice(
+            start: key,
+            value: value,
+            line: line,
+            column: column,
+          );
         } else {
           var stop = parseExpression(reader);
           reader.expect('rbracket');
-          return Slice(start: key, stop: stop, value: value);
+          return Slice(
+            start: key,
+            stop: stop,
+            value: value,
+            line: line,
+            column: column,
+          );
         }
       } else {
         reader.expect('rbracket');
-        return Item(key: key, value: value);
+        return Item(
+          key: key,
+          value: value,
+          line: line,
+          column: column,
+        );
       }
     }
 
@@ -1466,8 +1506,16 @@ final class Parser {
   }
 
   Call parseCall(TokenReader reader, Expression expression) {
+    var token = reader.current;
+    var line = token.line;
+    var column = token.column;
     var calling = parseCalling(reader);
-    return Call(value: expression, calling: calling);
+    return Call(
+      value: expression,
+      calling: calling,
+      line: line,
+      column: column,
+    );
   }
 
   Expression parseFilter(TokenReader reader, Expression expression) {

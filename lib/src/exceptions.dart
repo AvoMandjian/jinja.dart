@@ -12,6 +12,7 @@ abstract class TemplateError implements Exception {
     List<String>? suggestionsValue,
     String? templatePathValue,
     List<String>? callStackValue,
+    String? contextSnippetValue,
   })  : message = messageValue,
         stackTrace = stackTraceValue,
         node = nodeValue,
@@ -19,7 +20,8 @@ abstract class TemplateError implements Exception {
         operation = operationValue,
         suggestions = suggestionsValue,
         templatePath = templatePathValue,
-        callStack = callStackValue;
+        callStack = callStackValue,
+        contextSnippet = contextSnippetValue;
 
   /// The error message.
   final String? message;
@@ -44,6 +46,9 @@ abstract class TemplateError implements Exception {
 
   /// The rendering call stack (template -> macro -> include chain, max 10 frames).
   final List<String>? callStack;
+
+  /// Optional snippet of template source with caret.
+  final String? contextSnippet;
 
   @override
   String toString() {
@@ -80,6 +85,11 @@ abstract class TemplateError implements Exception {
     // Node information
     if (node case var node?) {
       buffer.write('\n  Node: ${_getNodeType(node)}');
+    }
+
+    // Context snippet (surrounding script)
+    if (contextSnippet case var snippet?) {
+      buffer.write('\n\n$snippet\n');
     }
 
     // Operation context
@@ -171,6 +181,7 @@ class TemplateNotFound extends TemplateError {
     List<String>? suggestions,
     String? templatePath,
     List<String>? callStack,
+    String? contextSnippet,
     this.searchPaths,
   }) : super(
           message,
@@ -181,6 +192,7 @@ class TemplateNotFound extends TemplateError {
           suggestionsValue: suggestions,
           templatePathValue: templatePath,
           callStackValue: callStack,
+          contextSnippetValue: contextSnippet,
         );
 
   /// The name of the template that was not found.
@@ -276,6 +288,7 @@ class TemplateSyntaxError extends TemplateError {
           suggestionsValue: suggestions,
           templatePathValue: templatePath,
           callStackValue: callStack,
+          contextSnippetValue: contextSnippet,
         );
 
   /// The path to the template that caused the error.
@@ -416,6 +429,7 @@ class TemplateAssertionError extends TemplateError {
     super.suggestionsValue,
     super.templatePathValue,
     super.callStackValue,
+    super.contextSnippetValue,
   });
 
   @override
@@ -439,6 +453,7 @@ class TemplateRuntimeError extends TemplateError {
     super.suggestionsValue,
     super.templatePathValue,
     super.callStackValue,
+    super.contextSnippetValue,
   });
 
   @override
@@ -460,6 +475,7 @@ class UndefinedError extends TemplateRuntimeError {
     super.suggestionsValue,
     super.templatePathValue,
     super.callStackValue,
+    super.contextSnippetValue,
     String? variableNameValue,
     List<String>? similarNamesValue,
   })  : variableName = variableNameValue,
@@ -519,15 +535,17 @@ class TemplateErrorWrapper extends TemplateRuntimeError {
     List<String>? suggestions,
     String? templatePath,
     List<String>? callStack,
+    String? contextSnippet,
   }) : super(
-          message ?? 'Non-template error occurred during template rendering',
-          stackTraceValue: stackTrace ?? (originalError is Error ? originalError.stackTrace : null),
-          nodeValue: node,
-          contextSnapshotValue: contextSnapshot,
-          operationValue: operation,
-          suggestionsValue: suggestions,
-          templatePathValue: templatePath,
-          callStackValue: callStack,
+          message ?? (originalError is TemplateError ? originalError.message : 'Non-template error occurred during template rendering'),
+          stackTraceValue: stackTrace ?? (originalError is Error ? originalError.stackTrace : (originalError is TemplateError ? originalError.stackTrace : null)),
+          nodeValue: node ?? (originalError is TemplateError ? originalError.node : null),
+          contextSnapshotValue: contextSnapshot ?? (originalError is TemplateError ? originalError.contextSnapshot : null),
+          operationValue: operation ?? (originalError is TemplateError ? originalError.operation : null),
+          suggestionsValue: suggestions ?? (originalError is TemplateError ? originalError.suggestions : null),
+          templatePathValue: templatePath ?? (originalError is TemplateError ? originalError.templatePath : null),
+          callStackValue: callStack ?? (originalError is TemplateError ? originalError.callStack : null),
+          contextSnippetValue: contextSnippet ?? (originalError is TemplateError ? originalError.contextSnippet : null),
         );
 
   /// The original non-template exception that was wrapped.

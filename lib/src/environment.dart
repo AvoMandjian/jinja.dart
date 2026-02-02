@@ -46,6 +46,7 @@ typedef AttributeGetter = Object? Function(
   String attribute,
   Object? object, {
   Object? node,
+  String? source,
 });
 
 /// A function that can be used to get object item.
@@ -55,6 +56,7 @@ typedef ItemGetter = Object? Function(
   Object? key,
   Object? object, {
   Object? node,
+  String? source,
 });
 
 /// A function that returns a value or throws an error if the variable is not
@@ -638,7 +640,7 @@ base class Environment {
     }
 
     if (optimize) {
-      body = body.accept(const Optimizer(), Context(this, template: path));
+      body = body.accept(const Optimizer(), Context(this, template: path, source: source));
     }
 
     body = body.accept(RuntimeCompiler(), null);
@@ -648,6 +650,7 @@ base class Environment {
       path: path,
       globals: globals,
       body: body,
+      source: source,
     );
   }
 
@@ -862,10 +865,14 @@ base class Template {
     this.path,
     this.globals = const <String, Object?>{},
     required Node body,
+    this.source,
   }) : body = body is TemplateNode ? body : TemplateNode(body: body);
 
   /// The environment used to parse and render template.
   final Environment environment;
+
+  /// The source code of the template.
+  final String? source;
 
   /// The path to the template if it was loaded.
   final String? path;
@@ -890,6 +897,7 @@ base class Template {
       environment,
       sink,
       template: path,
+      source: source,
       parent: globals,
       data: data,
     );
@@ -919,6 +927,7 @@ base class Template {
       environment,
       sink,
       template: path,
+      source: source,
       parent: globals,
       data: data,
     );

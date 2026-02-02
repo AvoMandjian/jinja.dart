@@ -7,11 +7,12 @@ enum AssignContext {
 }
 
 final class Name extends Expression {
-  const Name({required this.name, this.context = AssignContext.load});
+  const Name({required this.name, this.context = AssignContext.load, super.line, super.column});
 
-  const Name.store({required String name}) : this(name: name, context: AssignContext.store);
+  const Name.store({required String name, int? line, int? column}) : this(name: name, context: AssignContext.store, line: line, column: column);
 
-  const Name.parameter({required String name}) : this(name: name, context: AssignContext.parameter);
+  const Name.parameter({required String name, int? line, int? column})
+      : this(name: name, context: AssignContext.parameter, line: line, column: column);
 
   final String name;
 
@@ -24,7 +25,12 @@ final class Name extends Expression {
 
   @override
   Name copyWith({String? name, AssignContext? context}) {
-    return Name(name: name ?? this.name, context: context ?? this.context);
+    return Name(
+      name: name ?? this.name,
+      context: context ?? this.context,
+      line: line,
+      column: column,
+    );
   }
 
   @override
@@ -43,7 +49,7 @@ final class Name extends Expression {
 }
 
 final class NamespaceRef extends Expression {
-  const NamespaceRef({required this.name, required this.attribute});
+  const NamespaceRef({required this.name, required this.attribute, super.line, super.column});
 
   final String name;
 
@@ -59,6 +65,8 @@ final class NamespaceRef extends Expression {
     return NamespaceRef(
       name: name ?? this.name,
       attribute: attribute ?? this.attribute,
+      line: line,
+      column: column,
     );
   }
 
@@ -409,6 +417,8 @@ final class Call extends Expression {
   const Call({
     required this.value,
     this.calling = const Calling(),
+    super.line,
+    super.column,
   });
 
   final Expression value;
@@ -425,6 +435,8 @@ final class Call extends Expression {
     return Call(
       value: value ?? this.value,
       calling: calling ?? this.calling,
+      line: line,
+      column: column,
     );
   }
 
@@ -547,7 +559,7 @@ final class Test extends Expression {
 }
 
 final class Item extends Expression {
-  const Item({required this.key, required this.value});
+  const Item({required this.key, required this.value, super.line, super.column});
 
   final Expression key;
 
@@ -560,7 +572,12 @@ final class Item extends Expression {
 
   @override
   Item copyWith({Expression? key, Expression? value}) {
-    return Item(key: key ?? this.key, value: value ?? this.value);
+    return Item(
+      key: key ?? this.key,
+      value: value ?? this.value,
+      line: line,
+      column: column,
+    );
   }
 
   @override
@@ -594,7 +611,7 @@ final class Item extends Expression {
 }
 
 final class Attribute extends Expression {
-  const Attribute({required this.attribute, required this.value});
+  const Attribute({required this.attribute, required this.value, super.line, super.column});
 
   final String attribute;
 
@@ -610,6 +627,8 @@ final class Attribute extends Expression {
     return Attribute(
       attribute: attribute ?? this.attribute,
       value: value ?? this.value,
+      line: line,
+      column: column,
     );
   }
 
