@@ -227,8 +227,9 @@ void main() async {
     final errors = <String?>[];
 
     // Setup MapLoader with base templates for inheritance and inclusion
-    final loader = MapLoader({
-      'base.html': '''
+    final loader = MapLoader(
+      {
+        'base.html': '''
 <!DOCTYPE html>
 <html>
 <head>
@@ -241,7 +242,7 @@ void main() async {
 </body>
 </html>
 ''',
-      'macros.html': '''
+        'macros.html': '''
 {% macro render_user(user) %}
 <div class="user">
     <h3>{{ user.name }}</h3>
@@ -262,13 +263,15 @@ void main() async {
 </div>
 {% endmacro %}
 ''',
-      'partial.html': '''
+        'partial.html': '''
 <div class="partial">
     <p>This is a partial template included via include.</p>
     <p>Current time: {{ now() }}</p>
 </div>
 ''',
-    });
+      },
+      globalJinjaData: jinjaData,
+    );
 
     final env = GetJinja.environment(
       MockBuildContext(),
@@ -286,8 +289,144 @@ void main() async {
 
     // example 3: real world example
     print('\n=== Example 3: Real world example ===');
-    var template3 = env.fromString(jinjaScript);
-    var result3 = await template3.renderAsync(jinjaData);
+    var template3 = env.fromString('''
+{% set columns_to_show_key = data_source_id_my_columns %}
+{% set columns_to_show = get( null ,columns_to_show_key) %}
+
+{{columns_to_show}}
+
+''');
+    var result3 = await template3.renderAsync({
+      'data_source_id_my_columns': 'my_apps_list_columns',
+      'my_apps_list_columns': {
+        'list_data': [
+          {
+            'data_type': 'text',
+            'ui_widget': 'list_column',
+            'property_label': 'App Label',
+            'property_id': 'list_column',
+            'data': {
+              'value': 'app_label',
+              'value_text': 'App Label',
+            },
+          },
+          {
+            'data_type': 'text',
+            'ui_widget': 'list_column',
+            'property_label': 'App Description',
+            'property_id': 'list_column',
+            'data': {
+              'value': 'app_description',
+              'value_text': 'App Description',
+            },
+          },
+          {
+            'data_type': 'text',
+            'ui_widget': 'list_column',
+            'property_label': 'App Version',
+            'property_id': 'list_column',
+            'data': {
+              'value': 'app_version',
+              'value_text': 'App Version',
+            },
+          }
+        ],
+      },
+      'my_apps_list': {
+        'list_data': [
+          {
+            'events': {
+              'on_click': {
+                'workflow_id': 'navigate_to_my_app',
+                'properties': {
+                  'content_id': 'my_app_1',
+                },
+              },
+            },
+            'description': {
+              'ui_widget': 'text',
+              'data_type': 'text',
+              'data': {
+                'value_text': 'This is my first awesome app',
+                'value': 'description',
+              },
+            },
+            'label': {
+              'ui_widget': 'text',
+              'data_type': 'text',
+              'data': {
+                'value_text': 'My App Label',
+                'value': 'label',
+              },
+            },
+            'image': {
+              'data_type': 'image',
+              'ui_widget': 'image',
+              'property_label': 'image',
+              'property_id': 'image',
+              'data': {
+                'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+                'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+                'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+              },
+            },
+            'app_version': {
+              'ui_widget': 'text',
+              'data_type': 'text',
+              'data': {
+                'value_text': '1.0.0+1',
+                'value': 'app_version',
+              },
+            },
+          },
+          {
+            'events': {
+              'on_click': {
+                'workflow_id': 'navigate_to_my_app',
+                'properties': {
+                  'content_id': 'my_app_2',
+                },
+              },
+            },
+            'description': {
+              'ui_widget': 'text',
+              'data_type': 'text',
+              'data': {
+                'value_text': 'This is my SECOND awesome app',
+                'value': 'description',
+              },
+            },
+            'label': {
+              'ui_widget': 'text',
+              'data_type': 'text',
+              'data': {
+                'value_text': 'My SECOND App Label',
+                'value': 'label',
+              },
+            },
+            'image': {
+              'data_type': 'image',
+              'ui_widget': 'image',
+              'property_label': 'image',
+              'property_id': 'image',
+              'data': {
+                'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+                'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+                'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+              },
+            },
+            'app_version': {
+              'ui_widget': 'text',
+              'data_type': 'text',
+              'data': {
+                'value_text': '2.3.0+1',
+                'value': 'app_version',
+              },
+            },
+          }
+        ],
+      },
+    });
     print(result3);
 
     // Example 4: Using environment globals
@@ -1223,13 +1362,16 @@ End
     // Example 88: Import with Context
     print('\n=== Example 88: Import with Context ===');
     // We need a template that uses a context variable
-    var loaderWithContext = MapLoader({
-      'context_macros.html': '''
+    var loaderWithContext = MapLoader(
+      {
+        'context_macros.html': '''
     {% macro print_user() %}
       User: {{ user_name }}
     {% endmacro %}
     ''',
-    });
+      },
+      globalJinjaData: jinjaData,
+    );
     var envWithContext = Environment(loader: loaderWithContext);
     var template88 = envWithContext.fromString('''
 {% import "context_macros.html" as m with context %}

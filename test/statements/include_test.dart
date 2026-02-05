@@ -12,7 +12,7 @@ void main() {
         'module': '{% macro test() %}[{{ foo }}|{{ bar }}]{% endmacro %}',
         'header': '[{{ foo }}|{{ 23 }}]',
         'o_printer': '({{ o }})',
-      }),
+      }, globalJinjaData: {}),
     );
 
     test('context include', () {
@@ -88,7 +88,7 @@ void main() {
         loader: MapLoader({
           'main': '{% for item in [1, 2, 3] %}{% include "item" %}{% endfor %}',
           'item': '{{ item }}',
-        }),
+        }, globalJinjaData: {}),
       );
 
       var tmpl = env.getTemplate('main');
@@ -113,7 +113,7 @@ void main() {
       var env = Environment(
         loader: MapLoader({
           'a': '{% macro x() %}{{ foobar }}{% endmacro %}',
-        }),
+        }, globalJinjaData: {}),
       );
 
       var tmpl = env.fromString(

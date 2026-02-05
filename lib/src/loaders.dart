@@ -54,9 +54,10 @@ class MapLoader extends Loader {
   /// {@macro jinja.MapLoader}
   // TODO(loaders): comment that the map keys should be URI paths,
   // like 'path/to/template.html'
-  const MapLoader(this.sources);
+  const MapLoader(this.sources, {required this.globalJinjaData});
 
   final Map<String, String> sources;
+  final Map<String, dynamic> globalJinjaData;
 
   @override
   bool get hasSourceAccess {

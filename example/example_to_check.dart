@@ -438,7 +438,7 @@ Future<void> main() async {
     }
   ]
 }''',
-    }),
+    }, globalJinjaData: {}),
     leftStripBlocks: true,
     trimBlocks: true,
     filters: {

@@ -27,7 +27,7 @@ void main() {
     try {
       template2.render({
         'user_name': 'Alice',
-        'users': ['Bob']
+        'users': ['Bob'],
       });
     } catch (e) {
       print('Error shows similar variable names and suggestions:');
@@ -42,7 +42,7 @@ void main() {
     try {
       template3.render({
         'user': null,
-        'users': ['Alice', 'Bob']
+        'users': ['Alice', 'Bob'],
       });
     } catch (e) {
       print('Error includes null check suggestions:');
@@ -206,13 +206,16 @@ void main() {
 
     // Example 14: Error in Macro
     print('\n=== Example 14: Error in Macro ===');
-    var loader14 = MapLoader({
-      'macros.html': '''
+    var loader14 = MapLoader(
+      {
+        'macros.html': '''
 {% macro render_user(user) %}
   <div>{{ user.name }} - {{ user.age }}</div>
 {% endmacro %}
 ''',
-    });
+      },
+      globalJinjaData: {},
+    );
     var env14 = Environment(loader: loader14);
     var template14 = env14.fromString(
       '''
@@ -231,9 +234,12 @@ void main() {
 
     // Example 15: Error in Include
     print('\n=== Example 15: Error in Include ===');
-    var loader15 = MapLoader({
-      'partial.html': '{{ undefinedVariable }}',
-    });
+    var loader15 = MapLoader(
+      {
+        'partial.html': '{{ undefinedVariable }}',
+      },
+      globalJinjaData: {},
+    );
     var env15 = Environment(loader: loader15);
     var template15 = env15.fromString(
       '''
@@ -272,7 +278,7 @@ void main() {
     try {
       // This should work fine
       var result16 = template16.render({
-        'user': {'name': 'Alice'}
+        'user': {'name': 'Alice'},
       });
       print('Successful render: $result16');
 

@@ -5,7 +5,7 @@ import 'package:jinja/jinja.dart';
 import 'package:test/test.dart';
 
 MapLoader mapLoader() {
-  return MapLoader({'justdict.html': 'FOO'});
+  return MapLoader({'justdict.html': 'FOO'}, globalJinjaData: {});
 }
 
 void main() {

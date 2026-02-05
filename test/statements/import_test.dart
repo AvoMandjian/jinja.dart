@@ -12,7 +12,7 @@ void main() {
         'module': '{% macro test() %}[{{ foo }}|{{ bar }}]{% endmacro %}',
         'header': '[{{ foo }}|{{ 23 }}]',
         'o_printer': '({{ o }})',
-      }),
+      }, globalJinjaData: {}),
     );
 
     test('context import', () {

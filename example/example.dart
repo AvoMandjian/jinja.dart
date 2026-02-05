@@ -26,7 +26,7 @@ Future<void> main() async {
 <p>Third Script</p><p>{{subcategory_title_3}}</p>
 <p>Fourth Script</p><p>{{subcategory_title_4}}</p>
 ''',
-    }),
+    }, globalJinjaData: {}),
     leftStripBlocks: true,
     trimBlocks: true,
     filters: {

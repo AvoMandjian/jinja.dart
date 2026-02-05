@@ -396,6 +396,8 @@ class GetJinja {
         /// Safely retrieves a value from a nested Map/JSON structure using a key.
         'get': (dynamic json, String key, [dynamic defaultValue = '']) {
           try {
+            print(loader.globalJinjaData);
+            json ??= loader.globalJinjaData;
             if (json is! Map<Object?, Object?>) {
               UtilFunctions.appLog(
                 {

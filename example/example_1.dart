@@ -9,7 +9,7 @@ Map<String, dynamic> dataToPassToJinja = {'variable_1': 'the output is encoded t
 void main() {
   var loader = MapLoader({
     'first_script__1__00': '{{ foo|hello }}',
-  });
+  }, globalJinjaData: {});
   var env = Environment(
     globals: <String, Object?>{
       'jsonPath': (Map<Object?, Object?> json, String query) {
