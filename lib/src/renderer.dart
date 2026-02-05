@@ -502,8 +502,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         'Check if \'${node.name}\' is defined before using it: {% if ${node.name} %}...{% endif %}',
         if (similarNames.isNotEmpty) 'Did you mean one of these? ${similarNames.join(', ')}',
         'Ensure \'${node.name}\' is passed to the template context',
-        if (availableKeys.isNotEmpty)
-          'Available variables: ${availableKeys.take(10).join(', ')}${availableKeys.length > 10 ? '...' : ''}',
+        if (availableKeys.isNotEmpty) 'Available variables: ${availableKeys.take(10).join(', ')}${availableKeys.length > 10 ? '...' : ''}',
       ];
       throw TemplateErrorWrapper(
         e,
