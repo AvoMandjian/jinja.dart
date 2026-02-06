@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:intl/intl.dart';
 import 'package:jinja/jinja.dart';
+import 'package:jinja/src/runtime.dart';
 import 'package:json_path/json_path.dart';
 import 'package:path/path.dart' as p;
 import 'package:textwrap/textwrap.dart';
@@ -77,52 +78,88 @@ class GetJinja {
       required Map<String, dynamic> payload,
     }) callbackToParentProject,
   }) {
+    Future<String> fetchWidgetSource(String widgetId, [dynamic jinjaData]) async {
+      await Future<void>.delayed(const Duration(seconds: 2));
+      if (widgetId == 'macro_list_column') {
+        return '''{% macro macro_list_column(col) %}
+ {
+        "type": "{% if col.metadata and col.metadata.type %}{{col.metadata.type}}{%endif%}",
+        "column_id": "{% if col.data and col.data.value %}{{col.data.value}}{%endif%}",
+        "column_name": "{% if col.data and col.data.value_text %}{{col.data.value_text}}{%endif%}",
+        "allow_sorting": {% if col.metadata and col.metadata.sorting is defined and col.metadata.sorting == 1%}true{%else%}false{%endif%},
+{% if col.metadata and col.metadata.width is defined %}
+        "width": {{col.metadata.width}},
+{%endif%}
+         "column_alignement":"{% if col.metadata and col.metadata.column_alignement %}{{col.metadata.column_alignement}}{%endif%}",
+         "row_alignement":"{% if col.metadata and col.metadata.row_alignement %}{{col.metadata.row_alignement}}{%endif%}"
+      }
+{%endmacro%}
+''';
+      } else if (widgetId == 'macro_list_row') {
+        return '''{% macro macro_list_row(my_app) %}
+  {% if my_app %}
+  {
+  {% for key, val in my_app %}
+  {% if val.data_type == 'image'%}
+      "{{key}}": {
+        "value": {
+          "image_b64": "{% if val.data and val.data.value_text_b64%}{{val.data.value_text_b64}}{%endif%}",
+          "image_url": "{% if val.data and val.data.value_text%}{{val.data.value_text}}{%endif%}",
+          "main_image_url": "{% if val.data and val.data.value_text%}{{val.data.value_text}}{%endif%}"
+        }
+      }
+    {% elif val.data_type == 'icon'%}
+     "{{key}}": {
+                "value": {
+                    "unicode": "{% if val.data and val.data.value_text%}{{val.data.value_text}}{%endif%}"
+                }
+     }
+    {%else%}
+  
+      "{{key}}": {
+        "value": {
+          "text": "{% if val.data and val.data.value_text%}{{val.data.value_text}}{%endif%}"
+        }
+      }
+   {% endif %}
+    }
+  {%if not loop.last %},{%endif%}{%endfor%}
+  {%endif%}
+  {%endmacro%}''';
+      }
+      final res = await callbackToParentProject(
+        payload: {
+          'widget_id': widgetId,
+          'jinja_data': jinjaData,
+        },
+      );
+      return res?.toString() ?? '';
+    }
+
     return Environment(
       globals: <String, Object?>{
-        /// Returns data to the caller, preserving the data type (dict, list, int, etc).
-        ///
-        /// This function is compatible with dbt's `return` function behavior.
-        /// See: https://docs.getdbt.com/reference/dbt-jinja-functions/return
-        ///
-        /// **Usage:**
-        /// - **Expression**: `{{ return([1,2,3]) }}` - Outputs the value directly
-        /// - **Statement with do tag**: `{% do return([1,2,3]) %}` - Executes without output
-        ///
-        /// **Type Preservation:**
-        /// The type of the data (dict, list, int, etc) will be preserved through the return call.
-        /// This allows macros to return structured data that can be used in loops or assignments.
-        ///
-        /// **Example:**
-        /// ```jinja
-        /// {% macro get_data() %}
-        ///   {{ return([1,2,3]) }}
-        /// {% endmacro %}
-        ///
-        /// {% for i in get_data() %}
-        ///   {{ i }}
-        /// {% endfor %}
-        /// ```
-        ///
-        /// **Note:** Unlike dbt in some contexts, this implementation does not stop macro
-        /// execution (early exit). It only returns the value to the caller.
         'return': (dynamic value) {
           return value;
         },
-
-        /// Retrieves a widget configuration or data by its ID via the parent project callback.
+        'render_widget_by_id': passContext((
+          Context context,
+          String widgetId, [
+          Map<Object?, Object?>? data,
+        ]) async {
+          final source = await fetchWidgetSource(widgetId);
+          // Assuming macro name matches widgetId
+          final macroName = widgetId;
+          final args = data?.keys.map((k) => k.toString()).join(', ') ?? '';
+          final call = '{{ $macroName($args) }}';
+          final fullSource = '$source\n$call';
+          final template = context.environment.fromString(fullSource);
+          return template.renderAsync(data?.cast<String, Object?>());
+        }),
         'get_widget_by_id': (
           String widgetId, [
           dynamic jinjaData,
         ]) async {
-          // print('getting widget by id: $widgetId, jinjaData: $jinjaData');
-          final res = await callbackToParentProject(
-            payload: {
-              'widget_id': widgetId,
-              'jinja_data': jinjaData,
-            },
-          );
-          // print('widget by id result: $res');
-          return res ?? {};
+          return fetchWidgetSource(widgetId, jinjaData);
         },
 
         /// Executes a generic callback via the parent project with an ID and optional payload.
@@ -396,7 +433,6 @@ class GetJinja {
         /// Safely retrieves a value from a nested Map/JSON structure using a key.
         'get': (dynamic json, String key, [dynamic defaultValue = '']) {
           try {
-            print(loader.globalJinjaData);
             json ??= loader.globalJinjaData;
             if (json is! Map<Object?, Object?>) {
               UtilFunctions.appLog(

@@ -7,52 +7,6 @@ import 'package:jinja/jinja.dart';
 import 'get_jinja.dart';
 
 final jinjaScript = """
-{% macro macro_list_column(col) %}
- {
-        "type": "{% if col.metadata and col.metadata.type %}{{col.metadata.type}}{%endif%}",
-        "column_id": "{% if col.data and col.data.value %}{{col.data.value}}{%endif%}",
-        "column_name": "{% if col.data and col.data.value_text %}{{col.data.value_text}}{%endif%}",
-        "allow_sorting": {% if col.metadata and col.metadata.sorting is defined and col.metadata.sorting == 1%}true{%else%}false{%endif%},
-{% if col.metadata and col.metadata.width is defined %}
-        "width": {{col.metadata.width}},
-{%endif%}
-         "column_alignement":"{% if col.metadata and col.metadata.column_alignement %}{{col.metadata.column_alignement}}{%endif%}",
-         "row_alignement":"{% if col.metadata and col.metadata.row_alignement %}{{col.metadata.row_alignement}}{%endif%}"
-      }
-{%endmacro%}
-
-{% macro macro_list_row(my_app) %}
-  {% if my_app %}
-  {
-  {% for key, val in my_app %}
-  {% if val.data_type == 'image'%}
-      "{{key}}": {
-        "value": {
-          "image_b64": "{% if val.data and val.data.value_text_b64%}{{val.data.value_text_b64}}{%endif%}",
-          "image_url": "{% if val.data and val.data.value_text%}{{val.data.value_text}}{%endif%}",
-          "main_image_url": "{% if val.data and val.data.value_text%}{{val.data.value_text}}{%endif%}"
-        }
-      }
-    {% elif val.data_type == 'icon'%}
-     "{{key}}": {
-                "value": {
-                    "unicode": "{% if val.data and val.data.value_text%}{{val.data.value_text}}{%endif%}"
-                }
-     }
-    {%else%}
-  
-      "{{key}}": {
-        "value": {
-          "text": "{% if val.data and val.data.value_text%}{{val.data.value_text}}{%endif%}"
-        }
-      }
-   {% endif %}
-    }
-  {%if not loop.last %},{%endif%}{%endfor%}
-  {%endif%}
-  {%endmacro%}
-  
-
 {
   "list_view": {
     "style": {
@@ -63,7 +17,7 @@ final jinjaScript = """
       {% if my_apps_list_columns and my_apps_list_columns.list_data %}
       {% for col in my_apps_list_columns.list_data %}
       {% if col.ui_widget == 'list_column' %}
-        {{macro_list_column(col)}}
+        {{ render_widget_by_id("macro_list_column", {'col': col}) }}
       {%endif%}
     {% if not loop.last %},{%endif%}
     {%endfor%}
@@ -72,7 +26,7 @@ final jinjaScript = """
 "data": [
    {% if my_apps_list and my_apps_list.list_data %}
     {% for my_app in my_apps_list.list_data %}
-    {{ macro_list_row(my_app) }}
+    {{ render_widget_by_id("macro_list_row", {'my_app': my_app}) }}
      {% if not loop.last %},{%endif%}{%endfor%}
   {%endif%}
 ],
@@ -128,6 +82,276 @@ final jinjaData = {
   },
   'my_apps_list': {
     'list_data': [
+      {
+        'events': {
+          'on_click': {
+            'workflow_id': 'navigate_to_my_app',
+            'properties': {
+              'content_id': 'my_app_1',
+            },
+          },
+        },
+        'description': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'This is my first awesome app',
+            'value': 'description',
+          },
+        },
+        'label': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'My App Label',
+            'value': 'label',
+          },
+        },
+        'image': {
+          'data_type': 'image',
+          'ui_widget': 'image',
+          'property_label': 'image',
+          'property_id': 'image',
+          'data': {
+            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+          },
+        },
+        'app_version': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': '1.0.0+1',
+            'value': 'app_version',
+          },
+        },
+      },
+      {
+        'events': {
+          'on_click': {
+            'workflow_id': 'navigate_to_my_app',
+            'properties': {
+              'content_id': 'my_app_1',
+            },
+          },
+        },
+        'description': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'This is my first awesome app',
+            'value': 'description',
+          },
+        },
+        'label': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'My App Label',
+            'value': 'label',
+          },
+        },
+        'image': {
+          'data_type': 'image',
+          'ui_widget': 'image',
+          'property_label': 'image',
+          'property_id': 'image',
+          'data': {
+            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+          },
+        },
+        'app_version': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': '1.0.0+1',
+            'value': 'app_version',
+          },
+        },
+      },
+      {
+        'events': {
+          'on_click': {
+            'workflow_id': 'navigate_to_my_app',
+            'properties': {
+              'content_id': 'my_app_1',
+            },
+          },
+        },
+        'description': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'This is my first awesome app',
+            'value': 'description',
+          },
+        },
+        'label': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'My App Label',
+            'value': 'label',
+          },
+        },
+        'image': {
+          'data_type': 'image',
+          'ui_widget': 'image',
+          'property_label': 'image',
+          'property_id': 'image',
+          'data': {
+            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+          },
+        },
+        'app_version': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': '1.0.0+1',
+            'value': 'app_version',
+          },
+        },
+      },
+      {
+        'events': {
+          'on_click': {
+            'workflow_id': 'navigate_to_my_app',
+            'properties': {
+              'content_id': 'my_app_1',
+            },
+          },
+        },
+        'description': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'This is my first awesome app',
+            'value': 'description',
+          },
+        },
+        'label': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'My App Label',
+            'value': 'label',
+          },
+        },
+        'image': {
+          'data_type': 'image',
+          'ui_widget': 'image',
+          'property_label': 'image',
+          'property_id': 'image',
+          'data': {
+            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+          },
+        },
+        'app_version': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': '1.0.0+1',
+            'value': 'app_version',
+          },
+        },
+      },
+      {
+        'events': {
+          'on_click': {
+            'workflow_id': 'navigate_to_my_app',
+            'properties': {
+              'content_id': 'my_app_1',
+            },
+          },
+        },
+        'description': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'This is my first awesome app',
+            'value': 'description',
+          },
+        },
+        'label': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'My App Label',
+            'value': 'label',
+          },
+        },
+        'image': {
+          'data_type': 'image',
+          'ui_widget': 'image',
+          'property_label': 'image',
+          'property_id': 'image',
+          'data': {
+            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+          },
+        },
+        'app_version': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': '1.0.0+1',
+            'value': 'app_version',
+          },
+        },
+      },
+      {
+        'events': {
+          'on_click': {
+            'workflow_id': 'navigate_to_my_app',
+            'properties': {
+              'content_id': 'my_app_1',
+            },
+          },
+        },
+        'description': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'This is my first awesome app',
+            'value': 'description',
+          },
+        },
+        'label': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': 'My App Label',
+            'value': 'label',
+          },
+        },
+        'image': {
+          'data_type': 'image',
+          'ui_widget': 'image',
+          'property_label': 'image',
+          'property_id': 'image',
+          'data': {
+            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+          },
+        },
+        'app_version': {
+          'ui_widget': 'text',
+          'data_type': 'text',
+          'data': {
+            'value_text': '1.0.0+1',
+            'value': 'app_version',
+          },
+        },
+      },
       {
         'events': {
           'on_click': {
@@ -286,6 +510,11 @@ void main() async {
         return {'mock_data': 'test_data'};
       },
     );
+    // example 2: real world example
+    print('\n=== Example 2: Real world example ===');
+    var template2 = env.fromString(jinjaScript);
+    var result2 = await template2.renderAsync(jinjaData);
+    print(result2);
 
     // example 3: real world example
     print('\n=== Example 3: Real world example ===');
