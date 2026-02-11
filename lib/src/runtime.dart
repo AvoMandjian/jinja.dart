@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'environment.dart';
 import 'exceptions.dart';
 import 'nodes.dart';
@@ -130,33 +132,48 @@ base class Context {
   }
 
   bool has(String key) {
+    log('[DEBUG-JINJA] Context.has: Checking if variable "$key" exists');
     if (context.containsKey(key)) {
+      log('[DEBUG-JINJA] Context.has: "$key" found in context');
       return true;
     }
 
     if (parent.containsKey(key)) {
+      log('[DEBUG-JINJA] Context.has: "$key" found in parent');
       return true;
     }
 
-    return environment.loader?.globals?.containsKey(key) ?? false;
+    final inGlobals = environment.loader?.globals?.containsKey(key) ?? false;
+    if (inGlobals) {
+      log('[DEBUG-JINJA] Context.has: "$key" found in loader.globals');
+    } else {
+      log('[DEBUG-JINJA] Context.has: "$key" NOT FOUND');
+    }
+    return inGlobals;
   }
 
   Object? resolve(String name) {
     try {
+      log('[DEBUG-JINJA] Context.resolve: Looking for variable "$name"');
       if (context.containsKey(name)) {
-        return context[name];
+        final value = context[name];
+        log('[DEBUG-JINJA] Context.resolve: Found "$name" in context = $value (type: ${value.runtimeType})');
+        return value;
       }
 
       if (parent.containsKey(name)) {
-        return parent[name];
+        final value = parent[name];
+        log('[DEBUG-JINJA] Context.resolve: Found "$name" in parent = $value (type: ${value.runtimeType})');
+        return value;
       }
 
       if (environment.loader?.globals?.containsKey(name) ?? false) {
         final value = environment.loader!.globals![name];
-
+        log('[DEBUG-JINJA] Context.resolve: Found "$name" in loader.globals = $value (type: ${value.runtimeType})');
         return value;
       }
 
+      log('[DEBUG-JINJA] Context.resolve: Variable "$name" NOT FOUND (checked context, parent, loader.globals)');
       return undefined(name, template);
     } on TemplateError {
       // Re-throw template errors as-is (they already have context)
@@ -190,29 +207,56 @@ base class Context {
   /// Async version of resolve that awaits Future values.
   /// This is used when globals contain Future values that need to be awaited.
   Future<Object?> resolveAsync(String name) async {
+    log('[DEBUG-JINJA] Context.resolveAsync: Looking for variable "$name"');
     if (context.containsKey(name)) {
       var value = context[name];
-      return value is Future ? await value : value;
+      if (value is Future) {
+        log('[DEBUG-JINJA] Context.resolveAsync: Found "$name" in context as Future, awaiting...');
+        final resolved = await value;
+        log('[DEBUG-JINJA] Context.resolveAsync: "$name" Future resolved to = $resolved');
+        return resolved;
+      }
+      log('[DEBUG-JINJA] Context.resolveAsync: Found "$name" in context = $value (type: ${value.runtimeType})');
+      return value;
     }
 
     if (parent.containsKey(name)) {
       var value = parent[name];
-      return value is Future ? await value : value;
+      if (value is Future) {
+        log('[DEBUG-JINJA] Context.resolveAsync: Found "$name" in parent as Future, awaiting...');
+        final resolved = await value;
+        log('[DEBUG-JINJA] Context.resolveAsync: "$name" Future resolved to = $resolved');
+        return resolved;
+      }
+      log('[DEBUG-JINJA] Context.resolveAsync: Found "$name" in parent = $value (type: ${value.runtimeType})');
+      return value;
     }
 
     if (environment.loader?.globals?.containsKey(name) ?? false) {
       var value = environment.loader!.globals![name];
-      return value is Future ? await value : value;
+      if (value is Future) {
+        log('[DEBUG-JINJA] Context.resolveAsync: Found "$name" in loader.globals as Future, awaiting...');
+        final resolved = await value;
+        log('[DEBUG-JINJA] Context.resolveAsync: "$name" Future resolved to = $resolved');
+        return resolved;
+      }
+      log('[DEBUG-JINJA] Context.resolveAsync: Found "$name" in loader.globals = $value (type: ${value.runtimeType})');
+      return value;
     }
 
+    log('[DEBUG-JINJA] Context.resolveAsync: Variable "$name" NOT FOUND');
     return undefined(name, template);
   }
 
   Object? get(String key) {
-    return context[key];
+    log('[DEBUG-JINJA] Context.get: Getting key "$key"');
+    final value = context[key];
+    log('[DEBUG-JINJA] Context.get: Key "$key" = $value (type: ${value.runtimeType})');
+    return value;
   }
 
   void set(String key, Object? value) {
+    log('[DEBUG-JINJA] Context.set: Setting key "$key" = $value (type: ${value.runtimeType})');
     context[key] = value;
   }
 

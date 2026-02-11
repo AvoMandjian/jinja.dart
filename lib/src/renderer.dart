@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:math' as math;
 
 import 'package:meta/dart2js.dart';
@@ -358,15 +359,24 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   Object? visitAttribute(Attribute node, StringSinkRenderContext context) {
+    log('[DEBUG-JINJA] visitAttribute: Accessing attribute "${node.attribute}" on value');
     var value = node.value.accept(this, context);
-    return context.attribute(node.attribute, value, node);
+    log('[DEBUG-JINJA] visitAttribute: Value = $value (type: ${value.runtimeType}), accessing attribute "${node.attribute}"');
+    final result = context.attribute(node.attribute, value, node);
+    log('[DEBUG-JINJA] visitAttribute: Attribute "${node.attribute}" result = $result (type: ${result.runtimeType})');
+    return result;
   }
 
   @override
   Object? visitCall(Call node, StringSinkRenderContext context) {
+    log('[DEBUG-JINJA] visitCall: Calling function');
     var function = node.value.accept(this, context);
+    log('[DEBUG-JINJA] visitCall: Function = $function (type: ${function.runtimeType})');
     var (positional, named) = node.calling.accept(this, context) as Parameters;
-    return context.call(function, node, positional, named);
+    log('[DEBUG-JINJA] visitCall: Positional args: ${positional.length}, named args: ${named.length}');
+    final result = context.call(function, node, positional, named);
+    log('[DEBUG-JINJA] visitCall: Function call result = $result (type: ${result.runtimeType})');
+    return result;
   }
 
   @override
@@ -412,21 +422,31 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   Object? visitConcat(Concat node, StringSinkRenderContext context) {
+    log('[DEBUG-JINJA] visitConcat: Concatenating ${node.values.length} values');
     var buffer = StringBuffer();
 
-    for (var value in node.values) {
-      buffer.write(value.accept(this, context));
+    for (var i = 0; i < node.values.length; i++) {
+      final value = node.values[i].accept(this, context);
+      log('[DEBUG-JINJA] visitConcat: Value $i = $value (type: ${value.runtimeType})');
+      buffer.write(value);
     }
 
-    return buffer.toString();
+    final result = buffer.toString();
+    log('[DEBUG-JINJA] visitConcat: Concatenated result = "$result" (length: ${result.length})');
+    return result;
   }
 
   @override
   Object? visitCondition(Condition node, StringSinkRenderContext context) {
-    if (boolean(node.test.accept(this, context))) {
+    log('[DEBUG-JINJA] visitCondition: Evaluating ternary condition');
+    final testResult = node.test.accept(this, context);
+    final testBool = boolean(testResult);
+    log('[DEBUG-JINJA] visitCondition: Test result = $testResult, boolean = $testBool');
+    if (testBool) {
+      log('[DEBUG-JINJA] visitCondition: Condition true, returning trueValue');
       return node.trueValue.accept(this, context);
     }
-
+    log('[DEBUG-JINJA] visitCondition: Condition false, returning falseValue');
     return node.falseValue?.accept(this, context);
   }
 
@@ -444,16 +464,24 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   Object? visitFilter(Filter node, StringSinkRenderContext context) {
+    log('[DEBUG-JINJA] visitFilter: Applying filter "${node.name}"');
     var (positional, named) = node.calling.accept(this, context) as Parameters;
+    log('[DEBUG-JINJA] visitFilter: Filter "${node.name}" - positional args: ${positional.length}, named args: ${named.length}');
     // Return the Future without awaiting - the AsyncRenderer will handle it
-    return context.filter(node.name, positional, named);
+    final result = context.filter(node.name, positional, named);
+    log('[DEBUG-JINJA] visitFilter: Filter "${node.name}" result = $result (type: ${result.runtimeType})');
+    return result;
   }
 
   @override
   Object? visitItem(Item node, StringSinkRenderContext context) {
+    log('[DEBUG-JINJA] visitItem: Accessing item');
     var key = node.key.accept(this, context);
     var value = node.value.accept(this, context);
-    return context.item(key, value, node);
+    log('[DEBUG-JINJA] visitItem: Key = $key (type: ${key.runtimeType}), value = $value (type: ${value.runtimeType})');
+    final result = context.item(key, value, node);
+    log('[DEBUG-JINJA] visitItem: Item access result = $result (type: ${result.runtimeType})');
+    return result;
   }
 
   @override
@@ -469,11 +497,15 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   @override
   Object? visitName(Name node, StringSinkRenderContext context) {
     try {
-      return switch (node.context) {
+      log('[DEBUG-JINJA] visitName: Resolving name "${node.name}" (context: ${node.context})');
+      final result = switch (node.context) {
         AssignContext.load => context.resolve(node.name),
         _ => node.name,
       };
+      log('[DEBUG-JINJA] visitName: Name "${node.name}" resolved to: $result (type: ${result.runtimeType})');
+      return result;
     } on UndefinedError catch (e) {
+      log('[DEBUG-JINJA] visitName: Name "${node.name}" is undefined');
       throw UndefinedError(
         e.message,
         stackTraceValue: e.stackTrace,
@@ -581,27 +613,29 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   void visitAssign(Assign node, StringSinkRenderContext context) {
     var target = node.target.accept(this, context);
     var values = node.value.accept(this, context);
+    log('[DEBUG-JINJA] visitAssign: target="$target", value=$values (type: ${values.runtimeType})');
     if (values is Future) {
-      print('[DEBUG] visitAssign: value is Future, type: ${values.runtimeType}');
+      log('[DEBUG-JINJA] visitAssign: Value is Future, type: ${values.runtimeType}');
       // For async rendering, we need to await the Future before assigning
       if (context.sink is _AsyncCollectingSink) {
         final sink = context.sink as _AsyncCollectingSink;
         // Create a Future that resolves and assigns
         final assignmentFuture = values.then((resolvedValue) {
-          print('[DEBUG] visitAssign: Future resolved to: $resolvedValue, assigning to context');
+          log('[DEBUG-JINJA] visitAssign: Future resolved to: $resolvedValue, assigning to context target="$target"');
           context.assignTargets(target, resolvedValue);
-          print('[DEBUG] visitAssign: Assignment complete, target=$target');
+          log('[DEBUG-JINJA] visitAssign: Assignment complete, target="$target"');
           return resolvedValue;
         }).catchError((e) {
-          print('[ERROR] visitAssign: Future failed: $e');
+          log('[DEBUG-JINJA] ERROR visitAssign: Future failed: $e');
           throw e;
         });
         // Track the assignment Future separately - it shouldn't output anything
         sink.writeAssignmentFuture(assignmentFuture);
-        print('[DEBUG] visitAssign: Tracked assignment Future, will await before finalizing');
+        log('[DEBUG-JINJA] visitAssign: Tracked assignment Future, will await before finalizing');
         return;
       }
     }
+    log('[DEBUG-JINJA] visitAssign: Synchronous assignment, target="$target", value=$values');
     context.assignTargets(target, values);
   }
 
@@ -638,7 +672,9 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   void visitBlock(Block node, StringSinkRenderContext context) {
+    log('[DEBUG-JINJA] visitBlock: Rendering block "${node.name}"');
     context.blocks[node.name]![0](context);
+    log('[DEBUG-JINJA] visitBlock: Block "${node.name}" rendered');
   }
 
   @override
@@ -648,11 +684,15 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   void visitCallBlock(CallBlock node, StringSinkRenderContext context) {
+    log('[DEBUG-JINJA] visitCallBlock: Calling macro block');
     var function = node.call.value.accept(this, context) as MacroFunction;
+    log('[DEBUG-JINJA] visitCallBlock: Macro function = $function');
     var (arguments, _) = node.call.calling.accept(this, context) as Parameters;
     var [positional as List, named as Map] = arguments;
+    log('[DEBUG-JINJA] visitCallBlock: Positional args: ${positional.length}, named args: ${named.length}');
     named['caller'] = getMacroFunction(node, context);
     var result = function(positional, named);
+    log('[DEBUG-JINJA] visitCallBlock: Macro result = $result (type: ${result.runtimeType})');
     context.write(result);
   }
 
@@ -689,10 +729,15 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   @override
   void visitExtends(Extends node, StringSinkRenderContext context) {
     try {
+      log('[DEBUG-JINJA] visitExtends: Extending template');
       var templateOrPath = node.template.accept(this, context);
+      log('[DEBUG-JINJA] visitExtends: Template path/value = $templateOrPath (type: ${templateOrPath.runtimeType})');
 
       var template = switch (templateOrPath) {
-        String path => context.environment.getTemplate(path),
+        String path => () {
+            log('[DEBUG-JINJA] visitExtends: Loading template from path: $path');
+            return context.environment.getTemplate(path);
+          }(),
         Template template => template,
         Object? value => throw TemplateRuntimeError(
             'Invalid template value: ${value.runtimeType}. Expected String or Template.',
@@ -705,8 +750,9 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
             ],
           ),
       };
-
+      log('[DEBUG-JINJA] visitExtends: Template loaded, rendering extended template body');
       template.body.accept(this, context);
+      log('[DEBUG-JINJA] visitExtends: Extended template rendered');
     } on BreakException {
       rethrow;
     } on ContinueException {
@@ -754,11 +800,15 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   @override
   void visitFor(For node, StringSinkRenderContext context) {
     try {
+      log('[DEBUG-JINJA] visitFor: Starting for loop');
       var targets = node.target.accept(this, context);
+      log('[DEBUG-JINJA] visitFor: Targets = $targets');
       var iterable = node.iterable.accept(this, context);
+      log('[DEBUG-JINJA] visitFor: Iterable = $iterable (type: ${iterable.runtimeType})');
 
       // If iterable is a Future, write it to the sink so AsyncRenderer can handle it
       if (iterable is Future) {
+        log('[DEBUG-JINJA] visitFor: Iterable is Future, writing to sink for async handling');
         context.write(iterable);
         return;
       }
@@ -790,16 +840,21 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
       String render(Object? iterable, [int depth = 0]) {
         try {
+          log('[DEBUG-JINJA] visitFor.render: Processing iterable (depth: $depth)');
           List<Object?> values;
 
           if (iterable is Map) {
             values = List<Object?>.of(iterable.entries);
+            log('[DEBUG-JINJA] visitFor.render: Iterable is Map, converted to ${values.length} entries');
           } else {
             values = list(iterable);
+            log('[DEBUG-JINJA] visitFor.render: Iterable converted to list with ${values.length} items');
           }
 
           if (values.isEmpty) {
+            log('[DEBUG-JINJA] visitFor.render: Iterable is empty');
             if (node.orElse case var orElse?) {
+              log('[DEBUG-JINJA] visitFor.render: Rendering else block');
               orElse.accept(this, context);
             }
 
@@ -824,8 +879,12 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
           }
 
           var loop = LoopContext(values, depth, render);
+          log('[DEBUG-JINJA] visitFor.render: Created loop context with ${values.length} items');
 
+          int iteration = 0;
           for (var value in loop) {
+            iteration++;
+            log('[DEBUG-JINJA] visitFor.render: Iteration $iteration/${values.length}, value = $value');
             var data = getDataForTargets(targets, value);
             var forContext = context.derived(data: data);
             forContext.set('loop', loop);
@@ -833,8 +892,10 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
             try {
               node.body.accept(this, forContext);
             } on BreakException {
+              log('[DEBUG-JINJA] visitFor.render: Break exception, exiting loop');
               break;
             } on ContinueException {
+              log('[DEBUG-JINJA] visitFor.render: Continue exception, skipping to next iteration');
               continue;
             } on BreakException {
               rethrow;
@@ -965,10 +1026,18 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   void visitIf(If node, StringSinkRenderContext context) {
-    if (boolean(node.test.accept(this, context))) {
+    log('[DEBUG-JINJA] visitIf: Evaluating if condition');
+    final testResult = node.test.accept(this, context);
+    final testBool = boolean(testResult);
+    log('[DEBUG-JINJA] visitIf: Test result = $testResult, boolean = $testBool');
+    if (testBool) {
+      log('[DEBUG-JINJA] visitIf: Condition true, rendering body');
       node.body.accept(this, context);
     } else if (node.orElse case var orElse?) {
+      log('[DEBUG-JINJA] visitIf: Condition false, rendering else block');
       orElse.accept(this, context);
+    } else {
+      log('[DEBUG-JINJA] visitIf: Condition false, no else block');
     }
   }
 
@@ -998,15 +1067,23 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   @override
   void visitInclude(Include node, StringSinkRenderContext context) {
+    log('[DEBUG-JINJA] visitInclude: Including template');
     var templateOrParth = node.template.accept(this, context);
+    log('[DEBUG-JINJA] visitInclude: Template path/value = $templateOrParth (type: ${templateOrParth.runtimeType})');
 
     Template? template;
 
     try {
       template = switch (templateOrParth) {
-        String path => context.environment.getTemplate(path),
+        String path => () {
+            log('[DEBUG-JINJA] visitInclude: Loading template from path: $path');
+            return context.environment.getTemplate(path);
+          }(),
         Template template => template,
-        List<Object?> paths => context.environment.selectTemplate(paths),
+        List<Object?> paths => () {
+            log('[DEBUG-JINJA] visitInclude: Selecting template from ${paths.length} paths');
+            return context.environment.selectTemplate(paths);
+          }(),
         // TODO(renderer): add error message
         Object? value => throw ArgumentError.value(value, 'template'),
       };
@@ -1028,12 +1105,17 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   @override
   void visitInterpolation(Interpolation node, StringSinkRenderContext context) {
     try {
+      log('[DEBUG-JINJA] visitInterpolation: Evaluating expression');
       var value = node.value.accept(this, context);
+      log('[DEBUG-JINJA] visitInterpolation: Expression evaluated to: $value (type: ${value.runtimeType})');
       var finalized = context.finalize(value);
+      log('[DEBUG-JINJA] visitInterpolation: Finalized value: $finalized (type: ${finalized.runtimeType})');
 
       if (finalized is Future) {
+        log('[DEBUG-JINJA] visitInterpolation: Finalized value is Future, writing to sink');
         context.write(
           finalized.then((value) {
+            log('[DEBUG-JINJA] visitInterpolation: Future resolved to: $value');
             if (value is SafeString) {
               return value.toString();
             }
@@ -1051,15 +1133,15 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       if ((finalized == null || finalized == '') && context.sink is _AsyncCollectingSink && node.value is Name) {
         final nameNode = node.value as Name;
         final varName = nameNode.name;
-        print('[DEBUG] visitInterpolation: Value is null/empty for \'$varName\', checking for assignment Futures');
+        log('[DEBUG-JINJA] visitInterpolation: Value is null/empty for "$varName", checking for assignment Futures');
 
         final sink = context.sink as _AsyncCollectingSink;
         // Write a Future that waits for assignment Futures, then re-checks loader.globals
         final checkFuture = sink.waitForAssignmentFutures().then((_) {
-          print('[DEBUG] visitInterpolation: Assignment Futures complete, re-checking loader.globals for \'$varName\'');
+          log('[DEBUG-JINJA] visitInterpolation: Assignment Futures complete, re-checking loader.globals for "$varName"');
           // Re-resolve the variable after assignment Futures complete
           final reResolved = context.resolve(varName);
-          print('[DEBUG] visitInterpolation: Re-resolved \'$varName\' = $reResolved');
+          log('[DEBUG-JINJA] visitInterpolation: Re-resolved "$varName" = $reResolved');
 
           if (reResolved is SafeString) {
             return reResolved.toString();
@@ -1076,10 +1158,13 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       }
 
       if (finalized is SafeString) {
+        log('[DEBUG-JINJA] visitInterpolation: Writing SafeString: ${finalized.toString()}');
         context.write(finalized.toString());
         return;
       }
 
+      final output = context.autoEscape ? escape(finalized.toString()) : finalized;
+      log('[DEBUG-JINJA] visitInterpolation: Writing output: $output (autoEscape: ${context.autoEscape})');
       if (context.autoEscape) {
         context.write(escape(finalized.toString()));
       } else {
@@ -1154,11 +1239,14 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   @override
   void visitTemplateNode(TemplateNode node, StringSinkRenderContext context) {
     try {
+      log('[DEBUG-JINJA] visitTemplateNode: Starting template node rendering');
+      log('[DEBUG-JINJA] visitTemplateNode: Template has ${node.blocks.length} blocks');
       // TODO(renderer): add `TemplateReference`
       var self = Namespace();
 
       for (var block in node.blocks) {
         var blockName = block.name;
+        log('[DEBUG-JINJA] visitTemplateNode: Processing block "$blockName"');
 
         // TODO(compiler): switch to `ContextCallback`
         String render() {
@@ -1240,7 +1328,9 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       }
 
       context.set('self', self);
+      log('[DEBUG-JINJA] visitTemplateNode: Rendering template body');
       node.body.accept(this, context);
+      log('[DEBUG-JINJA] visitTemplateNode: Template body rendered');
     } on BreakException {
       rethrow;
     } on ContinueException {
@@ -1516,16 +1606,19 @@ class _AsyncCollectingSink implements StringSink {
   void write(Object? obj) {
     if (obj is Future) {
       // Store the Future and write a placeholder
+      log('[DEBUG-JINJA] _AsyncCollectingSink.write: Received Future (index ${_futures.length}), writing placeholder');
       _futures.add(obj);
       _isAssignmentFuture.add(false); // Default: not an assignment
       _buffer.write('__FUTURE_${_futures.length - 1}__');
     } else {
+      log('[DEBUG-JINJA] _AsyncCollectingSink.write: Writing value: $obj (type: ${obj.runtimeType})');
       _buffer.write(obj);
     }
   }
 
   /// Write a Future from an assignment - this shouldn't output anything, just await it
   void writeAssignmentFuture(Future<Object?> future) {
+    log('[DEBUG-JINJA] _AsyncCollectingSink.writeAssignmentFuture: Tracking assignment Future (index ${_futures.length})');
     _futures.add(future);
     _isAssignmentFuture.add(true); // Mark as assignment Future
     // Don't write anything to buffer - assignments shouldn't output
@@ -1533,11 +1626,16 @@ class _AsyncCollectingSink implements StringSink {
 
   /// Returns a Future that resolves when all assignment Futures are complete
   Future<void> waitForAssignmentFutures() async {
+    final assignmentCount = _isAssignmentFuture.where((isAssignment) => isAssignment).length;
+    log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAssignmentFutures: Waiting for $assignmentCount assignment Futures');
     for (int i = 0; i < _futures.length; i++) {
       if (_isAssignmentFuture[i]) {
+        log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAssignmentFutures: Awaiting assignment Future $i');
         await _futures[i];
+        log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAssignmentFutures: Assignment Future $i completed');
       }
     }
+    log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAssignmentFutures: All assignment Futures completed');
   }
 
   @override
@@ -1570,17 +1668,23 @@ class _AsyncCollectingSink implements StringSink {
 
   Future<String> getResolvedContent() async {
     String content = _buffer.toString();
-    print('[DEBUG] _AsyncCollectingSink.getResolvedContent: Starting, ${_futures.length} Futures to await');
-    print('[DEBUG] _AsyncCollectingSink.getResolvedContent: Buffer content length: ${content.length}');
+    log('[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Starting, ${_futures.length} Futures to await');
+    log('[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Buffer content length: ${content.length}');
+    print(
+      '[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Buffer preview: ${content.length > 100 ? "${content.substring(0, 100)}..." : content}',
+    );
 
     // Await all collected Futures
     List<Object?> resolvedValues = [];
     for (int i = 0; i < _futures.length; i++) {
       try {
         print(
-            '[DEBUG] _AsyncCollectingSink.getResolvedContent: Awaiting Future $i/${_futures.length} (isAssignment: ${_isAssignmentFuture[i]})');
+          '[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Awaiting Future $i/${_futures.length} (isAssignment: ${_isAssignmentFuture[i]})',
+        );
         resolvedValues.add(await _futures[i]);
-        print('[DEBUG] _AsyncCollectingSink.getResolvedContent: Future $i resolved to: ${resolvedValues[i]}');
+        print(
+          '[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Future $i resolved to: ${resolvedValues[i]} (type: ${resolvedValues[i].runtimeType})',
+        );
       } on BreakException {
         rethrow;
       } on ContinueException {
@@ -1606,17 +1710,21 @@ class _AsyncCollectingSink implements StringSink {
     }
 
     // Replace placeholders with resolved values (skip assignment Futures)
+    log('[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Replacing placeholders in content');
     for (int i = 0; i < resolvedValues.length; i++) {
       if (!_isAssignmentFuture[i]) {
         // Only replace placeholders for non-assignment Futures
-        content = content.replaceAll(
-          '__FUTURE_${i}__',
-          resolvedValues[i]?.toString() ?? 'null',
-        );
+        final placeholder = '__FUTURE_${i}__';
+        final replacement = resolvedValues[i]?.toString() ?? 'null';
+        log('[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Replacing $placeholder with "$replacement"');
+        content = content.replaceAll(placeholder, replacement);
+      } else {
+        log('[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Skipping placeholder replacement for assignment Future $i');
       }
       // Assignment Futures don't have placeholders, so nothing to replace
     }
 
+    log('[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Final content length: ${content.length}');
     return content;
   }
 }
@@ -1633,12 +1741,16 @@ base class AsyncRenderer {
   /// Renders a template node asynchronously, resolving all Future values in globals and during rendering.
   Future<void> render(TemplateNode node, AsyncRenderContext context) async {
     try {
+      log('[DEBUG-JINJA] AsyncRenderer.render: Starting async render');
       // First, resolve all async values in parent (globals)
       var resolvedGlobals = <String, Object?>{};
+      log('[DEBUG-JINJA] AsyncRenderer.render: Resolving ${context.parent.length} parent globals');
       for (var entry in context.parent.entries) {
         if (entry.value is Future) {
           try {
+            log('[DEBUG-JINJA] AsyncRenderer.render: Resolving async global "${entry.key}"');
             resolvedGlobals[entry.key] = await (entry.value as Future);
+            log('[DEBUG-JINJA] AsyncRenderer.render: Global "${entry.key}" resolved to: ${resolvedGlobals[entry.key]}');
           } on BreakException {
             rethrow;
           } on ContinueException {
@@ -1662,15 +1774,19 @@ base class AsyncRenderer {
           }
         } else {
           resolvedGlobals[entry.key] = entry.value;
+          log('[DEBUG-JINJA] AsyncRenderer.render: Global "${entry.key}" is synchronous: ${entry.value}');
         }
       }
 
       // Also resolve async values in context data
       var resolvedData = <String, Object?>{};
+      log('[DEBUG-JINJA] AsyncRenderer.render: Resolving ${context.context.length} context variables');
       for (var entry in context.context.entries) {
         if (entry.value is Future) {
           try {
+            log('[DEBUG-JINJA] AsyncRenderer.render: Resolving async context variable "${entry.key}"');
             resolvedData[entry.key] = await (entry.value as Future);
+            log('[DEBUG-JINJA] AsyncRenderer.render: Context variable "${entry.key}" resolved to: ${resolvedData[entry.key]}');
           } on BreakException {
             rethrow;
           } on ContinueException {
@@ -1694,13 +1810,18 @@ base class AsyncRenderer {
           }
         } else {
           resolvedData[entry.key] = entry.value;
+          log('[DEBUG-JINJA] AsyncRenderer.render: Context variable "${entry.key}" is synchronous: ${entry.value}');
         }
       }
 
       // Create a custom sink that collects Futures
+      log('[DEBUG-JINJA] AsyncRenderer.render: Creating _AsyncCollectingSink');
       _AsyncCollectingSink collectingSink = _AsyncCollectingSink(context.sink);
 
       // Create a sync context with the collecting sink
+      print(
+        '[DEBUG-JINJA] AsyncRenderer.render: Creating sync context with ${resolvedGlobals.length} globals, ${resolvedData.length} context vars',
+      );
       var syncContext = StringSinkRenderContext(
         context.environment,
         collectingSink,
@@ -1711,11 +1832,15 @@ base class AsyncRenderer {
       );
 
       // Use the base synchronous renderer
+      log('[DEBUG-JINJA] AsyncRenderer.render: Starting synchronous template rendering');
       _baseRenderer.visitTemplateNode(node, syncContext);
+      log('[DEBUG-JINJA] AsyncRenderer.render: Synchronous rendering complete, resolving Futures');
 
       // Get the resolved content and write it to the original sink
       String resolvedContent = await collectingSink.getResolvedContent();
+      log('[DEBUG-JINJA] AsyncRenderer.render: All Futures resolved, writing final content (length: ${resolvedContent.length})');
       context.sink.write(resolvedContent);
+      log('[DEBUG-JINJA] AsyncRenderer.render: Render complete');
     } on BreakException {
       rethrow;
     } on ContinueException {
