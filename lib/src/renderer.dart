@@ -806,38 +806,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       var iterable = node.iterable.accept(this, context);
       log('[DEBUG-JINJA] visitFor: Iterable = $iterable (type: ${iterable.runtimeType})');
 
-      // If iterable is a Future, write it to the sink so AsyncRenderer can handle it
-      if (iterable is Future) {
-        log('[DEBUG-JINJA] visitFor: Iterable is Future, writing to sink for async handling');
-        context.write(iterable);
-        return;
-      }
-
-      if (iterable == null) {
-        String? iterableName;
-        if (node.iterable is Name) {
-          iterableName = (node.iterable as Name).name;
-        } else if (node.iterable is Attribute) {
-          iterableName = (node.iterable as Attribute).attribute;
-        }
-        final suggestions = <String>[
-          'Check if the iterable variable is defined',
-          if (iterableName != null) 'Ensure \'$iterableName\' is passed to the template context',
-          'Verify the iterable is not null before the for loop',
-          'Use conditional rendering: {% if $iterableName %}{% for ... %}{% endif %}',
-        ];
-        throw UndefinedError(
-          iterableName != null
-              ? 'Trying to access an undefined list: "$iterableName" from the jinja data, in a for loop'
-              : 'Trying to access an undefined iterable in a for loop',
-          nodeValue: node.iterable,
-          operationValue: 'Iterating over undefined variable',
-          variableNameValue: iterableName,
-          suggestionsValue: suggestions,
-          templatePathValue: context.template,
-        );
-      }
-
+      // Define render function before null check so it can be called from Future callback
       String render(Object? iterable, [int depth = 0]) {
         try {
           log('[DEBUG-JINJA] visitFor.render: Processing iterable (depth: $depth)');
@@ -897,10 +866,6 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
             } on ContinueException {
               log('[DEBUG-JINJA] visitFor.render: Continue exception, skipping to next iteration');
               continue;
-            } on BreakException {
-              rethrow;
-            } on ContinueException {
-              rethrow;
             } on TemplateError {
               // Re-throw template errors as-is (they already have context)
               rethrow;
@@ -950,6 +915,104 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
             templatePath: context.template,
           );
         }
+      }
+
+      // If iterable is a Future, write it to the sink so AsyncRenderer can handle it
+      if (iterable is Future) {
+        log('[DEBUG-JINJA] visitFor: Iterable is Future, writing to sink for async handling');
+        context.write(iterable);
+        return;
+      }
+
+      if (iterable == null) {
+        // Extract variable name from node.iterable for async re-evaluation
+        String? varNameToCheck;
+        if (node.iterable is Name) {
+          varNameToCheck = (node.iterable as Name).name;
+          log('[DEBUG-JINJA] visitFor: Extracted variable name from Name: "$varNameToCheck"');
+        } else if (node.iterable is Attribute) {
+          // For Attribute (e.g., menu_data.list_data), extract the base variable name (menu_data)
+          final attr = node.iterable as Attribute;
+          if (attr.value is Name) {
+            varNameToCheck = (attr.value as Name).name;
+            log('[DEBUG-JINJA] visitFor: Extracted base variable name from Attribute: "$varNameToCheck" (attribute: ${attr.attribute})');
+          } else {
+            // If the value is not a Name, we can't extract a simple variable name
+            log('[DEBUG-JINJA] visitFor: Attribute value is not a Name, cannot extract variable name');
+          }
+        }
+
+        // Check if we're in async context and should wait for Futures before throwing error
+        if (varNameToCheck != null && context.sink is _AsyncCollectingSink) {
+          final varName = varNameToCheck; // Store in final variable for null safety
+          log('[DEBUG-JINJA] visitFor: Iterable is null for "$varName", checking for Futures before throwing error');
+
+          final sink = context.sink as _AsyncCollectingSink;
+          // Capture current Futures count BEFORE creating checkFuture to avoid circular dependency
+          // The checkFuture itself will be added to _futures, so we exclude it from waitForAllFutures()
+          final currentFuturesCount = sink.futuresCount;
+          // Wait for ALL Futures (not just assignment Futures) because run_data_source calls
+          // in interpolations might update loader.globals
+          final checkFuture = sink.waitForAllFutures(maxIndex: currentFuturesCount).then((_) {
+            log('[DEBUG-JINJA] visitFor: All Futures complete, re-evaluating iterable for "$varName"');
+            // Re-evaluate the iterable expression - this will now resolve to the updated value
+            final reEvaluatedIterable = node.iterable.accept(this, context);
+            log('[DEBUG-JINJA] visitFor: Re-evaluated iterable = $reEvaluatedIterable (type: ${reEvaluatedIterable.runtimeType})');
+
+            if (reEvaluatedIterable is Future) {
+              // If it's still a Future, write it to sink and return
+              log('[DEBUG-JINJA] visitFor: Re-evaluated iterable is still a Future, writing to sink');
+              context.write(reEvaluatedIterable);
+              return;
+            }
+
+            if (reEvaluatedIterable == null) {
+              // Still null after waiting - throw the error
+              log('[DEBUG-JINJA] visitFor: Re-evaluated iterable is still null, throwing UndefinedError');
+              final suggestions = <String>[
+                'Check if the iterable variable is defined',
+                'Ensure \'$varName\' is passed to the template context',
+                'Verify the iterable is not null before the for loop',
+                'Use conditional rendering: {% if $varName %}{% for ... %}{% endif %}',
+              ];
+              throw UndefinedError(
+                'Trying to access an undefined list: "$varName" from the jinja data, in a for loop',
+                nodeValue: node.iterable,
+                operationValue: 'Iterating over undefined variable',
+                variableNameValue: varName,
+                suggestionsValue: suggestions,
+                templatePathValue: context.template,
+              );
+            }
+
+            // Value is now available - proceed with rendering
+            log('[DEBUG-JINJA] visitFor: Re-evaluated iterable is now available, proceeding with render');
+            render(reEvaluatedIterable);
+          });
+
+          // Write the Future to the sink so it gets awaited
+          context.write(checkFuture);
+          return;
+        }
+
+        // Not in async context or couldn't extract variable name - throw error immediately
+        String? iterableName = varNameToCheck;
+        final suggestions = <String>[
+          'Check if the iterable variable is defined',
+          if (iterableName != null) 'Ensure \'$iterableName\' is passed to the template context',
+          'Verify the iterable is not null before the for loop',
+          'Use conditional rendering: {% if $iterableName %}{% for ... %}{% endif %}',
+        ];
+        throw UndefinedError(
+          iterableName != null
+              ? 'Trying to access an undefined list: "$iterableName" from the jinja data, in a for loop'
+              : 'Trying to access an undefined iterable in a for loop',
+          nodeValue: node.iterable,
+          operationValue: 'Iterating over undefined variable',
+          variableNameValue: iterableName,
+          suggestionsValue: suggestions,
+          templatePathValue: context.template,
+        );
       }
 
       render(iterable);
@@ -1149,9 +1212,12 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         log('[DEBUG-JINJA] visitInterpolation: Value is null/empty/null-string for "$varName", checking for Futures');
 
         final sink = context.sink as _AsyncCollectingSink;
+        // Capture current Futures count BEFORE creating checkFuture to avoid circular dependency
+        // The checkFuture itself will be added to _futures, so we exclude it from waitForAllFutures()
+        final currentFuturesCount = sink.futuresCount;
         // Write a Future that waits for ALL Futures (not just assignment Futures)
         // because run_data_source calls in interpolations might update loader.globals
-        final checkFuture = sink.waitForAllFutures().then((_) {
+        final checkFuture = sink.waitForAllFutures(maxIndex: currentFuturesCount).then((_) {
           log('[DEBUG-JINJA] visitInterpolation: All Futures complete, re-evaluating expression for "$varName"');
           // Re-evaluate the entire expression (node.value) - this will now resolve to the updated value
           // The context.resolve will now find the variable in loader.globals
@@ -1631,6 +1697,9 @@ class _AsyncCollectingSink implements StringSink {
 
   _AsyncCollectingSink(this._delegate);
 
+  /// Get the current number of Futures being tracked
+  int get futuresCount => _futures.length;
+
   @override
   void write(Object? obj) {
     if (obj is Future) {
@@ -1668,10 +1737,15 @@ class _AsyncCollectingSink implements StringSink {
   }
 
   /// Returns a Future that resolves when ALL Futures (assignment and non-assignment) are complete
-  Future<void> waitForAllFutures() async {
-    log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAllFutures: Waiting for ${_futures.length} total Futures');
-    for (int i = 0; i < _futures.length; i++) {
-      log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAllFutures: Awaiting Future $i/${_futures.length} (isAssignment: ${_isAssignmentFuture[i]})');
+  /// [maxIndex] if provided, only awaits Futures up to this index (exclusive).
+  /// This prevents circular dependencies when waitForAllFutures() itself creates Futures.
+  Future<void> waitForAllFutures({int? maxIndex}) async {
+    // If maxIndex is provided, use it; otherwise await all current Futures
+    // This allows callers to exclude Futures added after waitForAllFutures() was called
+    final futuresToAwait = maxIndex ?? _futures.length;
+    log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAllFutures: Waiting for $futuresToAwait Futures (current count: ${_futures.length}, maxIndex: $maxIndex)');
+    for (int i = 0; i < futuresToAwait; i++) {
+      log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAllFutures: Awaiting Future $i/$futuresToAwait (isAssignment: ${_isAssignmentFuture[i]})');
       await _futures[i];
       log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAllFutures: Future $i completed');
     }
