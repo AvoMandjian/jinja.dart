@@ -1146,12 +1146,13 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
       if (isNullOrEmpty && varNameToCheck != null && context.sink is _AsyncCollectingSink) {
         final varName = varNameToCheck; // Store in final variable for null safety
-        log('[DEBUG-JINJA] visitInterpolation: Value is null/empty/null-string for "$varName", checking for assignment Futures');
+        log('[DEBUG-JINJA] visitInterpolation: Value is null/empty/null-string for "$varName", checking for Futures');
 
         final sink = context.sink as _AsyncCollectingSink;
-        // Write a Future that waits for assignment Futures, then re-evaluates the expression
-        final checkFuture = sink.waitForAssignmentFutures().then((_) {
-          log('[DEBUG-JINJA] visitInterpolation: Assignment Futures complete, re-evaluating expression for "$varName"');
+        // Write a Future that waits for ALL Futures (not just assignment Futures)
+        // because run_data_source calls in interpolations might update loader.globals
+        final checkFuture = sink.waitForAllFutures().then((_) {
+          log('[DEBUG-JINJA] visitInterpolation: All Futures complete, re-evaluating expression for "$varName"');
           // Re-evaluate the entire expression (node.value) - this will now resolve to the updated value
           // The context.resolve will now find the variable in loader.globals
           final reEvaluatedValue = node.value.accept(this, context);
@@ -1664,6 +1665,17 @@ class _AsyncCollectingSink implements StringSink {
       }
     }
     log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAssignmentFutures: All assignment Futures completed');
+  }
+
+  /// Returns a Future that resolves when ALL Futures (assignment and non-assignment) are complete
+  Future<void> waitForAllFutures() async {
+    log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAllFutures: Waiting for ${_futures.length} total Futures');
+    for (int i = 0; i < _futures.length; i++) {
+      log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAllFutures: Awaiting Future $i/${_futures.length} (isAssignment: ${_isAssignmentFuture[i]})');
+      await _futures[i];
+      log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAllFutures: Future $i completed');
+    }
+    log('[DEBUG-JINJA] _AsyncCollectingSink.waitForAllFutures: All Futures completed');
   }
 
   @override
