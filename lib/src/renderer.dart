@@ -1128,25 +1128,53 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         return;
       }
 
-      // Check if value is null/empty and we're in async mode with assignment Futures
+      // Check if value is null/empty/null-string and we're in async mode with assignment Futures
       // If so, wait for assignment Futures and re-check loader.globals
-      if ((finalized == null || finalized == '') && context.sink is _AsyncCollectingSink && node.value is Name) {
-        final nameNode = node.value as Name;
-        final varName = nameNode.name;
-        log('[DEBUG-JINJA] visitInterpolation: Value is null/empty for "$varName", checking for assignment Futures');
+      // Handle both direct Name access and Filter-wrapped Name access (e.g., {{data | tojson}})
+      String? varNameToCheck;
+      if (node.value is Name) {
+        varNameToCheck = (node.value as Name).name;
+      } else if (node.value is Filter) {
+        // Extract the underlying Name from Filter (e.g., data | tojson -> data)
+        final filterNode = node.value as Filter;
+        if (filterNode.calling.arguments.isNotEmpty && filterNode.calling.arguments.first is Name) {
+          varNameToCheck = (filterNode.calling.arguments.first as Name).name;
+        }
+      }
+
+      final isNullOrEmpty = finalized == null || finalized == '' || (finalized is String && finalized == 'null');
+
+      if (isNullOrEmpty && varNameToCheck != null && context.sink is _AsyncCollectingSink) {
+        final varName = varNameToCheck; // Store in final variable for null safety
+        log('[DEBUG-JINJA] visitInterpolation: Value is null/empty/null-string for "$varName", checking for assignment Futures');
 
         final sink = context.sink as _AsyncCollectingSink;
-        // Write a Future that waits for assignment Futures, then re-checks loader.globals
+        // Write a Future that waits for assignment Futures, then re-evaluates the expression
         final checkFuture = sink.waitForAssignmentFutures().then((_) {
-          log('[DEBUG-JINJA] visitInterpolation: Assignment Futures complete, re-checking loader.globals for "$varName"');
-          // Re-resolve the variable after assignment Futures complete
-          final reResolved = context.resolve(varName);
-          log('[DEBUG-JINJA] visitInterpolation: Re-resolved "$varName" = $reResolved');
+          log('[DEBUG-JINJA] visitInterpolation: Assignment Futures complete, re-evaluating expression for "$varName"');
+          // Re-evaluate the entire expression (node.value) - this will now resolve to the updated value
+          // The context.resolve will now find the variable in loader.globals
+          final reEvaluatedValue = node.value.accept(this, context);
+          log('[DEBUG-JINJA] visitInterpolation: Re-evaluated expression = $reEvaluatedValue (type: ${reEvaluatedValue.runtimeType})');
+          final reFinalized = context.finalize(reEvaluatedValue);
+          log('[DEBUG-JINJA] visitInterpolation: Re-finalized value = $reFinalized (type: ${reFinalized.runtimeType})');
 
-          if (reResolved is SafeString) {
-            return reResolved.toString();
+          if (reFinalized is Future) {
+            // If it's still a Future, await it
+            return reFinalized.then((value) {
+              if (value is SafeString) {
+                return value.toString();
+              }
+              if (context.autoEscape) {
+                return escape(value.toString());
+              }
+              return value?.toString() ?? '';
+            });
           }
-          final reFinalized = context.finalize(reResolved);
+
+          if (reFinalized is SafeString) {
+            return reFinalized.toString();
+          }
           if (context.autoEscape && reFinalized is String) {
             return escape(reFinalized);
           }
