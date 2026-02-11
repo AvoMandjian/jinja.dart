@@ -59,7 +59,9 @@ class MapLoader extends Loader {
   Map<String, dynamic> globalJinjaData;
 
   @override
-  Map<String, Object?> get globals => globalJinjaData;
+  Map<String, Object?> get globals {
+    return globalJinjaData;
+  }
 
   @override
   bool get hasSourceAccess {
