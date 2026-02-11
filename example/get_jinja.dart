@@ -160,7 +160,6 @@ class GetJinja {
 
           /// it should also add the returned data to the jinja data
           try {
-
             // Ensure globalJinjaData is a plain Map<String, dynamic> to avoid type errors
             // when adding data with different levels of specificity.
             final Map<String, dynamic> globalData = Map<String, dynamic>.from(loader.globalJinjaData);
@@ -171,8 +170,7 @@ class GetJinja {
 
             if (res is Map) {
               dataMap.addAll(res.cast<String, dynamic>());
-            } else {
-            }
+            } else {}
 
             globalData['data'] = dataMap;
             loader.globalJinjaData = globalData;

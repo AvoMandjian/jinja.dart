@@ -582,22 +582,23 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     var target = node.target.accept(this, context);
     var values = node.value.accept(this, context);
     if (values is Future) {
+      print('[DEBUG] visitAssign: value is Future, type: ${values.runtimeType}');
       // For async rendering, we need to await the Future before assigning
-      // The AsyncCollectingSink will handle awaiting, but we also need to assign the resolved value
-      // Store a placeholder that will be resolved later
       if (context.sink is _AsyncCollectingSink) {
-        // Create a Future that resolves and assigns BEFORE the sink processes it
-        // This ensures the assignment happens as soon as the Future resolves
+        final sink = context.sink as _AsyncCollectingSink;
+        // Create a Future that resolves and assigns
         final assignmentFuture = values.then((resolvedValue) {
+          print('[DEBUG] visitAssign: Future resolved to: $resolvedValue, assigning to context');
           context.assignTargets(target, resolvedValue);
+          print('[DEBUG] visitAssign: Assignment complete, target=$target');
           return resolvedValue;
         }).catchError((e) {
           print('[ERROR] visitAssign: Future failed: $e');
           throw e;
         });
-        // Write the assignment Future to sink so it's awaited
-        // This ensures the assignment completes before final content resolution
-        context.write(assignmentFuture);
+        // Track the assignment Future separately - it shouldn't output anything
+        sink.writeAssignmentFuture(assignmentFuture);
+        print('[DEBUG] visitAssign: Tracked assignment Future, will await before finalizing');
         return;
       }
     }
@@ -1045,6 +1046,35 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         return;
       }
 
+      // Check if value is null/empty and we're in async mode with assignment Futures
+      // If so, wait for assignment Futures and re-check loader.globals
+      if ((finalized == null || finalized == '') && context.sink is _AsyncCollectingSink && node.value is Name) {
+        final nameNode = node.value as Name;
+        final varName = nameNode.name;
+        print('[DEBUG] visitInterpolation: Value is null/empty for \'$varName\', checking for assignment Futures');
+
+        final sink = context.sink as _AsyncCollectingSink;
+        // Write a Future that waits for assignment Futures, then re-checks loader.globals
+        final checkFuture = sink.waitForAssignmentFutures().then((_) {
+          print('[DEBUG] visitInterpolation: Assignment Futures complete, re-checking loader.globals for \'$varName\'');
+          // Re-resolve the variable after assignment Futures complete
+          final reResolved = context.resolve(varName);
+          print('[DEBUG] visitInterpolation: Re-resolved \'$varName\' = $reResolved');
+
+          if (reResolved is SafeString) {
+            return reResolved.toString();
+          }
+          final reFinalized = context.finalize(reResolved);
+          if (context.autoEscape && reFinalized is String) {
+            return escape(reFinalized);
+          }
+          return reFinalized?.toString() ?? '';
+        });
+
+        context.write(checkFuture);
+        return;
+      }
+
       if (finalized is SafeString) {
         context.write(finalized.toString());
         return;
@@ -1477,6 +1507,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 class _AsyncCollectingSink implements StringSink {
   final StringSink _delegate;
   final List<Future<Object?>> _futures = [];
+  final List<bool> _isAssignmentFuture = []; // Track if Future is from assignment (shouldn't output)
   final StringBuffer _buffer = StringBuffer();
 
   _AsyncCollectingSink(this._delegate);
@@ -1486,9 +1517,26 @@ class _AsyncCollectingSink implements StringSink {
     if (obj is Future) {
       // Store the Future and write a placeholder
       _futures.add(obj);
+      _isAssignmentFuture.add(false); // Default: not an assignment
       _buffer.write('__FUTURE_${_futures.length - 1}__');
     } else {
       _buffer.write(obj);
+    }
+  }
+
+  /// Write a Future from an assignment - this shouldn't output anything, just await it
+  void writeAssignmentFuture(Future<Object?> future) {
+    _futures.add(future);
+    _isAssignmentFuture.add(true); // Mark as assignment Future
+    // Don't write anything to buffer - assignments shouldn't output
+  }
+
+  /// Returns a Future that resolves when all assignment Futures are complete
+  Future<void> waitForAssignmentFutures() async {
+    for (int i = 0; i < _futures.length; i++) {
+      if (_isAssignmentFuture[i]) {
+        await _futures[i];
+      }
     }
   }
 
@@ -1522,12 +1570,17 @@ class _AsyncCollectingSink implements StringSink {
 
   Future<String> getResolvedContent() async {
     String content = _buffer.toString();
+    print('[DEBUG] _AsyncCollectingSink.getResolvedContent: Starting, ${_futures.length} Futures to await');
+    print('[DEBUG] _AsyncCollectingSink.getResolvedContent: Buffer content length: ${content.length}');
 
     // Await all collected Futures
     List<Object?> resolvedValues = [];
     for (int i = 0; i < _futures.length; i++) {
       try {
+        print(
+            '[DEBUG] _AsyncCollectingSink.getResolvedContent: Awaiting Future $i/${_futures.length} (isAssignment: ${_isAssignmentFuture[i]})');
         resolvedValues.add(await _futures[i]);
+        print('[DEBUG] _AsyncCollectingSink.getResolvedContent: Future $i resolved to: ${resolvedValues[i]}');
       } on BreakException {
         rethrow;
       } on ContinueException {
@@ -1552,12 +1605,16 @@ class _AsyncCollectingSink implements StringSink {
       }
     }
 
-    // Replace placeholders with resolved values
+    // Replace placeholders with resolved values (skip assignment Futures)
     for (int i = 0; i < resolvedValues.length; i++) {
-      content = content.replaceAll(
-        '__FUTURE_${i}__',
-        resolvedValues[i]?.toString() ?? 'null',
-      );
+      if (!_isAssignmentFuture[i]) {
+        // Only replace placeholders for non-assignment Futures
+        content = content.replaceAll(
+          '__FUTURE_${i}__',
+          resolvedValues[i]?.toString() ?? 'null',
+        );
+      }
+      // Assignment Futures don't have placeholders, so nothing to replace
     }
 
     return content;

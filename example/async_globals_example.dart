@@ -10,7 +10,9 @@ final jinjaScript = """
 {% set asdasd = run_data_source('my_apps_list', {}) %}
 
 
+THIS IS THE DATA:
 {{data}}
+THIS IS THE DATA:
 """;
 final jinjaData = {
   'my_apps_list_columns': {
