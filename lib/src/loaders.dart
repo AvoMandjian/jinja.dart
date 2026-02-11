@@ -34,11 +34,7 @@ abstract class Loader {
   }
 
   /// Loads a template to the environment template cache.
-  Template load(
-    Environment environment,
-    String path, {
-    Map<String, Object?>? globals,
-  });
+  Template load(Environment environment, String path, {Map<String, Object?>? globals});
 }
 
 /// {@template jinja.MapLoader}
@@ -54,10 +50,10 @@ class MapLoader extends Loader {
   /// {@macro jinja.MapLoader}
   // TODO(loaders): comment that the map keys should be URI paths,
   // like 'path/to/template.html'
-  const MapLoader(this.sources, {required this.globalJinjaData});
+  MapLoader(this.sources, {required this.globalJinjaData});
 
   final Map<String, String> sources;
-  final Map<String, dynamic> globalJinjaData;
+  Map<String, dynamic> globalJinjaData;
 
   @override
   bool get hasSourceAccess {
@@ -79,11 +75,7 @@ class MapLoader extends Loader {
   }
 
   @override
-  Template load(
-    Environment environment,
-    String path, {
-    Map<String, Object?>? globals,
-  }) {
+  Template load(Environment environment, String path, {Map<String, Object?>? globals}) {
     var source = getSource(path);
     return environment.fromString(source, path: path, globals: globals);
   }
