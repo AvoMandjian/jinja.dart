@@ -134,7 +134,11 @@ base class Context {
       return true;
     }
 
-    return parent.containsKey(key);
+    if (parent.containsKey(key)) {
+      return true;
+    }
+
+    return environment.loader?.globals?.containsKey(key) ?? false;
   }
 
   Object? resolve(String name) {
@@ -145,6 +149,10 @@ base class Context {
 
       if (parent.containsKey(name)) {
         return parent[name];
+      }
+
+      if (environment.loader?.globals?.containsKey(name) ?? false) {
+        return environment.loader!.globals![name];
       }
 
       return undefined(name, template);
@@ -187,6 +195,11 @@ base class Context {
 
     if (parent.containsKey(name)) {
       var value = parent[name];
+      return value is Future ? await value : value;
+    }
+
+    if (environment.loader?.globals?.containsKey(name) ?? false) {
+      var value = environment.loader!.globals![name];
       return value is Future ? await value : value;
     }
 

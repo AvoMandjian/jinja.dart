@@ -16,6 +16,9 @@ abstract class Loader {
     return true;
   }
 
+  /// Global variables provided by this loader.
+  Map<String, Object?>? get globals => null;
+
   /// Get template source from file.
   ///
   /// Throws [TemplateNotFound] if file not found
@@ -54,6 +57,9 @@ class MapLoader extends Loader {
 
   final Map<String, String> sources;
   Map<String, dynamic> globalJinjaData;
+
+  @override
+  Map<String, Object?> get globals => globalJinjaData;
 
   @override
   bool get hasSourceAccess {
