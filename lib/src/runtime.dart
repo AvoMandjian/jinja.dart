@@ -152,7 +152,9 @@ base class Context {
       }
 
       if (environment.loader?.globals?.containsKey(name) ?? false) {
-        return environment.loader!.globals![name];
+        final value = environment.loader!.globals![name];
+
+        return value;
       }
 
       return undefined(name, template);

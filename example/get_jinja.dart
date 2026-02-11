@@ -138,6 +138,53 @@ class GetJinja {
 
     return Environment(
       globals: <String, Object?>{
+        /// Runs a data source by its ID with provided properties.
+        ///
+        /// **Usage:**
+        /// `{{ run_data_source('ds_users_list', {'page': 1}) }}`
+        ///
+        /// **Parameters:**
+        /// - `dataSourceId`: The ID of the data source to run.
+        /// - `properties`: (Optional) A map of properties/parameters for the data source.
+        ///
+        /// **Returns:**
+        /// A Future resolving to the data source result (Map or List).
+        'run_data_source': (String dataSourceId, [dynamic properties]) async {
+          final res = await callbackToParentProject(
+            payload: {
+              'action': 'run_data_source',
+              'data_source_id': dataSourceId,
+              'properties': properties,
+            },
+          );
+
+          /// it should also add the returned data to the jinja data
+          try {
+
+            // Ensure globalJinjaData is a plain Map<String, dynamic> to avoid type errors
+            // when adding data with different levels of specificity.
+            final Map<String, dynamic> globalData = Map<String, dynamic>.from(loader.globalJinjaData);
+
+            final dynamic currentData = globalData['data'];
+
+            final Map<String, dynamic> dataMap = currentData is Map ? Map<String, dynamic>.from(currentData) : <String, dynamic>{};
+
+            if (res is Map) {
+              dataMap.addAll(res.cast<String, dynamic>());
+            } else {
+            }
+
+            globalData['data'] = dataMap;
+            loader.globalJinjaData = globalData;
+          } catch (e, stackTrace) {
+            print('[ERROR] Exception in run_data_source: $e');
+            print('[ERROR] Stack trace: $stackTrace');
+            valueListenableJinjaError(
+              'Error in run_data_source for adding data to jinja data -> $dataSourceId: $e',
+            );
+          }
+          return res;
+        },
         'return': (dynamic value) {
           return value;
         },

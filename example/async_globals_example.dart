@@ -7,44 +7,11 @@ import 'package:jinja/jinja.dart';
 import 'get_jinja.dart';
 
 final jinjaScript = """
-{
-  "list_view": {
-    "style": {
-      "row_height": 58,
-      "header_row_height": 40
-    },
-    "columns": [
-      {% if my_apps_list_columns and my_apps_list_columns.list_data %}
-      {% for col in my_apps_list_columns.list_data %}
-      {% if col.ui_widget == 'list_column' %}
-        {{ render_widget_by_id("macro_list_column", {'col': col}) }}
-      {%endif%}
-    {% if not loop.last %},{%endif%}
-    {%endfor%}
-  {%endif%}   
-    ],
-"data": [
-   {% if my_apps_list and my_apps_list.list_data %}
-    {% for my_app in my_apps_list.list_data %}
-    {{ render_widget_by_id("macro_list_row", {'my_app': my_app}) }}
-     {% if not loop.last %},{%endif%}{%endfor%}
-  {%endif%}
-],
-    "widget_id": "list_view",
-    "widget_type": "list_data_grid",
-    "global_row_height": true,
-    "mouse_cursor": true,
-    "recordset_auto_load": true
-  },
-  "widget_id": "list",
-  "widget_type": "power_list",
-  "padding_menu": {
-    "top": 5,
-    "left": 0,
-    "right": 0,
-    "bottom": 0
-  }
-}""";
+{% set asdasd = run_data_source('my_apps_list', {}) %}
+
+
+{{data}}
+""";
 final jinjaData = {
   'my_apps_list_columns': {
     'list_data': [

@@ -581,6 +581,26 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   void visitAssign(Assign node, StringSinkRenderContext context) {
     var target = node.target.accept(this, context);
     var values = node.value.accept(this, context);
+    if (values is Future) {
+      // For async rendering, we need to await the Future before assigning
+      // The AsyncCollectingSink will handle awaiting, but we also need to assign the resolved value
+      // Store a placeholder that will be resolved later
+      if (context.sink is _AsyncCollectingSink) {
+        // Create a Future that resolves and assigns BEFORE the sink processes it
+        // This ensures the assignment happens as soon as the Future resolves
+        final assignmentFuture = values.then((resolvedValue) {
+          context.assignTargets(target, resolvedValue);
+          return resolvedValue;
+        }).catchError((e) {
+          print('[ERROR] visitAssign: Future failed: $e');
+          throw e;
+        });
+        // Write the assignment Future to sink so it's awaited
+        // This ensures the assignment completes before final content resolution
+        context.write(assignmentFuture);
+        return;
+      }
+    }
     context.assignTargets(target, values);
   }
 
