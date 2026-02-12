@@ -502,7 +502,11 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         AssignContext.load => context.resolve(node.name),
         _ => node.name,
       };
-      log('[DEBUG-JINJA] visitName: Name "${node.name}" resolved to: $result (type: ${result.runtimeType})');
+      try {
+        log('[DEBUG-JINJA] visitName: Name "${node.name}" resolved to: $result (type: ${result.runtimeType})');
+      } catch (e) {
+        log('[DEBUG-JINJA] visitName: Name "${node.name}" resolved (type: ${result.runtimeType}, toString failed)');
+      }
       return result;
     } on UndefinedError catch (e) {
       log('[DEBUG-JINJA] visitName: Name "${node.name}" is undefined');

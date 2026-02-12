@@ -108,11 +108,19 @@ abstract class TemplateError implements Exception {
           break;
         }
         var value = entry.value;
-        var valueStr = value == null
-            ? 'null'
-            : value.toString().length > 50
-                ? '${value.toString().substring(0, 50)}...'
-                : value.toString();
+        String valueStr;
+        if (value == null) {
+          valueStr = 'null';
+        } else {
+          try {
+            final str = value.toString();
+            valueStr = str.length > 50 ? '${str.substring(0, 50)}...' : str;
+          } catch (e) {
+            // If toString() throws (e.g., MyMap.keys throws UnimplementedError),
+            // return a safe representation without calling methods that might fail
+            valueStr = '${value.runtimeType}(toString failed: ${e.runtimeType})';
+          }
+        }
         buffer.write('\n    - Variable \'${entry.key}\': $valueStr');
         count++;
       }
@@ -301,6 +309,7 @@ class TemplateSyntaxError extends TemplateError {
   final int? column;
 
   /// Optional snippet of template source with caret.
+  @override
   final String? contextSnippet;
 
   @override
@@ -366,11 +375,19 @@ class TemplateSyntaxError extends TemplateError {
           break;
         }
         var value = entry.value;
-        var valueStr = value == null
-            ? 'null'
-            : value.toString().length > 50
-                ? '${value.toString().substring(0, 50)}...'
-                : value.toString();
+        String valueStr;
+        if (value == null) {
+          valueStr = 'null';
+        } else {
+          try {
+            final str = value.toString();
+            valueStr = str.length > 50 ? '${str.substring(0, 50)}...' : str;
+          } catch (e) {
+            // If toString() throws (e.g., MyMap.keys throws UnimplementedError),
+            // return a safe representation without calling methods that might fail
+            valueStr = '${value.runtimeType}(toString failed: ${e.runtimeType})';
+          }
+        }
         buffer.write('\n    - Variable \'${entry.key}\': $valueStr');
         count++;
       }
@@ -538,7 +555,8 @@ class TemplateErrorWrapper extends TemplateRuntimeError {
     String? contextSnippet,
   }) : super(
           message ?? (originalError is TemplateError ? originalError.message : 'Non-template error occurred during template rendering'),
-          stackTraceValue: stackTrace ?? (originalError is Error ? originalError.stackTrace : (originalError is TemplateError ? originalError.stackTrace : null)),
+          stackTraceValue: stackTrace ??
+              (originalError is Error ? originalError.stackTrace : (originalError is TemplateError ? originalError.stackTrace : null)),
           nodeValue: node ?? (originalError is TemplateError ? originalError.node : null),
           contextSnapshotValue: contextSnapshot ?? (originalError is TemplateError ? originalError.contextSnapshot : null),
           operationValue: operation ?? (originalError is TemplateError ? originalError.operation : null),

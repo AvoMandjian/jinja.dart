@@ -157,19 +157,31 @@ base class Context {
       log('[DEBUG-JINJA] Context.resolve: Looking for variable "$name"');
       if (context.containsKey(name)) {
         final value = context[name];
-        log('[DEBUG-JINJA] Context.resolve: Found "$name" in context = $value (type: ${value.runtimeType})');
+        try {
+          log('[DEBUG-JINJA] Context.resolve: Found "$name" in context = $value (type: ${value.runtimeType})');
+        } catch (e) {
+          log('[DEBUG-JINJA] Context.resolve: Found "$name" in context (type: ${value.runtimeType}, toString failed)');
+        }
         return value;
       }
 
       if (parent.containsKey(name)) {
         final value = parent[name];
-        log('[DEBUG-JINJA] Context.resolve: Found "$name" in parent = $value (type: ${value.runtimeType})');
+        try {
+          log('[DEBUG-JINJA] Context.resolve: Found "$name" in parent = $value (type: ${value.runtimeType})');
+        } catch (e) {
+          log('[DEBUG-JINJA] Context.resolve: Found "$name" in parent (type: ${value.runtimeType}, toString failed)');
+        }
         return value;
       }
 
       if (environment.loader?.globals?.containsKey(name) ?? false) {
         final value = environment.loader!.globals![name];
-        log('[DEBUG-JINJA] Context.resolve: Found "$name" in loader.globals = $value (type: ${value.runtimeType})');
+        try {
+          log('[DEBUG-JINJA] Context.resolve: Found "$name" in loader.globals = $value (type: ${value.runtimeType})');
+        } catch (e) {
+          log('[DEBUG-JINJA] Context.resolve: Found "$name" in loader.globals (type: ${value.runtimeType}, toString failed)');
+        }
         return value;
       }
 
@@ -529,6 +541,11 @@ final class LoopContext extends Iterable<Object?> {
 
     return true;
   }
+
+  @override
+  String toString() {
+    return 'LoopContext(length: $length, index: $index)';
+  }
 }
 
 final class LoopIterator implements Iterator<Object?> {
@@ -543,7 +560,9 @@ final class LoopIterator implements Iterator<Object?> {
 
   @override
   bool moveNext() {
-    if (context.index < context.length) {
+    // Use index0 directly instead of index getter to avoid confusion
+    // index0 starts at -1, so we check if the NEXT index would be valid
+    if (context.index0 + 1 < context.length) {
       context.index0 += 1;
       return true;
     }

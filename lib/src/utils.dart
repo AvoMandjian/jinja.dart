@@ -408,8 +408,14 @@ String _valueToString(Object? value) {
     return value.length > 100 ? '${value.substring(0, 100)}...' : value;
   }
 
-  final str = value.toString();
-  return str.length > 100 ? '${str.substring(0, 100)}...' : str;
+  try {
+    final str = value.toString();
+    return str.length > 100 ? '${str.substring(0, 100)}...' : str;
+  } catch (e) {
+    // If toString() throws (e.g., MyMap.keys throws UnimplementedError),
+    // return a safe representation without calling methods that might fail
+    return '${value.runtimeType}(toString failed: ${e.runtimeType})';
+  }
 }
 
 /// Helper to extract a context snippet with a caret for error display.
