@@ -1784,7 +1784,7 @@ class _AsyncCollectingSink implements StringSink {
     String content = _buffer.toString();
     log('[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Starting, ${_futures.length} Futures to await');
     log('[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Buffer content length: ${content.length}');
-    print(
+    log(
       '[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Buffer preview: ${content.length > 100 ? "${content.substring(0, 100)}..." : content}',
     );
 
@@ -1792,11 +1792,11 @@ class _AsyncCollectingSink implements StringSink {
     List<Object?> resolvedValues = [];
     for (int i = 0; i < _futures.length; i++) {
       try {
-        print(
+        log(
           '[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Awaiting Future $i/${_futures.length} (isAssignment: ${_isAssignmentFuture[i]})',
         );
         resolvedValues.add(await _futures[i]);
-        print(
+        log(
           '[DEBUG-JINJA] _AsyncCollectingSink.getResolvedContent: Future $i resolved to: ${resolvedValues[i]} (type: ${resolvedValues[i].runtimeType})',
         );
       } on BreakException {
@@ -1864,7 +1864,6 @@ base class AsyncRenderer {
           try {
             log('[DEBUG-JINJA] AsyncRenderer.render: Resolving async global "${entry.key}"');
             resolvedGlobals[entry.key] = await (entry.value as Future);
-            log('[DEBUG-JINJA] AsyncRenderer.render: Global "${entry.key}" resolved to: ${resolvedGlobals[entry.key]}');
           } on BreakException {
             rethrow;
           } on ContinueException {
@@ -1888,7 +1887,6 @@ base class AsyncRenderer {
           }
         } else {
           resolvedGlobals[entry.key] = entry.value;
-          log('[DEBUG-JINJA] AsyncRenderer.render: Global "${entry.key}" is synchronous: ${entry.value}');
         }
       }
 
@@ -1933,7 +1931,7 @@ base class AsyncRenderer {
       _AsyncCollectingSink collectingSink = _AsyncCollectingSink(context.sink);
 
       // Create a sync context with the collecting sink
-      print(
+      log(
         '[DEBUG-JINJA] AsyncRenderer.render: Creating sync context with ${resolvedGlobals.length} globals, ${resolvedData.length} context vars',
       );
       var syncContext = StringSinkRenderContext(
