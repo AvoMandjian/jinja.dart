@@ -248,7 +248,7 @@ final class Dict extends Literal {
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'class': 'Dict',
-      'values': <Map<String, Object?>>[
+      'pairs': <Map<String, Object?>>[
         for (var (:key, :value) in pairs)
           <String, Object?>{
             'key': key.toJson(),
@@ -510,7 +510,21 @@ final class Filter extends Expression {
 
   @override
   String toSource() {
-    return '| $name';
+    var source = '';
+
+    if (calling.arguments.isNotEmpty) {
+      source = calling.arguments.first.toSource();
+    }
+
+    source += '|$name';
+
+    if (calling.arguments.length > 1 || calling.keywords.isNotEmpty) {
+      var arguments = calling.arguments.skip(1).map((a) => a.toSource()).toList();
+      var keywords = calling.keywords.map((k) => '${k.key}=${k.value.toSource()}').toList();
+      source += '(${[...arguments, ...keywords].join(', ')})';
+    }
+
+    return source;
   }
 }
 
@@ -554,7 +568,21 @@ final class Test extends Expression {
 
   @override
   String toSource() {
-    return 'is $name';
+    var source = '';
+
+    if (calling.arguments.isNotEmpty) {
+      source = calling.arguments.first.toSource();
+    }
+
+    source += ' is $name';
+
+    if (calling.arguments.length > 1 || calling.keywords.isNotEmpty) {
+      var arguments = calling.arguments.skip(1).map((a) => a.toSource()).toList();
+      var keywords = calling.keywords.map((k) => '${k.key}=${k.value.toSource()}').toList();
+      source += '(${[...arguments, ...keywords].join(', ')})';
+    }
+
+    return source;
   }
 }
 

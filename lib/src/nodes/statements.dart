@@ -319,9 +319,10 @@ final class Macro extends MacroCall {
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'class': 'Macro',
+      'name': name,
       if (varargs) 'varargs': varargs,
       if (kwargs) 'kwargs': kwargs,
-      if (caller) 'caller': caller,
+      'caller': caller,
       'positional': <Map<String, Object?>>[
         for (var argument in positional) argument.toJson(),
       ],
@@ -338,7 +339,13 @@ final class Macro extends MacroCall {
 
   @override
   String toSource() {
-    return '{% macro $name %}';
+    var source = '{% macro $name(';
+    source += [
+      ...positional.map((a) => a.toSource()),
+      ...named.map((n) => '${n.$1.toSource()}=${n.$2.toSource()}'),
+    ].join(', ');
+    source += ') %}${body.toSource()}{% endmacro %}';
+    return source;
   }
 }
 
@@ -390,6 +397,7 @@ final class CallBlock extends MacroCall {
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'class': 'CallBlock',
+      'call': call.toJson(),
       if (varargs) 'varargs': varargs,
       if (kwargs) 'kwargs': kwargs,
       'positional': <Map<String, Object?>>[
@@ -408,7 +416,16 @@ final class CallBlock extends MacroCall {
 
   @override
   String toSource() {
-    return '{% call ${call.toSource()} %}';
+    var source = '{% call';
+
+    if (positional.isNotEmpty || named.isNotEmpty) {
+      var args = positional.map((a) => a.toSource()).toList();
+      var kwargs = named.map((n) => '${n.$1.toSource()}=${n.$2.toSource()}').toList();
+      source += '(${[...args, ...kwargs].join(', ')})';
+    }
+
+    source += ' ${call.toSource()} %}${body.toSource()}{% endcall %}';
+    return source;
   }
 }
 
@@ -538,7 +555,17 @@ final class With extends Statement {
 
   @override
   String toSource() {
-    return '{% with %}';
+    var source = '{% with ';
+
+    for (var i = 0; i < targets.length; i += 1) {
+      if (i > 0) {
+        source += ', ';
+      }
+
+      source += '${targets[i].toSource()} = ${values[i].toSource()}';
+    }
+
+    return '$source %}${body.toSource()}{% endwith %}';
   }
 }
 
@@ -600,7 +627,17 @@ final class Block extends Statement {
 
   @override
   String toSource() {
-    return '{% block $name %}';
+    var source = '{% block $name';
+
+    if (scoped) {
+      source += ' scoped';
+    }
+
+    if (required) {
+      source += ' required';
+    }
+
+    return '$source %}${body.toSource()}{% endblock %}';
   }
 }
 
@@ -640,7 +677,7 @@ final class Include extends Statement implements ImportContext {
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'class': 'Include',
-      'template': template,
+      'template': template.toJson(),
       if (ignoreMissing) 'ignoreMissing': ignoreMissing,
       if (withContext) 'withContext': withContext,
     };
@@ -688,7 +725,7 @@ final class Import extends Statement implements ImportContext {
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'class': 'Import',
-      'template': template,
+      'template': template.toJson(),
       'target': target,
       if (withContext) 'withContext': withContext,
     };
@@ -736,7 +773,7 @@ final class FromImport extends Statement implements ImportContext {
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'class': 'FromImport',
-      'template': template,
+      'template': template.toJson(),
       'names': <String, String?>{for (var (name, alias) in names) name: alias},
       if (withContext) 'withContext': withContext,
     };
@@ -778,7 +815,7 @@ final class Do extends Statement {
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'class': 'Do',
-      'value': value,
+      'value': value.toJson(),
     };
   }
 
@@ -1009,7 +1046,9 @@ final class AssignBlock extends Statement {
 
   @override
   String toSource() {
-    return '{% set ${target.toSource()} %}';
+    var source = '{% set ${target.toSource()} %}';
+    source += body.toSource();
+    return '$source{% endset %}';
   }
 }
 

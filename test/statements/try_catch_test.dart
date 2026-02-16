@@ -16,21 +16,21 @@ void main() {
     test('catch', () {
       var tmpl = env.fromString('''
           {%- try -%}
-            {{ x | list }}
+            {{ x.y }}
           {%- catch -%}
-            collection expected
+            error occurred
           {%- endtry %}''');
-      expect(tmpl.render(), equals('collection expected'));
+      expect(tmpl.render(), equals('error occurred'));
     });
 
     test('catch error', () {
       var tmpl = env.fromString('''
           {%- try -%}
-            {{ x | list }}
+            {{ x.y }}
           {%- catch error -%}
             {{ error | runtimetype }}
           {%- endtry %}''');
-      expect(tmpl.render(), equals('TypeError'));
+      expect(tmpl.render(), equals('UndefinedError'));
     });
   });
 }

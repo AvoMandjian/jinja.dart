@@ -105,6 +105,10 @@ Iterable<Object?> iterate(Object? value) {
 /// If `value` is `null` returns empty [List] else calls [iterate] and returns
 /// [List] as is or wraps returned iterable with [List.of].
 List<Object?> list(Object? value) {
+  if (value == null) {
+    return <Object?>[];
+  }
+
   if (value is List) {
     return value;
   }
