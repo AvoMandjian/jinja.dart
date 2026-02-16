@@ -78,6 +78,12 @@ base class Context {
         return object.call(positional[0]);
       }
 
+      // Handle ContextFilter and EnvFilter - they wrap functions that need special handling
+      if (object is ContextFilter || object is EnvFilter) {
+        // These are handled by callCommon, which will extract the function and add context/env
+        return environment.callCommon(object, positional, named, this);
+      }
+
       // Try to find a 'call' method on the object (for callable classes)
       try {
         final callMethod = (object as dynamic).call;
@@ -85,6 +91,13 @@ base class Context {
           return environment.callCommon(callMethod, positional, named, this);
         }
       } catch (_) {
+        log('[DEBUG-JINJA] Context.call: Error calling .call method on object: $object');
+        log('[DEBUG-JINJA] Context.call: Error: $_');
+        log('[DEBUG-JINJA] Context.call: Node: $node');
+        log('[DEBUG-JINJA] Context.call: Positional: $positional');
+        log('[DEBUG-JINJA] Context.call: Named: $named');
+        log('[DEBUG-JINJA] Context.call: This: $this');
+        log('[DEBUG-JINJA] Context.call: Environment: $environment');
         // Ignore error if .call does not exist
       }
 

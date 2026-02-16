@@ -80,7 +80,434 @@ class GetJinja {
   }) {
     Future<String> fetchWidgetSource(String widgetId, [dynamic jinjaData]) async {
       await Future<void>.delayed(const Duration(seconds: 2));
-      if (widgetId == 'macro_list_column') {
+      if (widgetId == 'macro_header') {
+        return '''{% macro macro_header(value) %}
+{
+    "widget_id": "header",
+    "widget_type": "detail_header",
+    "property_settings": {
+        "height": {
+            "value": 50
+        },
+        "data": {},
+        "mode": {
+            "value": "custom"
+        },
+        "widget_list": [
+            {
+                "type": "text",
+                "widget": {
+                    "property_settings": {
+                        "padding": {
+                            "left": {
+                                "value": 20
+                            },
+                            "right": {
+                                "value": 20
+                            }
+                        }
+                    },
+                    "widget_id": "title",
+                    "text": {% if value and value.header_title %} "{{value.header_title}}" {% elif data and data.header and data.header.data and data.header.data.text %} "{{data.header.data.text}}" {% else %} "" {% endif %},
+                    "text_color": "neutral_darkest",
+                    "style": "title_large"
+                }
+            },
+            {
+                "type": "vertical_divider",
+                "widget": {
+                    "width": 1.0,
+                    "color": "neutral_darkest",
+                    "indent": 8,
+                    "end_indent": 8
+                }
+            },
+            {
+                "type": "text",
+                "widget": {
+                    "property_settings": {
+                        "padding": {
+                            "left": {
+                                "value": 20
+                            }
+                        }
+                    },
+                    "widget_id": "number",
+                    "text": "{% if data and data.header and data.header.data and data.header.data.count %}{{data.header.data.count}}{%endif%}",
+                    "text_color": "neutral_darkest",
+                    "style": "title_large"
+                }
+            },
+            {
+                "type": "spacer"
+            },
+            {
+                "type": "button",
+                "widget": {
+                    "widget_id": {% if value.show_save_button %} "save_button" {% else %} "build_button" {% endif %},
+                    "events": {
+                        "on_pressed": {
+                            "workflow_id": {% if value.show_save_button %} "save_jinja_workflow" {% else %} "open_add_new_slideover" {% endif %},
+                            "properties": {% if value.show_save_button %} {} {% else %} {} {% endif %}
+                        }
+                    },
+                    "widget_type": "button",
+                    "property_settings": {
+                        "style": {
+                            "icon_spacing": {
+                                "property_id": "icon_spacing",
+                                "property_label": "Icon Spacing",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 10
+                                }
+                            },
+                            "icon_padding": {
+                                "property_id": "icon_padding",
+                                "property_label": "Icon Padding",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 10
+                                }
+                            },
+                            "width": {
+                                "property_id": "width",
+                                "property_label": "Width",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 150
+                                }
+                            },
+                            "height": {
+                                "property_id": "height",
+                                "property_label": "Height",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 50
+                                }
+                            },
+                            "hover_color": {
+                                "property_id": "hover_color",
+                                "property_label": "Hover Color",
+                                "data_type": "color",
+                                "ui_widget": "color_picker",
+                                "data": {
+                                    "value": "transparent",
+                                    "value_text": "transparent"
+                                }
+                            },
+                            "background_color": {
+                                "property_id": "background_color",
+                                "property_label": "Background Color",
+                                "data_type": "color",
+                                "ui_widget": "color_picker",
+                                "data": {
+                                    "value": "primary",
+                                    "value_text": "primary"
+                                }
+                            }
+                        },
+                        "text": {
+                            "property_id": "text",
+                            "property_label": "Button text",
+                            "data_type": "input_text_single_line",
+                            "ui_widget": "input_text_single_line",
+                            "data": {
+                                "value": {% if value and value.add_button_text %} "{{value.add_button_text}}" {% else %} "{{add_button_text}}" {% endif %},
+                                "value_text": {% if value and value.add_button_text %} "{{value.add_button_text}}" {% else %} "{{add_button_text}}" {% endif %}
+                            }
+                        },
+                        "text_style": {
+                            "font_family": {
+                                "property_id": "font_family",
+                                "property_label": "Font Family",
+                                "data_type": "single_select",
+                                "ui_widget": "single_select_dropdown",
+                                "data": {
+                                    "value": "Inter",
+                                    "value_text": "Inter"
+                                }
+                            },
+                            "font_size": {
+                                "property_id": "font_size",
+                                "property_label": "Font Size",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 18.0,
+                                    "value_text": "18"
+                                }
+                            },
+                            "font_weight": {
+                                "property_id": "font_weight",
+                                "property_label": "Font Weight",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 600.0,
+                                    "value_text": "600"
+                                }
+                            },
+                            "text_color": {
+                                "property_id": "text_color",
+                                "property_label": "Text Color",
+                                "data_type": "color",
+                                "ui_widget": "color_picker",
+                                "data": {
+                                    "value": "#000000",
+                                    "value_text": "Black"
+                                }
+                            },
+                            "text_align": {
+                                "property_id": "text_align",
+                                "property_label": "Text Align",
+                                "data_type": "single_select",
+                                "ui_widget": "single_select_segmented_button",
+                                "data": {
+                                    "value": "center",
+                                    "value_text": "Center"
+                                }
+                            },
+                            "text_decoration_color": {
+                                "property_id": "text_decoration_color",
+                                "property_label": "Decoration Color",
+                                "data_type": "color",
+                                "ui_widget": "color_picker",
+                                "data": {
+                                    "value": "#FF0000",
+                                    "value_text": "Red"
+                                }
+                            },
+                            "text_decoration_style": {
+                                "property_id": "text_decoration_style",
+                                "property_label": "Decoration Style",
+                                "data_type": "single_select",
+                                "ui_widget": "single_select_dropdown",
+                                "data": {
+                                    "value": "solid",
+                                    "value_text": "Solid"
+                                }
+                            },
+                            "text_decoration_line": {
+                                "property_id": "text_decoration_line",
+                                "property_label": "Decoration Line",
+                                "data_type": "single_select",
+                                "ui_widget": "single_select_dropdown",
+                                "data": {
+                                    "value": "underline",
+                                    "value_text": "Underline"
+                                }
+                            },
+                            "font_style": {
+                                "property_id": "font_style",
+                                "property_label": "Font Style",
+                                "data_type": "single_select",
+                                "ui_widget": "single_select_dropdown",
+                                "data": {
+                                    "value": "italic",
+                                    "value_text": "Italic"
+                                }
+                            },
+                            "letter_spacing": {
+                                "property_id": "letter_spacing",
+                                "property_label": "Letter Spacing",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 1.2,
+                                    "value_text": "1.2"
+                                }
+                            },
+                            "line_height": {
+                                "property_id": "line_height",
+                                "property_label": "Line Height",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 1.5,
+                                    "value_text": "1.5"
+                                }
+                            },
+                            "data": {
+                                "value": "body",
+                                "value_text": "Body"
+                            },
+                            "property_id": "text_style",
+                            "property_label": "Default Text Style",
+                            "data_type": "text_styles",
+                            "ui_widget": "text_styles"
+                        },
+                        "padding": {
+                            "top": {
+                                "property_id": "top",
+                                "property_label": "Top",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 10
+                                }
+                            },
+                            "bottom": {
+                                "property_id": "bottom",
+                                "property_label": "Bottom",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 10
+                                }
+                            },
+                            "left": {
+                                "property_id": "left",
+                                "property_label": "Left",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 10
+                                }
+                            },
+                            "right": {
+                                "property_id": "right",
+                                "property_label": "Right",
+                                "data_type": "input_text_number",
+                                "ui_widget": "input_text_number",
+                                "data": {
+                                    "value": 10
+                                }
+                            }
+                        },
+                        "disabled": {
+                            "property_id": "disabled",
+                            "property_label": "Disabled",
+                            "data_type": "boolean",
+                            "ui_widget": "switch",
+                            "data": {
+                                "value": 0
+                            }
+                        },
+                        "border": {
+                            "color": {
+                                "property_id": "color",
+                                "property_label": "Border Color",
+                                "data_type": "color",
+                                "ui_widget": "color_picker",
+                                "data": {
+                                    "value": "primary"
+                                }
+                            },
+                            "border_radius": {
+                                "data": {
+                                    "value": 10.0
+                                },
+                                "top_left": {
+                                    "property_id": "top_left",
+                                    "property_label": "Top-left border",
+                                    "data_type": "input_text_number",
+                                    "ui_widget": "input_text_number",
+                                    "data": {
+                                        "value": 10.0
+                                    }
+                                },
+                                "top_right": {
+                                    "property_id": "top_right",
+                                    "property_label": "Top-right border",
+                                    "data_type": "input_text_number",
+                                    "ui_widget": "input_text_number",
+                                    "data": {
+                                        "value": 10.0
+                                    }
+                                },
+                                "bottom_left": {
+                                    "property_id": "bottom_left",
+                                    "property_label": "Bottom-left border",
+                                    "data_type": "input_text_number",
+                                    "ui_widget": "input_text_number",
+                                    "data": {
+                                        "value": 10.0
+                                    }
+                                },
+                                "bottom_right": {
+                                    "property_id": "bottom_right",
+                                    "property_label": "Bottom-right border",
+                                    "data_type": "input_text_number",
+                                    "ui_widget": "input_text_number",
+                                    "data": {
+                                        "value": 10.0
+                                    }
+                                }
+                            }
+                        },
+                        "show_leading_icon": {
+                            "data": {
+                                "value": 1
+                            }
+                        },
+                        "show_trailing_icon": {
+                            "data": {
+                                "value": 1
+                            }
+                        },
+                        "leading_icon": {
+                            "property_id": "leading_icon",
+                            "property_label": "Leading Icon",
+                            "data_type": "icon",
+                            "ui_widget": "icon",
+                            "data": {
+                                "value": "{{add_button_icon}}",
+                                "value_text": "{{add_button_icon}}"
+                            },
+                            "mode": {
+                                "data": {
+                                    "value": "network"
+                                }
+                            },
+                            "icon_color": {
+                                "property_id": "icon_color",
+                                "property_label": "Icon Color",
+                                "data_type": "color",
+                                "ui_widget": "color_picker",
+                                "data": {
+                                    "value": "neutral_white",
+                                    "value_text": "neutral_white"
+                                }
+                            }
+                        },
+                        "trailing_icon": {
+                            "property_id": "trailing_icon",
+                            "property_label": "Trailing Icon",
+                            "data_type": "icon",
+                            "ui_widget": "icon",
+                            "data": {
+                                "value": "https://files.svgcdn.io/uit/check.svg",
+                                "value_text": "https://files.svgcdn.io/uit/check.svg"
+                            },
+                            "mode": {
+                                "data": {
+                                    "value": "network"
+                                }
+                            },
+                            "icon_color": {
+                                "property_id": "icon_color",
+                                "property_label": "Icon Color",
+                                "data_type": "color",
+                                "ui_widget": "color_picker",
+                                "data": {
+                                    "value": "neutral_white",
+                                    "value_text": "neutral_white"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
+{% endmacro %}''';
+      } else if (widgetId == 'macro_list_column') {
         return '''{% macro macro_list_column(col) %}
  {
         "type": "{% if col.metadata and col.metadata.type %}{{col.metadata.type}}{%endif%}",
