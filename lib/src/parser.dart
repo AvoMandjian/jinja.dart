@@ -243,7 +243,7 @@ final class Parser {
   Statement parseSet(TokenReader reader) {
     const endSet = <(String, String?)>[('name', 'endset')];
 
-    reader.expect('name', 'set');
+    var setToken = reader.expect('name', 'set');
 
     var target = parseAssignNameSpace(reader);
 
@@ -263,7 +263,7 @@ final class Parser {
 
     if (reader.skipIf('assign')) {
       var expression = parseTuple(reader);
-      return Assign(target: target, value: expression);
+      return Assign(target: target, value: expression, line: setToken.line, column: setToken.column);
     }
 
     var filters = parseFilters(reader);

@@ -885,7 +885,7 @@ final class TryCatch extends Statement {
 }
 
 final class Assign extends Statement {
-  const Assign({required this.target, required this.value});
+  const Assign({required this.target, required this.value, super.line, super.column});
 
   final Expression target;
 
@@ -901,6 +901,8 @@ final class Assign extends Statement {
     return Assign(
       target: target ?? this.target,
       value: value ?? this.value,
+      line: line,
+      column: column,
     );
   }
 
