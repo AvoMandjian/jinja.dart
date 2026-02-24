@@ -1,3 +1,4 @@
+import 'dart:developer' show log;
 import 'dart:math' show Random;
 
 import 'package:meta/meta.dart';
@@ -65,6 +66,49 @@ typedef ItemGetter = Object? Function(
 /// Used by `{{ user.field }}` expression when `user` not found.
 typedef UndefinedCallback = Object? Function(String name, [String? template]);
 
+/// Logging interface used by the Jinja environment.
+///
+/// This allows host applications to plug in their own logging implementation
+/// without the core library depending on a specific logging backend.
+abstract class JinjaLogger {
+  void debug(String message);
+  void info(String message);
+  void warn(String message);
+  void error(String message, [Object? error, StackTrace? stackTrace]);
+}
+
+/// Default logger implementation used when no custom [JinjaLogger] is provided.
+///
+/// This delegates to `dart:developer`'s [log] function so that, when debug
+/// logging is enabled, messages appear in the developer console.
+class DefaultJinjaLogger implements JinjaLogger {
+  const DefaultJinjaLogger();
+
+  @override
+  void debug(String message) {
+    log(message);
+  }
+
+  @override
+  void info(String message) {
+    log(message);
+  }
+
+  @override
+  void warn(String message) {
+    log(message);
+  }
+
+  @override
+  void error(String message, [Object? error, StackTrace? stackTrace]) {
+    log(
+      message,
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+}
+
 /// Pass the [Context] as the first argument to the applied function when
 /// called while rendering a template.
 ///
@@ -118,13 +162,16 @@ base class Environment {
     this.getAttribute = defaults.getAttribute,
     this.getItem = defaults.getItem,
     this.undefined = defaults.undefined,
+    this.enableJinjaDebugLogging = false,
+    JinjaLogger? logger,
   })  : finalize = wrapFinalizer(finalize),
         globals = <String, Object?>{...defaults.globals},
         filters = <String, Object>{...defaults.filters},
         tests = <String, Object>{...defaults.tests},
         modifiers = <Node Function(Node)>[],
         templates = <String, Template>{},
-        random = random ?? Random() {
+        random = random ?? Random(),
+        logger = logger ?? const DefaultJinjaLogger() {
     if (newLine != '\r' && newLine != '\n' && newLine != '\r\n') {
       throw ArgumentError.value(newLine, 'newLine');
     }
@@ -200,6 +247,12 @@ base class Environment {
   /// Should the variables be auto escaped?
   final bool autoEscape;
 
+  /// Whether internal `[DEBUG-JINJA]` debug logs are enabled.
+  ///
+  /// When this is `false` (the default), internal debug logging is skipped to
+  /// avoid overhead. When enabled, debug messages are sent through [logger].
+  final bool enableJinjaDebugLogging;
+
   /// A Function that can be used to process the result of a variable
   /// expression before it is output.
   ///
@@ -240,6 +293,11 @@ base class Environment {
   /// A random generator used by some filters.
   final Random random;
 
+  /// Logger used for Jinja-related messages.
+  ///
+  /// Internal debug logging goes through this logger via [debugJinja].
+  final JinjaLogger logger;
+
   /// Get an attribute of an object.
   ///
   /// If `getAttribute` is not passed to the [Environment], [getItem] is used
@@ -253,6 +311,17 @@ base class Environment {
   ///
   /// Default implementation throws [UndefinedError].
   final UndefinedCallback undefined;
+
+  /// Emit an internal Jinja debug log message if debug logging is enabled.
+  ///
+  /// All `[DEBUG-JINJA]` style debug logs should flow through this helper so
+  /// that they can be toggled with [enableJinjaDebugLogging].
+  void debugJinja(String message) {
+    if (!enableJinjaDebugLogging) {
+      return;
+    }
+    logger.debug('[DEBUG-JINJA] $message');
+  }
 
   @override
   int get hashCode {

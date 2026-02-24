@@ -77,6 +77,8 @@ class GetJinja {
     required Future<dynamic> Function({
       required Map<String, dynamic> payload,
     }) callbackToParentProject,
+    bool enableJinjaDebugLogging = false,
+    JinjaLogger? logger,
   }) {
     Future<String> fetchWidgetSource(String widgetId, [dynamic jinjaData]) async {
       await Future<void>.delayed(const Duration(seconds: 2));
@@ -2872,6 +2874,8 @@ class GetJinja {
         /// Deserialize from a YAML-serialized string.
         'yaml_parse': (String? s) => s, // Placeholder
       },
+      enableJinjaDebugLogging: enableJinjaDebugLogging,
+      logger: logger,
     );
   }
 }
