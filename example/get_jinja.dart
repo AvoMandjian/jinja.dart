@@ -708,7 +708,6 @@ class GetJinja {
           UtilFunctions.appLog(
             'printed from jinja script: ${jsonEncode(value)}',
           );
-          return value;
         },
 
         // dbt-compatible globals
