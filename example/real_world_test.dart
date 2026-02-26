@@ -10,19 +10,20 @@ final jinjaScript = """{{print("STEP 1:")}}
 {% set login_response = jinja_action("handle_on_login","db")%}
 
 {{print("STEP 2:")}}
-    {# {% if login_response and login_response.workflow_results and login_response.workflow_results.login and login_response.workflow_results.login.login_user %} #}
+{{print(login_response | tostring)}}
+    {% if login_response and login_response.workflow_results and login_response.workflow_results.login and login_response.workflow_results.login.login_user %}
             {{print("STEP 3:")}}
         {% set login_user = login_response.workflow_results.login.login_user %}
             {{print("STEP 4:")}}
-        {# {% if login_user.detail is not null and login_user.detail != '' %} #}
+        {% if login_user.detail is not null and login_user.detail != '' %}
             {{print("STEP 5:")}}
             {% set error_message = login_user.detail %}
             {% set dataToSend = {"error_message": error_message} | tojson %}
             {{print("STEP 6:")}}
             {% do jinja_action("show_error_message","app", dataToSend) %}
             {{print("STEP 7:")}}
-        {# {% endif %} #}
-    {# {% endif %} #}
+        {% endif %}
+    {% endif %}
 
 {
   "workflow_actions": [
@@ -1778,25 +1779,41 @@ void main() async {
         await Future<void>.delayed(const Duration(seconds: 2));
         print('Mock callbackToParentProject called with: $payload');
         return {
+          'agent_name': 'main',
+          'client_name': 'jinja-hq',
+          'jinja_data': {
+            'password': 'avoavo',
+            'username': '',
+          },
+          'workflow_continue': null,
           'workflows': [
             'login',
           ],
-          'jinja_data': {
-            'username': 'avoavo',
-            'password': 'avoavo',
+          'payload': {
+            'workflows': [
+              'login',
+            ],
+            'jinja_data': {
+              'username': '',
+              'password': 'avoavo',
+            },
+            'workflow_continue': null,
+            'client_name': 'jinja-hq',
+            'agent_name': 'main',
           },
-          'workflow_continue': null,
-          'client_name': 'jinja-hq',
-          'agent_name': 'main',
           'workflow_results': {
             'login': {
               'login_user': {
-                'token': 'ef369359-94ab-4f2c-9320-e6c126fc1d17',
+                'workflow_response_action': [
+                  {
+                    'widget_id': 'login',
+                    'workflow_response_action_type': 'return_to_app',
+                    'workflow_action': 'return_result',
+                    'properties': {},
+                  }
+                ],
+                'detail': 'Invalid username or password',
               },
-              'list_user_servers': {
-                'detail': 'User Belongs to No Servers',
-              },
-              'workflow_log_id': '91afa13e-3832-44b4-b05c-472f2852454b',
             },
           },
         };

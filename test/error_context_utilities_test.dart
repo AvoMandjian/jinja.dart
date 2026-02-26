@@ -252,12 +252,9 @@ void main() {
     test('respects maxDepth limit', () {
       final callStack = captureCallStack(maxDepth: 5);
 
-      // Currently returns empty list (placeholder implementation)
       expect(callStack.length, lessThanOrEqualTo(5));
-      expect(callStack, isEmpty); // Current implementation returns empty list
     });
 
-    // Note: This is a placeholder implementation, so we just verify it doesn't crash
     test('does not throw', () {
       expect(() => captureCallStack(), returnsNormally);
     });

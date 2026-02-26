@@ -14,7 +14,7 @@ import 'parser.dart';
 import 'renderer.dart';
 import 'runtime.dart';
 import 'tests.dart' as tests_lib;
-import 'utils.dart' show captureContext, getSimilarNames, ContextFilter, EnvFilter;
+import 'utils.dart' show captureCallStack, captureContext, getSimilarNames, ContextFilter, EnvFilter, withRenderFrame, withRenderFrameAsync;
 
 export 'package:jinja/src/exceptions.dart' show TemplateError;
 export 'package:jinja/src/loaders.dart' show Loader;
@@ -425,6 +425,7 @@ base class Environment {
         stackTrace: stackTrace,
         operation: 'Calling function with ${positional.length} positional and ${named.length} named arguments',
         suggestions: suggestions,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -526,6 +527,7 @@ base class Environment {
             operation: 'Calling filter \'$name\' with ${resolvedPositional.length} positional and ${named.length} named arguments',
             suggestions: suggestions,
             templatePath: context?.template,
+            callStack: captureCallStack(),
           );
         }
       });
@@ -554,6 +556,7 @@ base class Environment {
           operation: 'Calling filter \'$name\' with ${finalPositional.length} positional and ${named.length} named arguments',
           suggestions: suggestions,
           templatePath: context?.template,
+          callStack: captureCallStack(),
         );
       }
     }
@@ -605,6 +608,7 @@ base class Environment {
               operation: 'Calling test \'$name\' with ${resolvedPositional.length} positional and ${named.length} named arguments',
               suggestions: suggestions,
               templatePath: context?.template,
+              callStack: captureCallStack(),
             );
           }
         });
@@ -631,6 +635,7 @@ base class Environment {
           operation: 'Calling test \'$name\' with ${positional.length} positional and ${named.length} named arguments',
           suggestions: suggestions,
           templatePath: context?.template,
+          callStack: captureCallStack(),
         );
       }
     }
@@ -753,6 +758,7 @@ base class Environment {
           operation: 'Loading template \'$name\'',
           suggestions: suggestions,
           templatePath: name,
+          callStack: captureCallStack(),
         );
       }
     }
@@ -962,16 +968,22 @@ base class Template {
 
   /// If no arguments are given the context will be empty.
   void renderTo(StringSink sink, [Map<String, Object?>? data]) {
-    var context = StringSinkRenderContext(
-      environment,
-      sink,
-      template: path,
-      source: source,
-      parent: globals,
-      data: data,
-    );
+    withRenderFrame<void>(
+      templatePath: path ?? '<string>',
+      description: 'template root',
+      body: () {
+        var context = StringSinkRenderContext(
+          environment,
+          sink,
+          template: path,
+          source: source,
+          parent: globals,
+          data: data,
+        );
 
-    body.accept(const StringSinkRenderer(), context);
+        body.accept(const StringSinkRenderer(), context);
+      },
+    );
   }
 
   /// Async version of [render] that supports Future values in globals.
@@ -992,15 +1004,21 @@ base class Template {
     StringSink sink, [
     Map<String, Object?>? data,
   ]) async {
-    var context = AsyncRenderContext(
-      environment,
-      sink,
-      template: path,
-      source: source,
-      parent: globals,
-      data: data,
-    );
+    await withRenderFrameAsync<void>(
+      templatePath: path ?? '<string>',
+      description: 'template root',
+      body: () async {
+        var context = AsyncRenderContext(
+          environment,
+          sink,
+          template: path,
+          source: source,
+          parent: globals,
+          data: data,
+        );
 
-    await AsyncRenderer().render(body, context);
+        await AsyncRenderer().render(body, context);
+      },
+    );
   }
 }

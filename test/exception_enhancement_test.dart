@@ -4,6 +4,7 @@ library;
 import 'package:jinja/jinja.dart';
 import 'package:jinja/src/exceptions.dart';
 import 'package:jinja/src/nodes.dart';
+import 'package:jinja/src/utils.dart' show captureCallStack;
 import 'package:test/test.dart';
 
 void main() {
@@ -243,6 +244,8 @@ void main() {
       expect(error.message, equals('Wrapped error'));
       expect(error.node, equals(node));
       expect(error.operation, equals('Testing operation'));
+      // When no callStack is provided, TemplateErrorWrapper should not set it by default.
+      expect(error.callStack, isNull);
     });
 
     test('uses default message if not provided', () {
@@ -260,6 +263,7 @@ void main() {
       final error = TemplateErrorWrapper(
         originalError,
         stackTrace: StackTrace.current,
+        callStack: captureCallStack(),
       );
 
       expect(error.stackTrace, isNotNull);
@@ -271,6 +275,7 @@ void main() {
       final error = TemplateErrorWrapper(
         originalError,
         message: 'Wrapped error',
+        callStack: <String>['user.html:1 (template root)'],
       );
 
       final errorString = error.toString();

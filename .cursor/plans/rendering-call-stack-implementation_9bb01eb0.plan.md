@@ -4,33 +4,26 @@ overview: Implement full rendering call stack tracking for Jinja.dart, connectin
 todos:
   - id: utils-callstack-helpers
     content: Add Zone-based rendering call stack helpers and implement captureCallStack in lib/src/utils.dart
-    status: pending
+    status: completed
   - id: template-entry-wiring
     content: Wrap Template.render and renderAsync entrypoints with root rendering call stack frames
-    status: pending
+    status: completed
   - id: renderer-macro-include-wiring
     content: Wire rendering call stack frames into macro invocations and includes in lib/src/renderer.dart
-    status: pending
+    status: completed
   - id: exceptions-callstack
     content: Feed captureCallStack into TemplateErrorWrapper and direct TemplateError constructions across renderer.dart, runtime.dart, and environment.dart
-    status: pending
+    status: completed
   - id: callstack-tests
     content: Update existing tests and add new tests to verify rendering call stack behavior and maxDepth truncation
-    status: pending
+    status: completed
   - id: docs-callstack
     content: Align README call stack documentation with implemented behavior
-    status: pending
+    status: completed
 isProject: false
 ---
 
 # Rendering Call Stack Implementation
-
-## Enhancement Summary
-
-- **Design sources**: Aligned with the comprehensive error logging design log, README call stack description (template → macro → include, max 10 frames), and Dart best practices for Zone-based context.
-- **Behavior**: Rendering call stack is captured only at meaningful template boundaries (template entry, macros, includes), exposed via `captureCallStack(maxDepth: 10)`, and wired into all `TemplateError` and `TemplateErrorWrapper` sites.
-- **Fallbacks & edge cases**: Outside a rendering Zone, `captureCallStack` falls back to a trimmed Dart stack trace; templates without a path use `'<string>'`/`'<unknown>'`; deeply nested chains are hard-limited to 10 frames to match documentation.
-- **Performance & safety**: Zone-local storage avoids global mutable state, keeps overhead near-zero when no errors occur, and ensures async rendering (macros, includes, futures) preserves the logical call chain.
 
 ## Goals
 

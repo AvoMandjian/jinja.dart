@@ -229,6 +229,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         stackTrace: stackTrace,
         operation: 'Unpacking values for target',
         suggestions: suggestions,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -330,18 +331,35 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
             ''');
       }
 
-      node.body.accept(this, derived);
+      final templatePath = derived.template ?? context.template ?? '<unknown>';
 
       // If buffer is an async collecting sink, return a Future that resolves it
       if (buffer is _AsyncCollectingSink) {
-        return buffer.getResolvedContent().then((content) {
-          // Macro output should be safe if auto-escaping was enabled during rendering
-          return SafeString(content);
-        });
+        final _AsyncCollectingSink asyncBuffer = buffer;
+        return withRenderFrameAsync<SafeString>(
+          templatePath: templatePath,
+          line: node.line,
+          description: 'macro ${node.name}',
+          body: () async {
+            node.body.accept(this, derived);
+            final content = await asyncBuffer.getResolvedContent();
+            // Macro output should be safe if auto-escaping was enabled during rendering
+            return SafeString(content);
+          },
+        );
       }
-      // Macro output should be safe if auto-escaping was enabled during rendering
-      // This prevents double escaping when the macro result is used in an interpolation
-      return SafeString(buffer.toString());
+
+      // Macro output should be safe if auto-escaping was enabled during rendering.
+      // This prevents double escaping when the macro result is used in an interpolation.
+      return withRenderFrame<SafeString>(
+        templatePath: templatePath,
+        line: node.line,
+        description: 'macro ${node.name}',
+        body: () {
+          node.body.accept(this, derived);
+          return SafeString(buffer.toString());
+        },
+      );
     }
 
     return macro;
@@ -601,6 +619,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         contextSnippet: (context.source != null && node.line != null && node.column != null)
             ? errorContextSnippet(context.source!, node.line!, node.column!)
             : null,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -863,6 +882,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         operation: 'Extending template',
         suggestions: suggestions,
         templatePath: context.template,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -997,6 +1017,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
                 operation: 'Rendering for loop body',
                 suggestions: suggestions,
                 templatePath: context.template,
+                callStack: captureCallStack(),
               );
             }
           }
@@ -1025,6 +1046,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
             operation: 'Processing for loop iterable',
             suggestions: suggestions,
             templatePath: context.template,
+            callStack: captureCallStack(),
           );
         }
       }
@@ -1179,6 +1201,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         operation: 'Rendering for loop',
         suggestions: suggestions,
         templatePath: context.template,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -1312,11 +1335,27 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
     }
 
     if (template != null) {
-      if (!node.withContext) {
-        context = context.derived(withContext: false);
+      final Template includedTemplate = template;
+      // Derive context for the included template, optionally without carrying over locals.
+      if (node.withContext) {
+        context = context.derived(template: includedTemplate.path ?? context.template);
+      } else {
+        context = context.derived(
+          template: includedTemplate.path ?? context.template,
+          withContext: false,
+        );
       }
 
-      template.body.accept(this, context);
+      final templatePath = includedTemplate.path ?? context.template ?? '<unknown>';
+
+      withRenderFrame<void>(
+        templatePath: templatePath,
+        line: node.line,
+        description: includedTemplate.path != null ? 'include ${includedTemplate.path}' : 'include',
+        body: () {
+          includedTemplate.body.accept(this, context);
+        },
+      );
     }
   }
 
@@ -1472,6 +1511,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         operation: 'Rendering interpolation expression',
         suggestions: suggestions,
         templatePath: context.template,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -1511,6 +1551,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         operation: 'Rendering output block',
         suggestions: suggestions,
         templatePath: context.template,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -1877,6 +1918,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         operation: 'Performing slice operation',
         suggestions: suggestions,
         templatePath: context.template,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -2646,6 +2688,7 @@ class _AsyncCollectingSink implements StringSink {
           stackTrace: stackTrace,
           operation: 'Resolving async Future value',
           suggestions: suggestions,
+          callStack: captureCallStack(),
         );
       }
     }
@@ -2727,6 +2770,7 @@ base class AsyncRenderer {
               operation: 'Resolving async global \'${entry.key}\'',
               suggestions: suggestions,
               templatePath: context.template,
+              callStack: captureCallStack(),
             );
           }
         } else {
@@ -2769,6 +2813,7 @@ base class AsyncRenderer {
               operation: 'Resolving async variable \'${entry.key}\'',
               suggestions: suggestions,
               templatePath: context.template,
+              callStack: captureCallStack(),
             );
           }
         } else {

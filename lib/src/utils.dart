@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:html_unescape/html_unescape.dart';
@@ -348,14 +349,125 @@ List<String> getSimilarNames(
   return distances.where((entry) => entry.$2 <= maxDistance).take(maxResults).map((entry) => entry.$1).toList();
 }
 
+/// Zone key used to store the current rendering call stack.
+const Object _renderCallStackKey = Object();
+
+/// Internal representation of a single rendering frame.
+///
+/// This describes where we are in template rendering, for example:
+/// - template path
+/// - line number (if available)
+/// - human readable description, e.g. "template root", "macro renderUser", "include sidebar.html"
+class _RenderFrame {
+  const _RenderFrame({
+    this.templatePath,
+    this.line,
+    required this.description,
+  });
+
+  final String? templatePath;
+  final int? line;
+  final String description;
+}
+
+List<_RenderFrame> _getCurrentFrames() {
+  final frames = Zone.current[_renderCallStackKey] as List<_RenderFrame>?;
+  if (frames == null) {
+    return const <_RenderFrame>[];
+  }
+  return frames;
+}
+
+T _withRenderFrame<T>(_RenderFrame frame, T Function() body) {
+  final current = _getCurrentFrames();
+  final updated = List<_RenderFrame>.of(current)..add(frame);
+  return runZoned<T>(
+    body,
+    zoneValues: <Object?, Object?>{
+      _renderCallStackKey: updated,
+    },
+  );
+}
+
+Future<T> _withRenderFrameAsync<T>(_RenderFrame frame, Future<T> Function() body) {
+  final current = _getCurrentFrames();
+  final updated = List<_RenderFrame>.of(current)..add(frame);
+  return runZoned<Future<T>>(
+    () => body(),
+    zoneValues: <Object?, Object?>{
+      _renderCallStackKey: updated,
+    },
+  );
+}
+
+T withRenderFrame<T>({
+  String? templatePath,
+  int? line,
+  required String description,
+  required T Function() body,
+}) {
+  return _withRenderFrame<T>(
+    _RenderFrame(
+      templatePath: templatePath,
+      line: line,
+      description: description,
+    ),
+    body,
+  );
+}
+
+Future<T> withRenderFrameAsync<T>({
+  String? templatePath,
+  int? line,
+  required String description,
+  required Future<T> Function() body,
+}) {
+  return _withRenderFrameAsync<T>(
+    _RenderFrame(
+      templatePath: templatePath,
+      line: line,
+      description: description,
+    ),
+    body,
+  );
+}
+
 /// Capture rendering call stack.
 ///
 /// Returns a list of call stack frames (max [maxDepth] frames).
-/// Currently returns empty list - will be enhanced when call stack tracking is implemented.
 List<String> captureCallStack({int maxDepth = 10}) {
-  // TODO: Implement call stack tracking during rendering
-  // This will track template -> macro -> include chain
-  return [];
+  if (maxDepth <= 0) {
+    return <String>[];
+  }
+
+  final frames = _getCurrentFrames();
+
+  if (frames.isNotEmpty) {
+    final result = <String>[];
+    for (var i = 0; i < frames.length && i < maxDepth; i++) {
+      final frame = frames[i];
+      final path = frame.templatePath ?? '<unknown>';
+      final linePart = frame.line != null ? ':${frame.line}' : '';
+      result.add('$path$linePart (${frame.description})');
+    }
+    return result;
+  }
+
+  // Fallback to Dart stack trace when no rendering call stack is available.
+  final stackLines = StackTrace.current.toString().split('\n');
+  final result = <String>[];
+  for (final line in stackLines) {
+    final trimmed = line.trim();
+    if (trimmed.isEmpty) {
+      continue;
+    }
+    result.add(trimmed);
+    if (result.length >= maxDepth) {
+      break;
+    }
+  }
+
+  return result;
 }
 
 /// Generate actionable suggestions based on error type.

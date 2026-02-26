@@ -126,6 +126,7 @@ base class Context {
         contextSnippet: (source != null && node is Node && node.line != null && node.column != null)
             ? errorContextSnippet(source!, node.line!, node.column!)
             : null,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -252,6 +253,7 @@ base class Context {
         operation: 'Resolving variable \'$name\'',
         suggestions: suggestions,
         templatePath: template,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -384,6 +386,7 @@ base class Context {
         contextSnippet: (source != null && node is Node && node.line != null && node.column != null)
             ? errorContextSnippet(source!, node.line!, node.column!)
             : null,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -415,6 +418,7 @@ base class Context {
         contextSnippet: (source != null && node is Node && node.line != null && node.column != null)
             ? errorContextSnippet(source!, node.line!, node.column!)
             : null,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -449,6 +453,7 @@ base class Context {
         operation: 'Calling filter \'$name\' with ${positional.length} positional and ${named.length} named arguments',
         suggestions: suggestions,
         templatePath: template,
+        callStack: captureCallStack(),
       );
     }
   }
@@ -482,6 +487,7 @@ base class Context {
         operation: 'Calling test \'$name\' with ${positional.length} positional and ${named.length} named arguments',
         suggestions: suggestions,
         templatePath: template,
+        callStack: captureCallStack(),
       );
     }
   }
