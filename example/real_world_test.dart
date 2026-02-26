@@ -1770,14 +1770,13 @@ void main() async {
     final env = GetJinja.environment(
       MockBuildContext(),
       loader,
-      // enableJinjaDebugLogging: true,
+      enableJinjaDebugLogging: true,
       valueListenableJinjaError: (error) {
         print('Jinja Error: $error');
         errors.add(error);
       },
       callbackToParentProject: ({required payload}) async {
         await Future<void>.delayed(const Duration(seconds: 2));
-        print('Mock callbackToParentProject called with: $payload');
         return {
           'agent_name': 'main',
           'client_name': 'jinja-hq',

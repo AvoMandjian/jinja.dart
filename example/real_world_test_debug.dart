@@ -2807,7 +2807,6 @@ void main() async {
       },
       callbackToParentProject: ({required payload}) async {
         await Future<void>.delayed(const Duration(seconds: 2));
-        print('Mock callbackToParentProject called with: $payload');
         return {'mock_data': 'test_data'};
       },
     );

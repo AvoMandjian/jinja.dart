@@ -85,8 +85,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
         var totalOutput = context.outputSoFar;
         var current = currentOutput ?? '';
-        var soFar =
-            (current.isNotEmpty && totalOutput.endsWith(current)) ? totalOutput.substring(0, totalOutput.length - current.length) : totalOutput;
+        var soFar = (current.isNotEmpty && totalOutput.endsWith(current))
+            ? totalOutput.substring(0, totalOutput.length - current.length)
+            : totalOutput;
 
         var info = BreakpointInfo(
           nodeType: nodeType,
@@ -104,7 +105,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
-  Future<List<Object?>> visitArray(Array node, DebugRenderContext context) async {
+  Future<List<Object?>> visitArray(
+    Array node,
+    DebugRenderContext context,
+  ) async {
     await _checkBreakpoint(node, context, 'Array');
     var result = <Object?>[];
     for (var value in node.values) {
@@ -114,7 +118,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
-  Future<Object?> visitAttribute(Attribute node, DebugRenderContext context) async {
+  Future<Object?> visitAttribute(
+    Attribute node,
+    DebugRenderContext context,
+  ) async {
     // Don't check breakpoints on Attribute nodes - they're part of expression evaluation
     var value = await node.value.accept(this, context);
     return context.attribute(node.attribute, value, node);
@@ -130,7 +137,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
-  Future<Parameters> visitCalling(Calling node, DebugRenderContext context) async {
+  Future<Parameters> visitCalling(
+    Calling node,
+    DebugRenderContext context,
+  ) async {
     var positional = <Object?>[];
     for (var argument in node.arguments) {
       positional.add(await argument.accept(this, context));
@@ -161,22 +171,33 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
-  Future<Object?> visitCondition(Condition node, DebugRenderContext context) async {
+  Future<Object?> visitCondition(
+    Condition node,
+    DebugRenderContext context,
+  ) async {
     await _checkBreakpoint(node, context, 'Condition');
     var testResult = await node.test.accept(this, context);
     if (boolean(testResult)) {
       return await node.trueValue.accept(this, context);
     }
-    return node.falseValue != null ? await node.falseValue!.accept(this, context) : null;
+    return node.falseValue != null
+        ? await node.falseValue!.accept(this, context)
+        : null;
   }
 
   @override
-  Future<Object?> visitConstant(Constant node, DebugRenderContext context) async {
+  Future<Object?> visitConstant(
+    Constant node,
+    DebugRenderContext context,
+  ) async {
     return node.value;
   }
 
   @override
-  Future<Map<Object?, Object?>> visitDict(Dict node, DebugRenderContext context) async {
+  Future<Map<Object?, Object?>> visitDict(
+    Dict node,
+    DebugRenderContext context,
+  ) async {
     await _checkBreakpoint(node, context, 'Dict');
     var result = <Object?, Object?>{};
     for (var (:key, :value) in node.pairs) {
@@ -221,7 +242,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
-  Future<NamespaceValue> visitNamespaceRef(NamespaceRef node, DebugRenderContext context) async {
+  Future<NamespaceValue> visitNamespaceRef(
+    NamespaceRef node,
+    DebugRenderContext context,
+  ) async {
     return NamespaceValue(node.name, node.attribute);
   }
 
@@ -240,7 +264,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
-  Future<List<Object?>> visitTuple(Tuple node, DebugRenderContext context) async {
+  Future<List<Object?>> visitTuple(
+    Tuple node,
+    DebugRenderContext context,
+  ) async {
     var result = <Object?>[];
     for (var value in node.values) {
       result.add(await value.accept(this, context));
@@ -266,19 +293,41 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
       nodeName = node.target.toString();
     }
     await _checkBreakpoint(node, context, 'Assign', nodeName: nodeName);
+
+    // Evaluate target and value in the async debug context.
     var target = await node.target.accept(this, context);
-    var values = await node.value.accept(this, context);
-    context.assignTargets(target, values);
+    var value = await node.value.accept(this, context);
+
+    // If the evaluated value is still a Future (for example, because a global like
+    // `jinja_action` returns a Future), await it here so that subsequent reads of
+    // the assigned variable see the resolved result instead of a Future.
+    if (value is Future) {
+      try {
+        value = await value;
+      } catch (e) {
+        // In debug mode, surface the error through the debug controller rather than
+        // wrapping it again; this keeps behavior consistent with other debug nodes.
+        rethrow;
+      }
+    }
+
+    context.assignTargets(target, value);
   }
 
   @override
-  Future<void> visitAssignBlock(AssignBlock node, DebugRenderContext context) async {
+  Future<void> visitAssignBlock(
+    AssignBlock node,
+    DebugRenderContext context,
+  ) async {
     await _checkBreakpoint(node, context, 'AssignBlock');
     _baseRenderer.visitAssignBlock(node, context);
   }
 
   @override
-  Future<void> visitAutoEscape(AutoEscape node, DebugRenderContext context) async {
+  Future<void> visitAutoEscape(
+    AutoEscape node,
+    DebugRenderContext context,
+  ) async {
     await _checkBreakpoint(node, context, 'AutoEscape');
     _baseRenderer.visitAutoEscape(node, context);
   }
@@ -299,7 +348,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
-  Future<void> visitCallBlock(CallBlock node, DebugRenderContext context) async {
+  Future<void> visitCallBlock(
+    CallBlock node,
+    DebugRenderContext context,
+  ) async {
     await _checkBreakpoint(node, context, 'CallBlock');
     _baseRenderer.visitCallBlock(node, context);
   }
@@ -316,7 +368,13 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     // Skip breakpoint for Data nodes on the for statement line when inside iterations
     // This prevents the whitespace after {% for %} from triggering on each iteration
     if (!(_inForIteration && node.line == _currentForLine)) {
-      await _checkBreakpoint(node, context, 'Data', nodeData: node.data, currentOutput: node.data);
+      await _checkBreakpoint(
+        node,
+        context,
+        'Data',
+        nodeData: node.data,
+        currentOutput: node.data,
+      );
     }
   }
 
@@ -339,7 +397,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
-  Future<void> visitFilterBlock(FilterBlock node, DebugRenderContext context) async {
+  Future<void> visitFilterBlock(
+    FilterBlock node,
+    DebugRenderContext context,
+  ) async {
     await _checkBreakpoint(node, context, 'FilterBlock');
     _baseRenderer.visitFilterBlock(node, context);
   }
@@ -398,7 +459,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
       var outputAfterIteration = context.outputSoFar;
 
       if (outputAfterIteration.length > outputBeforeIteration.length) {
-        var currentOutput = outputAfterIteration.substring(outputBeforeIteration.length);
+        var currentOutput = outputAfterIteration.substring(
+          outputBeforeIteration.length,
+        );
         // This is a bit of a hack, but we need to manually trigger the breakpoint
         // for the content generated inside the loop, as the nodes inside won't
         // be aware that they are part of a loop's output.
@@ -418,7 +481,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
-  Future<void> visitFromImport(FromImport node, DebugRenderContext context) async {
+  Future<void> visitFromImport(
+    FromImport node,
+    DebugRenderContext context,
+  ) async {
     await _checkBreakpoint(node, context, 'FromImport');
     _baseRenderer.visitFromImport(node, context);
   }
@@ -451,7 +517,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
-  Future<void> visitInterpolation(Interpolation node, DebugRenderContext context) async {
+  Future<void> visitInterpolation(
+    Interpolation node,
+    DebugRenderContext context,
+  ) async {
     if (node.line != null) {
       context.setLine(node.line!);
     }
@@ -494,7 +563,10 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   }
 
   @override
-  Future<void> visitTemplateNode(TemplateNode node, DebugRenderContext context) async {
+  Future<void> visitTemplateNode(
+    TemplateNode node,
+    DebugRenderContext context,
+  ) async {
     await _checkBreakpoint(node, context, 'Template');
 
     // Set up blocks

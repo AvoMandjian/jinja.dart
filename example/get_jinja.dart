@@ -23,7 +23,10 @@ enum LogType {
 // Mock UtilFunctions for standalone usage
 class UtilFunctions {
   UtilFunctions._();
-  static void appLog(dynamic message, {dynamic logType}) {}
+  static void appLog(dynamic message, {dynamic logType}) {
+    print('Jinja log: $message');
+  }
+
   static String formatDate(String date) => date;
   static double getScreenWidth(dynamic context) => 1024.0;
   static double getScreenHeight(dynamic context) => 768.0;
