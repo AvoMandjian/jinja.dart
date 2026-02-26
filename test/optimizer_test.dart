@@ -13,9 +13,12 @@ void main() {
 
   group('Optimizer', () {
     test('visitAttribute constant folding', () {
-      final context = Context(env, data: {
-        'foo': {'bar': 42}
-      });
+      final context = Context(
+        env,
+        data: {
+          'foo': {'bar': 42},
+        },
+      );
       final node = Attribute(value: const Constant(value: {'bar': 42}), attribute: 'bar');
       final optimized = optimizer.visitAttribute(node, context);
       expect(optimized, isA<Constant>().having((c) => c.value, 'value', 42));
@@ -33,6 +36,41 @@ void main() {
       final node = Concat(values: [const Constant(value: 'foo'), const Constant(value: 'bar')]);
       final optimized = optimizer.visitConcat(node, context);
       expect(optimized, isA<Constant>().having((c) => c.value, 'value', 'foobar'));
+    });
+
+    test('visitDict constant folding for all-constant pairs', () {
+      final context = Context(env);
+      const node = Dict(
+        pairs: <Pair>[
+          (key: Constant(value: 'a'), value: Constant(value: 1)),
+          (key: Constant(value: 'b'), value: Constant(value: 2)),
+        ],
+      );
+
+      final optimized = optimizer.visitDict(node, context);
+
+      expect(
+        optimized,
+        isA<Constant>().having(
+          (c) => c.value,
+          'value',
+          <Object?, Object?>{'a': 1, 'b': 2},
+        ),
+      );
+    });
+
+    test('visitDict does not fold when any pair is non-constant', () {
+      final context = Context(env, data: const {'x': 42});
+      const node = Dict(
+        pairs: <Pair>[
+          (key: Constant(value: 'a'), value: Constant(value: 1)),
+          (key: Constant(value: 'b'), value: Name(name: 'x')),
+        ],
+      );
+
+      final optimized = optimizer.visitDict(node, context);
+
+      expect(optimized, isA<Dict>());
     });
 
     test('visitBlock', () {

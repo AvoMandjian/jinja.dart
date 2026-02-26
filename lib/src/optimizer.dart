@@ -1,10 +1,11 @@
 import 'dart:math' as math;
 
+import 'package:meta/meta.dart';
+
 import 'nodes.dart';
 import 'runtime.dart';
 import 'utils.dart';
 import 'visitor.dart';
-import 'package:meta/meta.dart';
 
 @doNotStore
 class Optimizer implements Visitor<Context, Node> {
@@ -64,8 +65,7 @@ class Optimizer implements Visitor<Context, Node> {
     return node.copyWith(
       arguments: visitNodes<Expression>(node.arguments, context),
       keywords: <Keyword>[
-        for (var (:key, :value) in node.keywords)
-          (key: key, value: visitNode<Expression>(value, context)),
+        for (var (:key, :value) in node.keywords) (key: key, value: visitNode<Expression>(value, context)),
       ],
     );
   }
@@ -75,8 +75,7 @@ class Optimizer implements Visitor<Context, Node> {
     return node.copyWith(
       value: visitNode<Expression>(node.value, context),
       operands: <Operand>[
-        for (var (operator, value) in node.operands)
-          (operator, visitNode<Expression>(value, context)),
+        for (var (operator, value) in node.operands) (operator, visitNode<Expression>(value, context)),
       ],
     );
   }
@@ -149,12 +148,10 @@ class Optimizer implements Visitor<Context, Node> {
         ),
     ];
 
-    if (pairs.any((pair) => pair.key is Constant && pair.value is Constant)) {
-      var constantPairs = pairs.cast<({Constant key, Constant value})>();
-
+    if (pairs.every((pair) => pair.key is Constant && pair.value is Constant)) {
       return Constant(
         value: <Object?, Object?>{
-          for (var (:key, :value) in constantPairs) key.value: value.value,
+          for (var (:key, :value) in pairs) (key as Constant).value: (value as Constant).value,
         },
       );
     }
