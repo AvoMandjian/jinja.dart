@@ -567,6 +567,57 @@ class GetJinja {
 
     return Environment(
       globals: <String, Object?>{
+        /// Executes an action based on the target type (widget, db, or app).
+        ///
+        /// **Usage:**
+        /// `{{ jinja_action('my_widget_id', 'widget', {'key': 'value'}) }}`
+        ///
+        /// **Parameters:**
+        /// - `widgetId`: The ID of the widget or data source.
+        /// - `target`: The target type. Options:
+        ///   - `'widget'`: Refreshes the widget with the given ID.
+        ///   - `'db'`: Runs a data source action.
+        ///   - `'app'`: Executes a general app action via callback.
+        /// - `data`: The payload data for the action.
+        /// - `actionId`: (Optional) Specific action identifier for 'app' target.
+        ///
+        /// **Returns:**
+        /// The result of the action (if any), or void/null.
+        'jinja_action': ([
+          String? widgetId,
+          String? target,
+          dynamic data,
+          dynamic actionId,
+        ]) async {
+          if (target == 'widget') {
+            try {
+              // mapOfWidgets[widgetId].refreshWidget.call(data);
+            } catch (e) {
+              valueListenableJinjaError(
+                'Error in jinja_action for widget refresh -> $widgetId: $e',
+              );
+            }
+          } else if (target == 'db') {
+            final res = await callbackToParentProject(
+              payload: {
+                'action': 'run_data_source',
+                'data_source_id': widgetId,
+                'properties': data ?? loader.globalJinjaData,
+              },
+            );
+            return res;
+          } else if (target == 'app') {
+            final res = await callbackToParentProject(
+              payload: {
+                'action': actionId,
+                'widget_id': widgetId,
+                'properties': data ?? loader.globalJinjaData,
+              },
+            );
+            return res;
+          }
+        },
+
         /// Runs a data source by its ID with provided properties.
         ///
         /// **Usage:**

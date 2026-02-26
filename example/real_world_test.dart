@@ -6,10 +6,39 @@ import 'package:jinja/jinja.dart';
 
 import 'get_jinja.dart';
 
-final jinjaScript = '''
-{% import 'macro_header' as macro_header %}
-<h4> hello from macro: {{ macro_header.macro_header({'value': 'Hello, World!'}) }}</h4>
-''';
+final jinjaScript = """{% set login_response = jinja_action("handle_on_login","db")%}
+
+    {% if not login_response and login_response.workflow_results and login_response.workflow_results.login and login_response.workflow_results.login.login_user and login_response.workflow_results.login.login_user.token is not null or login_response.workflow_results.login.login_user.token is not empty %}
+        {% if login_response and login_response.workflow_results and login_response.workflow_results.login and login_response.workflow_results.login.login_user and login_response.workflow_results.login.login_user.detail is not null or login_response.workflow_results.login.login_user.detail is not empty %}
+            {% set error_message = login_response.workflow_results.login.login_user.detail %}
+            {% set dataToSend = {"error_message": error_message} | tojson %}
+            {% do jinja_action("show_error_message","app", dataToSend) %}
+        {% endif %}
+    {% endif %}
+
+
+{
+  "workflow_actions": [
+    {% if login_response and login_response.workflow_results and login_response.workflow_results.login and login_response.workflow_results.login.login_user and login_response.workflow_results.login.login_user.token is not null or login_response.workflow_results.login.login_user.token is not empty %}
+    {% set dataToSend = {"key": 'userToken', "value": login_response.workflow_results.login.login_user.token} | tojson %}
+    {% do jinja_action("save_to_secure_storage","app", dataToSend) %}
+    {
+      "json_in_schema_id": "get_data_from_db_json_in_schema",
+      "json_out_schema_id": "get_data_from_db_json_out_schema",
+      "set_page": {
+        "properties": {
+          "column_id": "column_2",
+          "page_id": "jframe_scripts_list",
+          "cell_value": "output_doc_jframe_scripts_list",
+          "table_name": "content",
+          "column_name": "content_id"
+        }
+      }
+    }
+    {% endif %}
+  ]
+}
+""";
 final jinjaData = {
   'jinja_script_id': '5c61aa50-d001-487b-8c12-5b2380bdedd4',
   'output_type': '',
@@ -1733,6 +1762,7 @@ void main() async {
     final env = GetJinja.environment(
       MockBuildContext(),
       loader,
+      enableJinjaDebugLogging: true,
       valueListenableJinjaError: (error) {
         print('Jinja Error: $error');
         errors.add(error);
@@ -1740,7 +1770,48 @@ void main() async {
       callbackToParentProject: ({required payload}) async {
         await Future<void>.delayed(const Duration(seconds: 2));
         print('Mock callbackToParentProject called with: $payload');
-        return {'mock_data': 'test_data'};
+        return {
+          'mock_data': 'test_data',
+          'login_response': {
+            'agent_name': 'main',
+            'client_name': 'jinja-hq',
+            'jinja_data': {
+              'password': 'avoavo',
+              'username': '',
+            },
+            'workflow_continue': null,
+            'workflows': [
+              'login',
+            ],
+            'payload': {
+              'workflows': [
+                'login',
+              ],
+              'jinja_data': {
+                'username': '',
+                'password': 'avoavo',
+              },
+              'workflow_continue': null,
+              'client_name': 'jinja-hq',
+              'agent_name': 'main',
+            },
+            'workflow_results': {
+              'login': {
+                'login_user': {
+                  'workflow_response_action': [
+                    {
+                      'widget_id': 'login',
+                      'workflow_response_action_type': 'return_to_app',
+                      'workflow_action': 'return_result',
+                      'properties': {},
+                    }
+                  ],
+                  'detail': 'Invalid username or password',
+                },
+              },
+            },
+          },
+        };
       },
       // enableJinjaDebugLogging: true,
     );
