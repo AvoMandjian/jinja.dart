@@ -89,6 +89,42 @@ var result = template.render({'name': 'World'});
 print(result); // Output: Hello World!
 ```
 
+### Async Rendering
+
+Jinja for Dart also supports an async rendering mode that can work with `Future` values in globals, context data, and function calls:
+
+```dart
+// Async global in data
+Future<String> getName() async {
+  await Future<void>.delayed(Duration(milliseconds: 10));
+  return 'World';
+}
+
+var template = Template('Hello {{ name }}!');
+var asyncResult = await template.renderAsync({'name': getName()});
+print(asyncResult); // Output: Hello World!
+```
+
+Async rendering is powered by a dedicated async renderer and has the following behavior:
+
+- `Template.renderAsync` resolves all `Future` values in environment globals and render-time data before evaluation.
+- Function calls and filters that return `Future` values (e.g. callbacks passed in globals) are awaited during expression evaluation.
+- Assignments from async calls are awaited before later expressions:
+
+  ```jinja
+  {% set login_response = jinja_action('handle_on_login', 'db') %}
+  {% if login_response and login_response.workflow_results.login.login_user.token %}
+    Logged in
+  {% endif %}
+  ```
+
+  In async mode, `login_response` will be fully resolved before the `if` condition is evaluated, so attribute access is safe as long as you guard against `null` logically (as above).
+
+**Limitations:**
+
+- Async semantics are only guaranteed for `renderAsync` / `renderToAsync`; `render` remains purely synchronous and does not await `Future` values.
+- Most common expressions and statements (function calls, `set`, `if`, logical operators, attribute/item access) support async values. Less common constructs may still behave synchronously and should avoid returning `Future` values.
+
 **Alternative: Direct Template Creation**
 
 You can also create templates directly without an Environment (creates a temporary Environment internally):

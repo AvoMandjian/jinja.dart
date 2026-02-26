@@ -1882,6 +1882,592 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   }
 }
 
+/// Async version of the renderer used for normal (non-debug) async rendering.
+///
+/// This closely follows the structure of `AsyncDebugRenderer` but operates on
+/// `AsyncRenderContext` and does not include any debugging or breakpoint logic.
+class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?>> {
+  AsyncStringSinkRenderer();
+
+  final StringSinkRenderer _baseRenderer = const StringSinkRenderer();
+
+  StringSinkRenderContext _toSyncContext(AsyncRenderContext context) {
+    return StringSinkRenderContext(
+      context.environment,
+      context.sink,
+      template: context.template,
+      blocks: context.blocks,
+      parent: context.parent,
+      data: context.context,
+      autoEscape: context.autoEscape,
+    );
+  }
+
+  @override
+  Future<List<Object?>> visitArray(Array node, AsyncRenderContext context) async {
+    var result = <Object?>[];
+    for (var value in node.values) {
+      result.add(await value.accept(this, context));
+    }
+    return result;
+  }
+
+  @override
+  Future<Object?> visitAttribute(Attribute node, AsyncRenderContext context) async {
+    var value = await node.value.accept(this, context);
+    return context.attribute(node.attribute, value, node);
+  }
+
+  @override
+  Future<Object?> visitCall(Call node, AsyncRenderContext context) async {
+    var function = await node.value.accept(this, context);
+    var params = await node.calling.accept(this, context) as Parameters;
+    var (positional, named) = params;
+    return context.call(function, node, positional, named);
+  }
+
+  @override
+  Future<Parameters> visitCalling(Calling node, AsyncRenderContext context) async {
+    var positional = <Object?>[];
+    for (var argument in node.arguments) {
+      positional.add(await argument.accept(this, context));
+    }
+
+    var named = <Symbol, Object?>{};
+    for (var (:key, :value) in node.keywords) {
+      named[Symbol(key)] = await value.accept(this, context);
+    }
+
+    return (positional, named);
+  }
+
+  @override
+  Future<bool> visitCompare(Compare node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    return _baseRenderer.visitCompare(node, syncContext);
+  }
+
+  @override
+  Future<Object?> visitConcat(Concat node, AsyncRenderContext context) async {
+    var buffer = StringBuffer();
+    for (var value in node.values) {
+      buffer.write(await value.accept(this, context));
+    }
+    return buffer.toString();
+  }
+
+  @override
+  Future<Object?> visitCondition(Condition node, AsyncRenderContext context) async {
+    var testResult = await node.test.accept(this, context);
+    if (boolean(testResult)) {
+      return await node.trueValue.accept(this, context);
+    }
+    return node.falseValue != null ? await node.falseValue!.accept(this, context) : null;
+  }
+
+  @override
+  Future<Object?> visitConstant(Constant node, AsyncRenderContext context) async {
+    return node.value;
+  }
+
+  @override
+  Future<Map<Object?, Object?>> visitDict(Dict node, AsyncRenderContext context) async {
+    var result = <Object?, Object?>{};
+    for (var (:key, :value) in node.pairs) {
+      var k = await key.accept(this, context);
+      var v = await value.accept(this, context);
+      result[k] = v;
+    }
+    return result;
+  }
+
+  @override
+  Future<Object?> visitFilter(Filter node, AsyncRenderContext context) async {
+    var params = await node.calling.accept(this, context) as Parameters;
+    var (positional, named) = params;
+    return context.filter(node.name, positional, named);
+  }
+
+  @override
+  Future<Object?> visitItem(Item node, AsyncRenderContext context) async {
+    var key = await node.key.accept(this, context);
+    var value = await node.value.accept(this, context);
+    return context.item(key, value, node);
+  }
+
+  @override
+  Future<Object?> visitLogical(Logical node, AsyncRenderContext context) async {
+    var left = await node.left.accept(this, context);
+    return switch (node.operator) {
+      LogicalOperator.and => boolean(left) ? await node.right.accept(this, context) : left,
+      LogicalOperator.or => boolean(left) ? left : await node.right.accept(this, context),
+    };
+  }
+
+  @override
+  Future<Object?> visitName(Name node, AsyncRenderContext context) async {
+    return switch (node.context) {
+      AssignContext.load => context.resolve(node.name),
+      _ => node.name,
+    };
+  }
+
+  @override
+  Future<NamespaceValue> visitNamespaceRef(NamespaceRef node, AsyncRenderContext context) async {
+    return NamespaceValue(node.name, node.attribute);
+  }
+
+  @override
+  Future<Object?> visitScalar(Scalar node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    return _baseRenderer.visitScalar(node, syncContext);
+  }
+
+  @override
+  Future<Object?> visitTest(Test node, AsyncRenderContext context) async {
+    var params = await node.calling.accept(this, context) as Parameters;
+    var (positional, named) = params;
+    return context.test(node.name, positional, named);
+  }
+
+  @override
+  Future<List<Object?>> visitTuple(Tuple node, AsyncRenderContext context) async {
+    var result = <Object?>[];
+    for (var value in node.values) {
+      result.add(await value.accept(this, context));
+    }
+    return result;
+  }
+
+  @override
+  Future<Object?> visitUnary(Unary node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    return _baseRenderer.visitUnary(node, syncContext);
+  }
+
+  @override
+  Future<void> visitAssign(Assign node, AsyncRenderContext context) async {
+    var target = await node.target.accept(this, context);
+    var values = await node.value.accept(this, context);
+    context.assignTargets(target, values);
+  }
+
+  @override
+  Future<void> visitAssignBlock(AssignBlock node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    _baseRenderer.visitAssignBlock(node, syncContext);
+  }
+
+  @override
+  Future<void> visitAutoEscape(AutoEscape node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    _baseRenderer.visitAutoEscape(node, syncContext);
+  }
+
+  @override
+  Future<void> visitBlock(Block node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    _baseRenderer.visitBlock(node, syncContext);
+  }
+
+  @override
+  Future<void> visitBreak(Break node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    _baseRenderer.visitBreak(node, syncContext);
+  }
+
+  @override
+  Future<void> visitCallBlock(CallBlock node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    _baseRenderer.visitCallBlock(node, syncContext);
+  }
+
+  @override
+  Future<void> visitContinue(Continue node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    _baseRenderer.visitContinue(node, syncContext);
+  }
+
+  @override
+  Future<void> visitData(Data node, AsyncRenderContext context) async {
+    context.write(node.data);
+  }
+
+  @override
+  Future<void> visitDebug(Debug node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    _baseRenderer.visitDebug(node, syncContext);
+  }
+
+  @override
+  Future<void> visitDo(Do node, AsyncRenderContext context) async {
+    await node.value.accept(this, context);
+  }
+
+  @override
+  Future<void> visitExtends(Extends node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    _baseRenderer.visitExtends(node, syncContext);
+  }
+
+  @override
+  Future<void> visitFilterBlock(FilterBlock node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    _baseRenderer.visitFilterBlock(node, syncContext);
+  }
+
+  @override
+  Future<void> visitFor(For node, AsyncRenderContext context) async {
+    var targets = await node.target.accept(this, context);
+    var iterable = await node.iterable.accept(this, context);
+
+    Future<void> render(Object? iterable, [int depth = 0]) async {
+      List<Object?> values;
+
+      if (iterable is Map) {
+        values = List<Object?>.of(iterable.entries);
+      } else {
+        values = list(iterable);
+      }
+
+      if (values.isEmpty) {
+        if (node.orElse != null) {
+          await node.orElse!.accept(this, context);
+        }
+        return;
+      }
+
+      if (node.test case var test?) {
+        var filtered = <Object?>[];
+        for (var value in values) {
+          var data = _baseRenderer.getDataForTargets(targets, value);
+          var newContext = context.derived(data: data);
+          var result = await test.accept(this, newContext);
+          if (boolean(result)) {
+            filtered.add(value);
+          }
+        }
+        values = filtered;
+
+        if (values.isEmpty) {
+          if (node.orElse != null) {
+            await node.orElse!.accept(this, context);
+          }
+          return;
+        }
+      }
+
+      // LoopContext provides loop.index, loop.first, loop.last, etc.
+      // Recursive rendering via loop.call() is not fully async-aware here,
+      // but basic loop metadata is preserved.
+      String recurse(Object? data, [int depth = 0]) {
+        // Recursive loops are not supported in async mode yet.
+        // Return empty string to avoid crashes if called.
+        return '';
+      }
+
+      var loop = LoopContext(values, depth, recurse);
+
+      int iteration = 0;
+      for (var value in loop) {
+        iteration++;
+        var data = _baseRenderer.getDataForTargets(targets, value);
+        var forContext = context.derived(data: data);
+        forContext.set('loop', loop);
+
+        try {
+          await node.body.accept(this, forContext);
+        } on BreakException {
+          break;
+        } on ContinueException {
+          continue;
+        }
+      }
+    }
+
+    await render(iterable);
+  }
+
+  @override
+  Future<void> visitFromImport(FromImport node, AsyncRenderContext context) async {
+    var templateOrPath = await node.template.accept(this, context);
+
+    var template = switch (templateOrPath) {
+      String path => context.environment.getTemplate(path),
+      Template template => template,
+      Object? value => throw ArgumentError.value(value, 'template'),
+    };
+
+    for (var (name, alias) in node.names) {
+      Object? macro(List<Object?> positional, Map<Object?, Object?> named) {
+        Macro? targetMacro;
+
+        for (var macro in template.body.macros) {
+          if (macro.name == name) {
+            targetMacro = macro;
+            break;
+          }
+        }
+
+        if (targetMacro == null) {
+          throw TemplateRuntimeError(
+            "The '${template.path}' does not export the requested name.",
+          );
+        }
+
+        // Build a sync context with an async-collecting sink so that macros
+        // can still work with async values inside their bodies.
+        final baseSyncContext = StringSinkRenderContext(
+          context.environment,
+          _AsyncCollectingSink(StringBuffer(), context.environment),
+          template: context.template,
+          blocks: context.blocks,
+          parent: context.parent,
+          data: context.context,
+          autoEscape: context.autoEscape,
+        );
+
+        MacroFunction function;
+
+        if (node.withContext) {
+          function = _baseRenderer.getMacroFunction(targetMacro, baseSyncContext);
+        } else {
+          var newContext = baseSyncContext.derived(withContext: false);
+          function = _baseRenderer.getMacroFunction(targetMacro, newContext);
+        }
+
+        return function(positional, named);
+      }
+
+      context.set(alias ?? name, macro);
+    }
+  }
+
+  @override
+  Future<void> visitIf(If node, AsyncRenderContext context) async {
+    var testResult = await node.test.accept(this, context);
+    if (boolean(testResult)) {
+      await node.body.accept(this, context);
+    } else if (node.orElse != null) {
+      await node.orElse!.accept(this, context);
+    }
+  }
+
+  @override
+  Future<void> visitImport(Import node, AsyncRenderContext context) async {
+    var templateOrPath = await node.template.accept(this, context);
+
+    var template = switch (templateOrPath) {
+      String path => context.environment.getTemplate(path),
+      Template template => template,
+      Object? value => throw ArgumentError.value(value, 'template'),
+    };
+
+    var namespace = Namespace();
+
+    for (var macro in template.body.macros) {
+      // Build a sync context with an async-collecting sink so that macros
+      // can still work with async values inside their bodies.
+      final baseSyncContext = StringSinkRenderContext(
+        context.environment,
+        _AsyncCollectingSink(StringBuffer(), context.environment),
+        template: context.template,
+        blocks: context.blocks,
+        parent: context.parent,
+        data: context.context,
+        autoEscape: context.autoEscape,
+      );
+
+      if (node.withContext) {
+        namespace[macro.name] = _baseRenderer.getMacroFunction(macro, baseSyncContext);
+      } else {
+        var newContext = baseSyncContext.derived(withContext: false);
+        namespace[macro.name] = _baseRenderer.getMacroFunction(macro, newContext);
+      }
+    }
+
+    context.set(node.target, namespace);
+  }
+
+  @override
+  Future<void> visitInclude(Include node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    _baseRenderer.visitInclude(node, syncContext);
+  }
+
+  @override
+  Future<void> visitInterpolation(Interpolation node, AsyncRenderContext context) async {
+    var value = await node.value.accept(this, context);
+    var finalized = context.finalize(value);
+    context.write(finalized);
+  }
+
+  @override
+  Future<void> visitMacro(Macro node, AsyncRenderContext context) async {
+    // Build macro function using the existing sync implementation, but
+    // register it on the async context so that async rendering can call it.
+    // We use an _AsyncCollectingSink so that macros can still work with
+    // async values inside their bodies and return a Future when needed.
+    final syncContext = StringSinkRenderContext(
+      context.environment,
+      _AsyncCollectingSink(StringBuffer(), context.environment),
+      template: context.template,
+      blocks: context.blocks,
+      parent: context.parent,
+      data: context.context,
+      autoEscape: context.autoEscape,
+    );
+    final function = _baseRenderer.getMacroFunction(node, syncContext);
+    // Register macro on both the async context (for normal calls) and the
+    // sync context used by the underlying macro implementation so that
+    // recursive macros can resolve their own name.
+    syncContext.set(node.name, function);
+    context.set(node.name, function);
+  }
+
+  @override
+  Future<void> visitOutput(Output node, AsyncRenderContext context) async {
+    for (var child in node.nodes) {
+      await child.accept(this, context);
+    }
+  }
+
+  @override
+  Future<void> visitTemplateNode(TemplateNode node, AsyncRenderContext context) async {
+    // Mirror the synchronous template rendering behavior so that
+    // `self` and block callbacks behave the same way in async mode.
+    // This is essentially an async-friendly version of
+    // StringSinkRenderer.visitTemplateNode.
+
+    // TODO(renderer): add `TemplateReference`
+    var self = Namespace();
+
+    for (var block in node.blocks) {
+      var blockName = block.name;
+
+      // Render function for `self.blockName()`
+      String render() {
+        // Use a synchronous render context for block execution so that
+        // the underlying StringSinkRenderer sees the expected context type.
+        final syncContext = _toSyncContext(context);
+        var blocks = syncContext.blocks[blockName];
+
+        if (blocks == null) {
+          throw UndefinedError(
+            "Block '$blockName' is not defined.",
+            operationValue: "Rendering block '$blockName'",
+            suggestionsValue: <String>[
+              'Check if the block is defined in the template',
+              'Verify the block name matches between templates',
+            ],
+            templatePathValue: context.template,
+          );
+        }
+
+        // Call the current block implementation
+        blocks[0](syncContext);
+        return '';
+      }
+
+      self[blockName] = render;
+
+      var blocks = context.blocks[blockName] ??= <ContextCallback>[];
+
+      if (block.required) {
+        Never callback(Context ctx) {
+          throw TemplateRuntimeError(
+            "Required block '${block.name}' not found.",
+            operationValue: "Rendering required block '${block.name}'",
+            suggestionsValue: <String>[
+              'Add a block implementation in the child template',
+              'Ensure the block name matches exactly',
+            ],
+            templatePathValue: ctx.template,
+          );
+        }
+
+        blocks.add(callback);
+      } else {
+        var parentIndex = blocks.length + 1;
+
+        void callback(Context ctx) {
+          var current = ctx.get('super');
+
+          String parent() {
+            var parentBlocks = ctx.blocks[blockName]!;
+
+            if (parentIndex >= parentBlocks.length) {
+              throw TemplateRuntimeError(
+                "Super block '$blockName' not found.",
+                operationValue: "Calling super block '$blockName'",
+                suggestionsValue: <String>[
+                  'Check if the parent template defines this block',
+                  'Verify the block inheritance chain is correct',
+                ],
+                templatePathValue: ctx.template,
+              );
+            }
+
+            parentBlocks[parentIndex](ctx);
+            return '';
+          }
+
+          ctx.set('super', parent);
+          block.body.accept(_baseRenderer, ctx);
+          ctx.set('super', current);
+        }
+
+        blocks.add(callback);
+      }
+    }
+
+    context.set('self', self);
+    await node.body.accept(this, context);
+  }
+
+  @override
+  Future<void> visitTrans(Trans node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    _baseRenderer.visitTrans(node, syncContext);
+  }
+
+  @override
+  Future<void> visitTryCatch(TryCatch node, AsyncRenderContext context) async {
+    try {
+      await node.body.accept(this, context);
+    } catch (error) {
+      if (node.exception != null) {
+        var target = await node.exception!.accept(this, context);
+        context.assignTargets(target, error);
+      }
+      await node.catchBody.accept(this, context);
+    }
+  }
+
+  @override
+  Future<void> visitWith(With node, AsyncRenderContext context) async {
+    var targets = <Object?>[];
+    for (var target in node.targets) {
+      targets.add(await target.accept(this, context));
+    }
+
+    var values = <Object?>[];
+    for (var value in node.values) {
+      values.add(await value.accept(this, context));
+    }
+
+    var data = _baseRenderer.getDataForTargets(targets, values);
+    var newContext = context.derived(data: data);
+    await node.body.accept(this, newContext);
+  }
+
+  @override
+  Future<Object?> visitSlice(Slice node, AsyncRenderContext context) async {
+    final syncContext = _toSyncContext(context);
+    return _baseRenderer.visitSlice(node, syncContext);
+  }
+}
+
 /// Custom sink that collects Futures written during rendering.
 class _AsyncCollectingSink implements StringSink {
   final StringSink _delegate;
@@ -2101,9 +2687,10 @@ class _AsyncCollectingSink implements StringSink {
 /// This renderer properly awaits Future values returned from function calls
 /// during template rendering.
 base class AsyncRenderer {
-  const AsyncRenderer();
+  AsyncRenderer();
 
-  final StringSinkRenderer _baseRenderer = const StringSinkRenderer();
+  final StringSinkRenderer _syncRenderer = const StringSinkRenderer();
+  final AsyncStringSinkRenderer _asyncRenderer = AsyncStringSinkRenderer();
 
   /// Renders a template node asynchronously, resolving all Future values in globals and during rendering.
   Future<void> render(TemplateNode node, AsyncRenderContext context) async {
@@ -2193,43 +2780,66 @@ base class AsyncRenderer {
         }
       }
 
-      // Create a custom sink that collects Futures
-      context.environment.debugJinja(
-        'AsyncRenderer.render: Creating _AsyncCollectingSink',
-      );
-      _AsyncCollectingSink collectingSink = _AsyncCollectingSink(context.sink, context.environment);
+      // If the template uses inheritance/extends, fall back to the original
+      // sync renderer + collecting sink pipeline to preserve complex block and
+      // super() semantics.
+      final hasExtends = node.findAll<Extends>().isNotEmpty;
+      if (hasExtends) {
+        context.environment.debugJinja(
+          'AsyncRenderer.render: Template uses extends, falling back to '
+          'sync renderer with collecting sink',
+        );
 
-      // Create a sync context with the collecting sink
-      context.environment.debugJinja(
-        'AsyncRenderer.render: Creating sync context with '
-        '${resolvedGlobals.length} globals, ${resolvedData.length} context vars',
-      );
-      var syncContext = StringSinkRenderContext(
-        context.environment,
-        collectingSink,
-        template: context.template,
-        blocks: context.blocks,
-        parent: resolvedGlobals,
-        data: resolvedData,
-      );
+        // Create a custom sink that collects Futures
+        final collectingSink = _AsyncCollectingSink(
+          context.sink,
+          context.environment,
+        );
 
-      // Use the base synchronous renderer
-      context.environment.debugJinja(
-        'AsyncRenderer.render: Starting synchronous template rendering',
-      );
-      _baseRenderer.visitTemplateNode(node, syncContext);
-      context.environment.debugJinja(
-        'AsyncRenderer.render: Synchronous rendering complete, resolving Futures',
-      );
+        // Create a sync context with the collecting sink
+        final syncContext = StringSinkRenderContext(
+          context.environment,
+          collectingSink,
+          template: context.template,
+          blocks: context.blocks,
+          parent: resolvedGlobals,
+          data: resolvedData,
+        );
 
-      // Get the resolved content and write it to the original sink
-      String resolvedContent = await collectingSink.getResolvedContent();
-      context.environment.debugJinja(
-        'AsyncRenderer.render: All Futures resolved, writing final content '
-        '(length: ${resolvedContent.length})',
-      );
-      context.sink.write(resolvedContent);
-      context.environment.debugJinja('AsyncRenderer.render: Render complete');
+        // Use the base synchronous renderer
+        _syncRenderer.visitTemplateNode(node, syncContext);
+
+        // Resolve all collected Futures and write final content
+        final resolvedContent = await collectingSink.getResolvedContent();
+        context.sink.write(resolvedContent);
+        context.environment.debugJinja(
+          'AsyncRenderer.render: Render complete (extends fallback)',
+        );
+      } else {
+        // Create an async render context that will be used by the async renderer
+        context.environment.debugJinja(
+          'AsyncRenderer.render: Creating async context with '
+          '${resolvedGlobals.length} globals, ${resolvedData.length} context vars',
+        );
+        var asyncContext = AsyncRenderContext(
+          context.environment,
+          context.sink,
+          template: context.template,
+          blocks: context.blocks,
+          parent: resolvedGlobals,
+          data: resolvedData,
+        );
+
+        // Use the async renderer
+        context.environment.debugJinja(
+          'AsyncRenderer.render: Starting async template rendering',
+        );
+        context.environment.debugJinja(
+          'AsyncRenderer.render: Delegating to AsyncStringSinkRenderer',
+        );
+        await node.accept(_asyncRenderer, asyncContext);
+        context.environment.debugJinja('AsyncRenderer.render: Render complete');
+      }
     } on BreakException {
       rethrow;
     } on ContinueException {

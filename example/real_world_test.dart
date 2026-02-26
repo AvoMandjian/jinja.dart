@@ -1762,7 +1762,7 @@ void main() async {
     final env = GetJinja.environment(
       MockBuildContext(),
       loader,
-      enableJinjaDebugLogging: true,
+      // enableJinjaDebugLogging: true,
       valueListenableJinjaError: (error) {
         print('Jinja Error: $error');
         errors.add(error);
@@ -1772,7 +1772,7 @@ void main() async {
         print('Mock callbackToParentProject called with: $payload');
         return {
           'mock_data': 'test_data',
-          'login_response': {
+          'handle_on_login': {
             'agent_name': 'main',
             'client_name': 'jinja-hq',
             'jinja_data': {

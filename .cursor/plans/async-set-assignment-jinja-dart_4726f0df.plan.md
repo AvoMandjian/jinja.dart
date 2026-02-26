@@ -4,22 +4,22 @@ overview: Refactor the async renderer so that async function calls used in `{% s
 todos:
   - id: engine-repro-test
     content: Add a minimal failing test that covers async `set` followed by an `if` accessing the assigned value.
-    status: pending
+    status: completed
   - id: engine-async-design
     content: Finalize the async renderer/interpreter design and decide whether to duplicate or extend `StringSinkRenderer` for async rendering.
-    status: pending
+    status: completed
   - id: engine-async-impl-core-nodes
     content: Implement async evaluation for calls, assignments, logical operators, attribute/item access, and `if` in the new async renderer.
-    status: pending
+    status: completed
   - id: engine-wire-async-renderer
     content: Wire `AsyncRenderer.render` and `Template.renderAsync` to use the new async evaluation path instead of the sync `_baseRenderer` + `_AsyncCollectingSink` for control-flow semantics.
-    status: pending
+    status: completed
   - id: engine-regression-tests
     content: Update `real_world_test.dart` login scenario and add regression tests to ensure async `set` values are visible to subsequent `if`/expressions.
-    status: pending
+    status: completed
   - id: engine-docs-async-behavior
     content: Update project documentation to describe async rendering behavior, supported patterns, and limitations.
-    status: pending
+    status: completed
 isProject: false
 ---
 
@@ -36,6 +36,14 @@ I'm using the writing-plans skill to create the implementation plan.
   the `if` executes before the `jinja_action` future has completed and before the assignment has updated the context, so `login_response` resolves to `null` and attribute access throws `UndefinedError`.
 - **Goal**: Make async `set` behave intuitively: when a template assigns from an async call, any *subsequent* expressions and control-flow that read that variable should see the resolved value, not `null`/undefined.
 
+### Observed Runtime Failure (Current Engine)
+
+- **Trace details**: The debug logs for `example/real_world_test.dart` show:
+  - `visitAssign` sees `value=Instance of 'Future<dynamic>'`, logs `Value is Future`, and `_AsyncCollectingSink.writeAssignmentFuture` tracks the assignment future.
+  - Immediately afterward, `visitIf` runs and the condition is evaluated; `visitName` for `login_response` (load) logs `Variable "login_response" NOT FOUND` and resolves it to `null`.
+  - `visitAttribute` then attempts to access `workflow_results` on this `null` value, causing `UndefinedError: Cannot access attribute 'workflow_results' on a null object` at `StringSinkRenderer.visitAttribute`.
+- **Implication**: The assignment future is only awaited *after* synchronous template evaluation has completed, so variable binding in the context lags behind control-flow evaluation. The plan must ensure that in async mode, the assignment completes and updates the context before any later `if`/expression that reads `login_response` executes, so this runtime error cannot occur.
+
 ## High-Level Design
 
 - **Approach**: Introduce a truly async evaluation path for template nodes that can depend on async values (assignments, function calls, conditionals), rather than trying to retrofit semantics purely via `_AsyncCollectingSink` post-processing.
@@ -51,6 +59,12 @@ I'm using the writing-plans skill to create the implementation plan.
 - **Async renderer as a separate path**: Implement async evaluation in a dedicated renderer/interpreter (e.g. `AsyncStringSinkRenderer` or `AsyncInterpreter`) that reuses the existing AST and context types but does not change `StringSinkRenderer` semantics.
 - **Minimal surface-area for changes**: Restrict engine modifications to `lib/src/renderer.dart` (and an optional `lib/src/async_renderer.dart`) plus `Template.renderAsync` wiring, leaving parser, lexer, and runtime APIs untouched.
 - **Streaming output compatibility**: Keep `_AsyncCollectingSink` available for streaming async outputs (e.g. `{{ async_call() }}`) but remove its role in controlling assignment and `if` semantics so variable binding and control-flow are driven by the async renderer instead of post-processing.
+
+### External Best-Practice Alignment
+
+- **Jinja2 async patterns**: Python Jinja2’s own async support (`render_async`, async loaders) treats async evaluation as a separate execution path and does not attempt to magically await coroutines inside otherwise-synchronous code paths. Mirroring this, `renderAsync` in jinja.dart should have a clearly documented async semantics model instead of trying to “retrofit” async on top of the sync renderer.
+- **Template semantics over transport**: The engine should guarantee that from the template author’s perspective, `{% set x = async_call() %}` followed by `{% if x and x.foo %}` behaves as if `async_call()` completed before the `if`, regardless of whether output is streamed or buffered.
+- **Explicit async limitations**: Similar to upstream Jinja2, explicitly document any constructs that remain unsupported or discouraged in async mode (e.g. deeply nested async calls inside macros, or custom filters that return Futures but are used in sync-only contexts), and ensure the engine fails with clear `TemplateError` messages instead of surprising runtime type errors on `Future`/null values.
 
 ## Plan
 

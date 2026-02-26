@@ -2800,6 +2800,7 @@ void main() async {
     final env = GetJinja.environment(
       MockBuildContext(),
       loader,
+      enableJinjaDebugLogging: true,
       valueListenableJinjaError: (error) {
         print('Jinja Error: $error');
         errors.add(error);

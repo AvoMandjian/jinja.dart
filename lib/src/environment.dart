@@ -1001,6 +1001,6 @@ base class Template {
       data: data,
     );
 
-    await const AsyncRenderer().render(body, context);
+    await AsyncRenderer().render(body, context);
   }
 }
