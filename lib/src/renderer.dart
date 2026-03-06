@@ -158,8 +158,7 @@ base class AsyncRenderContext extends RenderContext {
   }
 }
 
-base class StringSinkRenderer
-    extends Visitor<StringSinkRenderContext, Object?> {
+base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> {
   const StringSinkRenderer();
 
   Map<String, Object?> getDataForTargets(Object? targets, Object? current) {
@@ -313,10 +312,7 @@ base class StringSinkRenderer
               kwargs[key] = named[key];
             } else if (key is Symbol) {
               // Convert Symbol to String for kwargs
-              var keyStr = key
-                  .toString()
-                  .replaceAll('Symbol("', '')
-                  .replaceAll('")', '');
+              var keyStr = key.toString().replaceAll('Symbol("', '').replaceAll('")', '');
               kwargs[keyStr] = named[key];
             } else {
               kwargs[key] = named[key];
@@ -325,7 +321,8 @@ base class StringSinkRenderer
           derived.set('kwargs', kwargs);
         } else if (remaining.isNotEmpty) {
           throw TemplateRuntimeError(
-              'remaining.isNotEmpty: ${remaining.map((e) => e.toString()).join(', ')}');
+            'remaining.isNotEmpty: ${remaining.map((e) => e.toString()).join(', ')}',
+          );
         }
       } catch (e) {
         throw TemplateRuntimeError('''Error at macro ${node.name},
@@ -423,8 +420,7 @@ base class StringSinkRenderer
     ];
 
     var named = <Symbol, Object?>{
-      for (var (:key, :value) in node.keywords)
-        Symbol(key): value.accept(this, context),
+      for (var (:key, :value) in node.keywords) Symbol(key): value.accept(this, context),
     };
 
     return (positional, named);
@@ -482,8 +478,7 @@ base class StringSinkRenderer
 
   @override
   Object? visitCondition(Condition node, StringSinkRenderContext context) {
-    context.environment
-        .debugJinja('visitCondition: Evaluating ternary condition');
+    context.environment.debugJinja('visitCondition: Evaluating ternary condition');
     final testResult = node.test.accept(this, context);
     final testBool = boolean(testResult);
     context.environment.debugJinja(
@@ -509,8 +504,7 @@ base class StringSinkRenderer
   @override
   Map<Object?, Object?> visitDict(Dict node, StringSinkRenderContext context) {
     return <Object?, Object?>{
-      for (var (:key, :value) in node.pairs)
-        key.accept(this, context): value.accept(this, context),
+      for (var (:key, :value) in node.pairs) key.accept(this, context): value.accept(this, context),
     };
   }
 
@@ -554,10 +548,8 @@ base class StringSinkRenderer
     var left = node.left.accept(this, context);
 
     return switch (node.operator) {
-      LogicalOperator.and =>
-        boolean(left) ? node.right.accept(this, context) : left,
-      LogicalOperator.or =>
-        boolean(left) ? left : node.right.accept(this, context),
+      LogicalOperator.and => boolean(left) ? node.right.accept(this, context) : left,
+      LogicalOperator.or => boolean(left) ? left : node.right.accept(this, context),
     };
   }
 
@@ -596,10 +588,9 @@ base class StringSinkRenderer
         suggestionsValue: e.suggestions,
         templatePathValue: context.template,
         callStackValue: e.callStack,
-        contextSnippetValue:
-            (context.source != null && node.line != null && node.column != null)
-                ? errorContextSnippet(context.source!, node.line!, node.column!)
-                : null,
+        contextSnippetValue: (context.source != null && node.line != null && node.column != null)
+            ? errorContextSnippet(context.source!, node.line!, node.column!)
+            : null,
         variableNameValue: e.variableName,
         similarNamesValue: e.similarNames,
       );
@@ -614,11 +605,9 @@ base class StringSinkRenderer
       final similarNames = getSimilarNames(node.name, availableKeys);
       final suggestions = <String>[
         'Check if \'${node.name}\' is defined before using it: {% if ${node.name} %}...{% endif %}',
-        if (similarNames.isNotEmpty)
-          'Did you mean one of these? ${similarNames.join(', ')}',
+        if (similarNames.isNotEmpty) 'Did you mean one of these? ${similarNames.join(', ')}',
         'Ensure \'${node.name}\' is passed to the template context',
-        if (availableKeys.isNotEmpty)
-          'Available variables: ${availableKeys.take(10).join(', ')}${availableKeys.length > 10 ? '...' : ''}',
+        if (availableKeys.isNotEmpty) 'Available variables: ${availableKeys.take(10).join(', ')}${availableKeys.length > 10 ? '...' : ''}',
       ];
       throw TemplateErrorWrapper(
         e,
@@ -629,10 +618,9 @@ base class StringSinkRenderer
         operation: 'Resolving variable \'${node.name}\'',
         suggestions: suggestions,
         templatePath: context.template,
-        contextSnippet:
-            (context.source != null && node.line != null && node.column != null)
-                ? errorContextSnippet(context.source!, node.line!, node.column!)
-                : null,
+        contextSnippet: (context.source != null && node.line != null && node.column != null)
+            ? errorContextSnippet(context.source!, node.line!, node.column!)
+            : null,
         callStack: captureCallStack(),
       );
     }
@@ -872,8 +860,7 @@ base class StringSinkRenderer
         'visitExtends: Template loaded, rendering extended template body',
       );
       template.body.accept(this, context);
-      context.environment
-          .debugJinja('visitExtends: Extended template rendered');
+      context.environment.debugJinja('visitExtends: Extended template rendered');
     } on BreakException {
       rethrow;
     } on ContinueException {
@@ -1103,8 +1090,7 @@ base class StringSinkRenderer
 
         // Check if we're in async context and should wait for Futures before throwing error
         if (varNameToCheck != null && context.sink is _AsyncCollectingSink) {
-          final varName =
-              varNameToCheck; // Store in final variable for null safety
+          final varName = varNameToCheck; // Store in final variable for null safety
           context.environment.debugJinja(
             'visitFor: Iterable is null for "$varName", '
             'checking for Futures before throwing error',
@@ -1116,8 +1102,7 @@ base class StringSinkRenderer
           final currentFuturesCount = sink.futuresCount;
           // Wait for ALL Futures (not just assignment Futures) because run_data_source calls
           // in interpolations might update loader.globals
-          final checkFuture =
-              sink.waitForAllFutures(maxIndex: currentFuturesCount).then((_) {
+          final checkFuture = sink.waitForAllFutures(maxIndex: currentFuturesCount).then((_) {
             context.environment.debugJinja(
               'visitFor: All Futures complete, '
               're-evaluating iterable for "$varName"',
@@ -1178,8 +1163,7 @@ base class StringSinkRenderer
         String? iterableName = varNameToCheck;
         final suggestions = <String>[
           'Check if the iterable variable is defined',
-          if (iterableName != null)
-            'Ensure \'$iterableName\' is passed to the template context',
+          if (iterableName != null) 'Ensure \'$iterableName\' is passed to the template context',
           'Verify the iterable is not null before the for loop',
           'Use conditional rendering: {% if $iterableName %}{% for ... %}{% endif %}',
         ];
@@ -1235,6 +1219,9 @@ base class StringSinkRenderer
       Object? value => throw ArgumentError.value(value, 'template'),
     };
 
+    var moduleContext = context.derived(withContext: node.withContext, sink: StringBuffer());
+    template.body.accept(this, moduleContext);
+
     for (var (name, alias) in node.names) {
       Object? macro(List<Object?> positional, Map<Object?, Object?> named) {
         Macro? targetMacro;
@@ -1252,14 +1239,7 @@ base class StringSinkRenderer
           );
         }
 
-        MacroFunction function;
-
-        if (node.withContext) {
-          function = getMacroFunction(targetMacro, context);
-        } else {
-          var newContext = context.derived(withContext: false);
-          function = getMacroFunction(targetMacro, newContext);
-        }
+        MacroFunction function = getMacroFunction(targetMacro, moduleContext);
 
         return function(positional, named);
       }
@@ -1305,13 +1285,11 @@ base class StringSinkRenderer
 
     var namespace = Namespace();
 
+    var moduleContext = context.derived(withContext: node.withContext, sink: StringBuffer());
+    template.body.accept(this, moduleContext);
+
     for (var macro in template.body.macros) {
-      if (node.withContext) {
-        namespace[macro.name] = getMacroFunction(macro, context);
-      } else {
-        var newContext = context.derived(withContext: false);
-        namespace[macro.name] = getMacroFunction(macro, newContext);
-      }
+      namespace[macro.name] = getMacroFunction(macro, moduleContext);
     }
 
     context.set(node.target, namespace);
@@ -1357,7 +1335,8 @@ base class StringSinkRenderer
       // Derive context for the included template, optionally without carrying over locals.
       if (node.withContext) {
         context = context.derived(
-            template: includedTemplate.path ?? context.template);
+          template: includedTemplate.path ?? context.template,
+        );
       } else {
         context = context.derived(
           template: includedTemplate.path ?? context.template,
@@ -1365,15 +1344,12 @@ base class StringSinkRenderer
         );
       }
 
-      final templatePath =
-          includedTemplate.path ?? context.template ?? '<unknown>';
+      final templatePath = includedTemplate.path ?? context.template ?? '<unknown>';
 
       withRenderFrame<void>(
         templatePath: templatePath,
         line: node.line,
-        description: includedTemplate.path != null
-            ? 'include ${includedTemplate.path}'
-            : 'include',
+        description: includedTemplate.path != null ? 'include ${includedTemplate.path}' : 'include',
         body: () {
           includedTemplate.body.accept(this, context);
         },
@@ -1428,21 +1404,15 @@ base class StringSinkRenderer
       } else if (node.value is Filter) {
         // Extract the underlying Name from Filter (e.g., data | tojson -> data)
         final filterNode = node.value as Filter;
-        if (filterNode.calling.arguments.isNotEmpty &&
-            filterNode.calling.arguments.first is Name) {
+        if (filterNode.calling.arguments.isNotEmpty && filterNode.calling.arguments.first is Name) {
           varNameToCheck = (filterNode.calling.arguments.first as Name).name;
         }
       }
 
-      final isNullOrEmpty = finalized == null ||
-          finalized == '' ||
-          (finalized is String && finalized == 'null');
+      final isNullOrEmpty = finalized == null || finalized == '' || (finalized is String && finalized == 'null');
 
-      if (isNullOrEmpty &&
-          varNameToCheck != null &&
-          context.sink is _AsyncCollectingSink) {
-        final varName =
-            varNameToCheck; // Store in final variable for null safety
+      if (isNullOrEmpty && varNameToCheck != null && context.sink is _AsyncCollectingSink) {
+        final varName = varNameToCheck; // Store in final variable for null safety
         context.environment.debugJinja(
           'visitInterpolation: Value is null/empty/null-string for '
           '"$varName", checking for Futures',
@@ -1454,8 +1424,7 @@ base class StringSinkRenderer
         final currentFuturesCount = sink.futuresCount;
         // Write a Future that waits for ALL Futures (not just assignment Futures)
         // because run_data_source calls in interpolations might update loader.globals
-        final checkFuture =
-            sink.waitForAllFutures(maxIndex: currentFuturesCount).then((_) {
+        final checkFuture = sink.waitForAllFutures(maxIndex: currentFuturesCount).then((_) {
           context.environment.debugJinja(
             'visitInterpolation: All Futures complete, '
             're-evaluating expression for "$varName"',
@@ -1507,8 +1476,7 @@ base class StringSinkRenderer
         return;
       }
 
-      final output =
-          context.autoEscape ? escape(finalized.toString()) : finalized;
+      final output = context.autoEscape ? escape(finalized.toString()) : finalized;
       context.environment.debugJinja(
         'visitInterpolation: Writing output: $output '
         '(autoEscape: ${context.autoEscape})',
@@ -1752,8 +1720,10 @@ base class StringSinkRenderer
           // Try npgettext
           var npgettext = context.resolve('npgettext');
           if (npgettext is Function) {
-            result = Function.apply(npgettext,
-                [node.context, bodyText, pluralText ?? bodyText, countValue]);
+            result = Function.apply(
+              npgettext,
+              [node.context, bodyText, pluralText ?? bodyText, countValue],
+            );
           } else {
             // Fallback to ngettext if context not supported directly or npgettext not found,
             // but we really should use context if provided.
@@ -1761,7 +1731,9 @@ base class StringSinkRenderer
             var ngettext = context.resolve('ngettext');
             if (ngettext is Function) {
               result = Function.apply(
-                  ngettext, [bodyText, pluralText ?? bodyText, countValue]);
+                ngettext,
+                [bodyText, pluralText ?? bodyText, countValue],
+              );
             }
           }
         } catch (e) {
@@ -1773,7 +1745,9 @@ base class StringSinkRenderer
           var ngettext = context.resolve('ngettext');
           if (ngettext is Function) {
             result = Function.apply(
-                ngettext, [bodyText, pluralText ?? bodyText, countValue]);
+              ngettext,
+              [bodyText, pluralText ?? bodyText, countValue],
+            );
           }
         } catch (e) {
           // ignore
@@ -1961,8 +1935,7 @@ base class StringSinkRenderer
 ///
 /// This closely follows the structure of `AsyncDebugRenderer` but operates on
 /// `AsyncRenderContext` and does not include any debugging or breakpoint logic.
-class AsyncStringSinkRenderer
-    extends Visitor<AsyncRenderContext, Future<Object?>> {
+class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?>> {
   AsyncStringSinkRenderer();
 
   final StringSinkRenderer _baseRenderer = const StringSinkRenderer();
@@ -1981,7 +1954,9 @@ class AsyncStringSinkRenderer
 
   @override
   Future<List<Object?>> visitArray(
-      Array node, AsyncRenderContext context) async {
+    Array node,
+    AsyncRenderContext context,
+  ) async {
     var result = <Object?>[];
     for (var value in node.values) {
       result.add(await value.accept(this, context));
@@ -1991,7 +1966,9 @@ class AsyncStringSinkRenderer
 
   @override
   Future<Object?> visitAttribute(
-      Attribute node, AsyncRenderContext context) async {
+    Attribute node,
+    AsyncRenderContext context,
+  ) async {
     var value = await node.value.accept(this, context);
     return context.attribute(node.attribute, value, node);
   }
@@ -2006,7 +1983,9 @@ class AsyncStringSinkRenderer
 
   @override
   Future<Parameters> visitCalling(
-      Calling node, AsyncRenderContext context) async {
+    Calling node,
+    AsyncRenderContext context,
+  ) async {
     var positional = <Object?>[];
     for (var argument in node.arguments) {
       positional.add(await argument.accept(this, context));
@@ -2037,25 +2016,29 @@ class AsyncStringSinkRenderer
 
   @override
   Future<Object?> visitCondition(
-      Condition node, AsyncRenderContext context) async {
+    Condition node,
+    AsyncRenderContext context,
+  ) async {
     var testResult = await node.test.accept(this, context);
     if (boolean(testResult)) {
       return await node.trueValue.accept(this, context);
     }
-    return node.falseValue != null
-        ? await node.falseValue!.accept(this, context)
-        : null;
+    return node.falseValue != null ? await node.falseValue!.accept(this, context) : null;
   }
 
   @override
   Future<Object?> visitConstant(
-      Constant node, AsyncRenderContext context) async {
+    Constant node,
+    AsyncRenderContext context,
+  ) async {
     return node.value;
   }
 
   @override
   Future<Map<Object?, Object?>> visitDict(
-      Dict node, AsyncRenderContext context) async {
+    Dict node,
+    AsyncRenderContext context,
+  ) async {
     var result = <Object?, Object?>{};
     for (var (:key, :value) in node.pairs) {
       var k = await key.accept(this, context);
@@ -2083,10 +2066,8 @@ class AsyncStringSinkRenderer
   Future<Object?> visitLogical(Logical node, AsyncRenderContext context) async {
     var left = await node.left.accept(this, context);
     return switch (node.operator) {
-      LogicalOperator.and =>
-        boolean(left) ? await node.right.accept(this, context) : left,
-      LogicalOperator.or =>
-        boolean(left) ? left : await node.right.accept(this, context),
+      LogicalOperator.and => boolean(left) ? await node.right.accept(this, context) : left,
+      LogicalOperator.or => boolean(left) ? left : await node.right.accept(this, context),
     };
   }
 
@@ -2100,7 +2081,9 @@ class AsyncStringSinkRenderer
 
   @override
   Future<NamespaceValue> visitNamespaceRef(
-      NamespaceRef node, AsyncRenderContext context) async {
+    NamespaceRef node,
+    AsyncRenderContext context,
+  ) async {
     return NamespaceValue(node.name, node.attribute);
   }
 
@@ -2119,7 +2102,9 @@ class AsyncStringSinkRenderer
 
   @override
   Future<List<Object?>> visitTuple(
-      Tuple node, AsyncRenderContext context) async {
+    Tuple node,
+    AsyncRenderContext context,
+  ) async {
     var result = <Object?>[];
     for (var value in node.values) {
       result.add(await value.accept(this, context));
@@ -2155,8 +2140,7 @@ class AsyncStringSinkRenderer
       } catch (e, stackTrace) {
         throw TemplateErrorWrapper(
           e,
-          message:
-              'Error awaiting async assignment for target "$target": ${e.toString()}',
+          message: 'Error awaiting async assignment for target "$target": ${e.toString()}',
           stackTrace: stackTrace,
           operation: 'Awaiting async assignment',
           suggestions: const [
@@ -2174,14 +2158,18 @@ class AsyncStringSinkRenderer
 
   @override
   Future<void> visitAssignBlock(
-      AssignBlock node, AsyncRenderContext context) async {
+    AssignBlock node,
+    AsyncRenderContext context,
+  ) async {
     final syncContext = _toSyncContext(context);
     _baseRenderer.visitAssignBlock(node, syncContext);
   }
 
   @override
   Future<void> visitAutoEscape(
-      AutoEscape node, AsyncRenderContext context) async {
+    AutoEscape node,
+    AsyncRenderContext context,
+  ) async {
     final syncContext = _toSyncContext(context);
     _baseRenderer.visitAutoEscape(node, syncContext);
   }
@@ -2200,7 +2188,9 @@ class AsyncStringSinkRenderer
 
   @override
   Future<void> visitCallBlock(
-      CallBlock node, AsyncRenderContext context) async {
+    CallBlock node,
+    AsyncRenderContext context,
+  ) async {
     final syncContext = _toSyncContext(context);
     _baseRenderer.visitCallBlock(node, syncContext);
   }
@@ -2235,7 +2225,9 @@ class AsyncStringSinkRenderer
 
   @override
   Future<void> visitFilterBlock(
-      FilterBlock node, AsyncRenderContext context) async {
+    FilterBlock node,
+    AsyncRenderContext context,
+  ) async {
     final syncContext = _toSyncContext(context);
     _baseRenderer.visitFilterBlock(node, syncContext);
   }
@@ -2314,7 +2306,9 @@ class AsyncStringSinkRenderer
 
   @override
   Future<void> visitFromImport(
-      FromImport node, AsyncRenderContext context) async {
+    FromImport node,
+    AsyncRenderContext context,
+  ) async {
     var templateOrPath = await node.template.accept(this, context);
 
     var template = switch (templateOrPath) {
@@ -2322,6 +2316,10 @@ class AsyncStringSinkRenderer
       Template template => template,
       Object? value => throw ArgumentError.value(value, 'template'),
     };
+
+    var asyncModuleContext = context.derived(withContext: node.withContext, sink: _AsyncCollectingSink(StringBuffer(), context.environment));
+    await template.body.accept(this, asyncModuleContext);
+    var syncModuleContext = _toSyncContext(asyncModuleContext);
 
     for (var (name, alias) in node.names) {
       Object? macro(List<Object?> positional, Map<Object?, Object?> named) {
@@ -2340,27 +2338,7 @@ class AsyncStringSinkRenderer
           );
         }
 
-        // Build a sync context with an async-collecting sink so that macros
-        // can still work with async values inside their bodies.
-        final baseSyncContext = StringSinkRenderContext(
-          context.environment,
-          _AsyncCollectingSink(StringBuffer(), context.environment),
-          template: context.template,
-          blocks: context.blocks,
-          parent: context.parent,
-          data: context.context,
-          autoEscape: context.autoEscape,
-        );
-
-        MacroFunction function;
-
-        if (node.withContext) {
-          function =
-              _baseRenderer.getMacroFunction(targetMacro, baseSyncContext);
-        } else {
-          var newContext = baseSyncContext.derived(withContext: false);
-          function = _baseRenderer.getMacroFunction(targetMacro, newContext);
-        }
+        MacroFunction function = _baseRenderer.getMacroFunction(targetMacro, syncModuleContext);
 
         return function(positional, named);
       }
@@ -2391,27 +2369,12 @@ class AsyncStringSinkRenderer
 
     var namespace = Namespace();
 
-    for (var macro in template.body.macros) {
-      // Build a sync context with an async-collecting sink so that macros
-      // can still work with async values inside their bodies.
-      final baseSyncContext = StringSinkRenderContext(
-        context.environment,
-        _AsyncCollectingSink(StringBuffer(), context.environment),
-        template: context.template,
-        blocks: context.blocks,
-        parent: context.parent,
-        data: context.context,
-        autoEscape: context.autoEscape,
-      );
+    var asyncModuleContext = context.derived(withContext: node.withContext, sink: _AsyncCollectingSink(StringBuffer(), context.environment));
+    await template.body.accept(this, asyncModuleContext);
+    var syncModuleContext = _toSyncContext(asyncModuleContext);
 
-      if (node.withContext) {
-        namespace[macro.name] =
-            _baseRenderer.getMacroFunction(macro, baseSyncContext);
-      } else {
-        var newContext = baseSyncContext.derived(withContext: false);
-        namespace[macro.name] =
-            _baseRenderer.getMacroFunction(macro, newContext);
-      }
+    for (var macro in template.body.macros) {
+      namespace[macro.name] = _baseRenderer.getMacroFunction(macro, syncModuleContext);
     }
 
     context.set(node.target, namespace);
@@ -2425,7 +2388,9 @@ class AsyncStringSinkRenderer
 
   @override
   Future<void> visitInterpolation(
-      Interpolation node, AsyncRenderContext context) async {
+    Interpolation node,
+    AsyncRenderContext context,
+  ) async {
     var value = await node.value.accept(this, context);
     var finalized = context.finalize(value);
     context.write(finalized);
@@ -2463,7 +2428,9 @@ class AsyncStringSinkRenderer
 
   @override
   Future<void> visitTemplateNode(
-      TemplateNode node, AsyncRenderContext context) async {
+    TemplateNode node,
+    AsyncRenderContext context,
+  ) async {
     // Mirror the synchronous template rendering behavior so that
     // `self` and block callbacks behave the same way in async mode.
     // This is essentially an async-friendly version of
@@ -2646,8 +2613,7 @@ class _AsyncCollectingSink implements StringSink {
 
   /// Returns a Future that resolves when all assignment Futures are complete
   Future<void> waitForAssignmentFutures() async {
-    final assignmentCount =
-        _isAssignmentFuture.where((isAssignment) => isAssignment).length;
+    final assignmentCount = _isAssignmentFuture.where((isAssignment) => isAssignment).length;
     _environment.debugJinja(
       '_AsyncCollectingSink.waitForAssignmentFutures: Waiting for '
       '$assignmentCount assignment Futures',
@@ -2827,8 +2793,7 @@ base class AsyncRenderer {
   /// Renders a template node asynchronously, resolving all Future values in globals and during rendering.
   Future<void> render(TemplateNode node, AsyncRenderContext context) async {
     try {
-      context.environment
-          .debugJinja('AsyncRenderer.render: Starting async render');
+      context.environment.debugJinja('AsyncRenderer.render: Starting async render');
       // First, resolve all async values in parent (globals)
       var resolvedGlobals = <String, Object?>{};
       context.environment.debugJinja(
@@ -2855,8 +2820,7 @@ base class AsyncRenderer {
             ];
             throw TemplateErrorWrapper(
               e,
-              message:
-                  'Error resolving async global \'${entry.key}\': ${e.toString()}',
+              message: 'Error resolving async global \'${entry.key}\': ${e.toString()}',
               stackTrace: stackTrace,
               operation: 'Resolving async global \'${entry.key}\'',
               suggestions: suggestions,
@@ -2899,8 +2863,7 @@ base class AsyncRenderer {
             ];
             throw TemplateErrorWrapper(
               e,
-              message:
-                  'Error resolving async variable \'${entry.key}\': ${e.toString()}',
+              message: 'Error resolving async variable \'${entry.key}\': ${e.toString()}',
               stackTrace: stackTrace,
               operation: 'Resolving async variable \'${entry.key}\'',
               suggestions: suggestions,
