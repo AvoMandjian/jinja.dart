@@ -19,9 +19,16 @@ void main() async {
     // Setup MapLoader with base templates for inheritance and inclusion
     final loader = MapLoader(
       {
-        'inner_macro_from_loader': '{% macro inner_macro_from_loader(value) %} Inner: {{ value }} {% endmacro %}',
-        'outer_macro_from_loader':
-            '{% from "inner_macro_from_loader" import inner_macro_from_loader %}{% macro outer_macro_from_loader(name) %} Outer macro for {{ name }}: {{ inner_macro_from_loader("nested value") }} {% endmacro %}',
+        'inner_macro_from_loader': '''
+        {% macro inner_macro_from_loader(value) %} 
+          Inner: {{ value }}
+        {% endmacro %}''',
+        'outer_macro_from_loader': '''
+        {% from "inner_macro_from_loader" import inner_macro_from_loader %}
+          {% macro outer_macro_from_loader(name) %}
+            Outer macro for {{ name }}: 
+            {{ inner_macro_from_loader("nested value") }}
+          {% endmacro %}''',
       },
       globalJinjaData: jinjaData,
     );
