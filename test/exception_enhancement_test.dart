@@ -90,7 +90,8 @@ void main() {
       );
 
       final errorString = error.toString();
-      final contextSection = errorString.split('Context:')[1].split('Call Stack:')[0];
+      final contextSection =
+          errorString.split('Context:')[1].split('Call Stack:')[0];
 
       // Should show first 10 variables and mention the rest
       expect(contextSection, contains('... and 5 more variables'));
@@ -187,7 +188,8 @@ void main() {
 
       expect(errorString, contains('UndefinedError'));
       expect(errorString, contains("Variable: 'userName'"));
-      expect(errorString, contains('Similar variables found: username, user_name'));
+      expect(errorString,
+          contains('Similar variables found: username, user_name'),);
     });
 
     test('works without variable name (backward compatibility)', () {

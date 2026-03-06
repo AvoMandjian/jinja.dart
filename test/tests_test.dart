@@ -346,8 +346,9 @@ void main() {
 
       var env = Environment(tests: {'matching': matching});
 
-      var tmpl = env.fromString('{{ "us-west-1" is matching "(us-east-1|ap-northeast-1)"'
-          ' or "stage" is matching "(dev|stage)" }}');
+      var tmpl = env
+          .fromString('{{ "us-west-1" is matching "(us-east-1|ap-northeast-1)"'
+              ' or "stage" is matching "(dev|stage)" }}');
 
       var result = tmpl.render();
       expect(result, equals('false'));

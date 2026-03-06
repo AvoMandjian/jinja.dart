@@ -63,7 +63,7 @@ void main() {
         'level4': level4,
         'working': working,
         'doublee': doublee,
-      }, globalJinjaData: {}),
+      }, globalJinjaData: {},),
     );
 
     test('layout', () {
@@ -101,7 +101,7 @@ void main() {
           'c': '{% extends "b" %}{% block intro %}--{{ '
               'super() }}--{% endblock %}\n{% block data '
               '%}[{{ super() }}]{% endblock %}',
-        }, globalJinjaData: {}),
+        }, globalJinjaData: {},),
       );
 
       var tmpl = env.getTemplate('c');
@@ -125,7 +125,7 @@ void main() {
           'a': '{% if false %}{% block x %}A{% endblock %}'
               '{% endif %}{{ self.x() }}',
           'b': '{% extends "a" %}{% block x %}B{{ super() }}{% endblock %}',
-        }, globalJinjaData: {}),
+        }, globalJinjaData: {},),
       );
 
       var tmpl = env.getTemplate('b');
@@ -138,7 +138,7 @@ void main() {
           'default1': 'DEFAULT1{% block x %}{% endblock %}',
           'default2': 'DEFAULT2{% block x %}{% endblock %}',
           'child': '{% extends default %}{% block x %}CHILD{% endblock %}',
-        }, globalJinjaData: {}),
+        }, globalJinjaData: {},),
       );
 
       var tmpl = env.getTemplate('child');
@@ -156,7 +156,7 @@ void main() {
             'child': '{% if default %}{% extends default %}{% else %}'
                 '{% extends "default1" %}{% endif %}'
                 '{% block x %}CHILD{% endblock %}',
-          }, globalJinjaData: {}),
+          }, globalJinjaData: {},),
         );
 
         var tmpl = env.getTemplate('child');
@@ -172,7 +172,7 @@ void main() {
         loader: MapLoader({
           'default.html': '{% for item in seq %}[{% block item scoped %}'
               '{% endblock %}]{% endfor %}',
-        }, globalJinjaData: {}),
+        }, globalJinjaData: {},),
       );
 
       var tmpl = env.fromString(
@@ -186,7 +186,7 @@ void main() {
         loader: MapLoader({
           'default.html': '{% for item in seq %}[{% block item scoped %}'
               '{{ item }}{% endblock %}]{% endfor %}',
-        }, globalJinjaData: {}),
+        }, globalJinjaData: {},),
       );
 
       var tmpl = env.fromString('{% extends "default.html" %}{% block item %}'
@@ -231,7 +231,7 @@ void main() {
         loader: MapLoader({
           'default': '{% block x required %}{# comment #}\n {% endblock %}',
           'level1': '{% extends "default" %}{% block x %}[1]{% endblock %}',
-        }, globalJinjaData: {}),
+        }, globalJinjaData: {},),
       );
 
       expect(env.getTemplate('level1').render(), equals('[1]'));
@@ -243,7 +243,7 @@ void main() {
           'default': '{% block x required %}{% endblock %}',
           'level1': '{% extends "default" %}{% block x %}[1]{% endblock %}',
           'level2': '{% extends "default" %}{% block x %}[2]{% endblock %}',
-        }, globalJinjaData: {}),
+        }, globalJinjaData: {},),
       );
 
       expect(env.getTemplate('level1').render(), equals('[1]'));
@@ -257,7 +257,7 @@ void main() {
           'level1': '{% extends "default" %}',
           'level2': '{% extends "level1" %}{% block x %}[2]{% endblock %}',
           'level3': '{% extends "level2" %}',
-        }, globalJinjaData: {}),
+        }, globalJinjaData: {},),
       );
 
       expect(
@@ -281,15 +281,20 @@ void main() {
               '{% endblock %}  {% endblock %}',
           'default3': '{% block x required %}{% if true %}{% endif %}  '
               '{% endblock %}',
-          'level1default1': '{% extends "default" %}{%- block x %}CHILD{% endblock %}',
-          'level1default2': '{% extends "default2" %}{%- block x %}CHILD{% endblock %}',
-          'level1default3': '{% extends "default3" %}{%- block x %}CHILD{% endblock %}',
-        }, globalJinjaData: {}),
+          'level1default1':
+              '{% extends "default" %}{%- block x %}CHILD{% endblock %}',
+          'level1default2':
+              '{% extends "default2" %}{%- block x %}CHILD{% endblock %}',
+          'level1default3':
+              '{% extends "default3" %}{%- block x %}CHILD{% endblock %}',
+        }, globalJinjaData: {},),
       );
 
       var matcher = throwsA(
         predicate<TemplateSyntaxError>(
-          (error) => error.message == 'Required blocks can only contain comments or whitespace.',
+          (error) =>
+              error.message ==
+              'Required blocks can only contain comments or whitespace.',
         ),
       );
 

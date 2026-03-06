@@ -85,7 +85,7 @@ void main() {
       var env = Environment(
         loader: MapLoader({
           'include': '{% macro test(foo) %}[{{ foo }}]{% endmacro %}',
-        }, globalJinjaData: {}),
+        }, globalJinjaData: {},),
       );
 
       var tmpl = env.fromString('''

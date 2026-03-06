@@ -29,11 +29,11 @@ void main() {
       };
 
       final result = await template.renderAsync(data);
-      
+
       // Should NOT contain "Instance of '_Future"
       expect(result, isNot(contains('Instance of')));
       expect(result, isNot(contains('Future')));
-      
+
       // Should contain the actual values
       expect(result, contains('"value": "100"'));
       expect(result, contains('"value": "50"'));
@@ -78,7 +78,7 @@ void main() {
       };
 
       final result = await template.renderAsync(data);
-      
+
       expect(result, isNot(contains('Instance of')));
       expect(result, contains('"value": "Button"'));
       expect(result, contains('"color": "#FF0000"'));
@@ -133,7 +133,7 @@ void main() {
       };
 
       final result = await template.renderAsync(data);
-      
+
       expect(result, isNot(contains('Instance of')));
       expect(result, contains('"name": "Item 1"'));
       expect(result, contains('"value": "42"'));

@@ -40,7 +40,8 @@ void main() {
     });
 
     test('namespace redefined', () {
-      var tmpl = env.fromString('{% set ns = namespace() %}{% set ns.bar = "hi" %}');
+      var tmpl =
+          env.fromString('{% set ns = namespace() %}{% set ns.bar = "hi" %}');
       expect(
         () => tmpl.render({'namespace': () => emptyMap}),
         throwsA(

@@ -15,8 +15,10 @@ void main() {
       final reader = TokenReader(tokens);
       reader.next(); // consume block_begin
       expect(reader.current.type, equals('eof'));
-      expect(() => reader.expect('block_end'),
-          throwsA(isA<TemplateSyntaxError>().having((e) => e.message, 'message', contains('Unexpected end of template'))));
+      expect(
+          () => reader.expect('block_end'),
+          throwsA(isA<TemplateSyntaxError>().having((e) => e.message, 'message',
+              contains('Unexpected end of template'),),),);
     });
 
     test('expect with wrong token throws correct error', () {
@@ -24,8 +26,10 @@ void main() {
         const Token(1, 1, 'name', 'foo'),
       ];
       final reader = TokenReader(tokens);
-      expect(() => reader.expect('block_begin'),
-          throwsA(isA<TemplateSyntaxError>().having((e) => e.message, 'message', contains('Expected token block_begin'))));
+      expect(
+          () => reader.expect('block_begin'),
+          throwsA(isA<TemplateSyntaxError>().having((e) => e.message, 'message',
+              contains('Expected token block_begin'),),),);
     });
 
     test('push and look', () {

@@ -125,7 +125,8 @@ void main() {
     });
 
     test('inop', () {
-      var tmpl = env.fromString('{{ 1 in [1, 2, 3] }}|{{ 1 not in [1, 2, 3] }}');
+      var tmpl =
+          env.fromString('{{ 1 in [1, 2, 3] }}|{{ 1 not in [1, 2, 3] }}');
       expect(tmpl.render(), equals('true|false'));
     });
 
@@ -323,7 +324,8 @@ void main() {
     });
 
     test('operator or', () {
-      var tmpl = env.fromString("<{% if page['next'] or empty['test'] %}ok{% endif %}>");
+      var tmpl = env
+          .fromString("<{% if page['next'] or empty['test'] %}ok{% endif %}>");
       var page = {'next': '5'};
       expect(tmpl.render({'page': page}), equals('<ok>'));
     });
@@ -364,7 +366,8 @@ void main() {
     });
 
     test('localset', () {
-      var tmpl = env.fromString('{% set foo = 0 %}{% for item in [1, 2] %}{% set foo = 1 %}'
+      var tmpl = env.fromString(
+          '{% set foo = 0 %}{% for item in [1, 2] %}{% set foo = 1 %}'
           '{% endfor %}{{ foo }}');
       expect(tmpl.render(), equals('0'));
     });

@@ -19,7 +19,8 @@ void main() {
     test('List attributes', () {
       final list = [1, 2];
       expect(getAttribute('add', list), isA<Function>());
-      expect(() => getAttribute('unknown', list), throwsA(isA<UndefinedError>()));
+      expect(
+          () => getAttribute('unknown', list), throwsA(isA<UndefinedError>()),);
     });
 
     test('Cycler attributes', () {
@@ -27,7 +28,8 @@ void main() {
       expect(getAttribute('next', cycler), isA<Function>());
       expect(getAttribute('reset', cycler), isA<Function>());
       expect(getAttribute('current', cycler), equals('a'));
-      expect(() => getAttribute('unknown', cycler), throwsA(isA<UndefinedError>()));
+      expect(() => getAttribute('unknown', cycler),
+          throwsA(isA<UndefinedError>()),);
     });
 
     test('LoopContext attributes', () {

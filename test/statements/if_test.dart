@@ -56,9 +56,11 @@ void main() {
     });
 
     test('no scope', () {
-      var tmpl = env.fromString('{% if a %}{% set foo = 1 %}{% endif %}{{ foo }}');
+      var tmpl =
+          env.fromString('{% if a %}{% set foo = 1 %}{% endif %}{{ foo }}');
       expect(tmpl.render({'a': true}), equals('1'));
-      tmpl = env.fromString('{% if true %}{% set foo = 1 %}{% endif %}{{ foo }}');
+      tmpl =
+          env.fromString('{% if true %}{% set foo = 1 %}{% endif %}{{ foo }}');
       expect(tmpl.render(), equals('1'));
     });
   });

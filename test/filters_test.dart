@@ -121,7 +121,8 @@ void main() {
           'example</a> link</p>\n<p>to a webpage</p> '
           '<!-- <p>and some commented stuff</p> -->';
       var tmpl = env.fromString('{{ foo|striptags }}');
-      expect(tmpl.render({'foo': foo}), equals('just a small example link to a webpage'));
+      expect(tmpl.render({'foo': foo}),
+          equals('just a small example link to a webpage'),);
     });
 
     test('filesizeformat', () {
@@ -391,7 +392,8 @@ void main() {
     });
 
     test('sum attributes tuple', () {
-      var tmpl = env.fromString('{{ values.entries|map("list")|map(item=1)|sum }}');
+      var tmpl =
+          env.fromString('{{ values.entries|map("list")|map(item=1)|sum }}');
       expect(
         tmpl.render({
           'values': {'foo': 23, 'bar': 1, 'baz': 18},
@@ -428,7 +430,8 @@ void main() {
     // TODO: add groupby case test
 
     test('filtertag', () {
-      var tmpl = env.fromString('{% filter upper|replace("FOO", "foo") %}foobar{% endfilter %}');
+      var tmpl = env.fromString(
+          '{% filter upper|replace("FOO", "foo") %}foobar{% endfilter %}',);
       expect(tmpl.render(), equals('fooBAR'));
     });
 

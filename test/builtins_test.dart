@@ -32,7 +32,8 @@ void main() {
           {'name': 'alice', 'age': 30},
         ],
       };
-      tmpl = env.fromString('{{ users|sort(attribute="name")|map(attribute="name")|join(",") }}');
+      tmpl = env.fromString(
+          '{{ users|sort(attribute="name")|map(attribute="name")|join(",") }}',);
       expect(tmpl.render(data), equals('alice,bob'));
     });
 
@@ -49,9 +50,11 @@ void main() {
     });
 
     test('intersect/difference', () {
-      var tmpl = env.fromString('{{ [1, 2, 3]|intersect([2, 3, 4])|sort|join(",") }}');
+      var tmpl =
+          env.fromString('{{ [1, 2, 3]|intersect([2, 3, 4])|sort|join(",") }}');
       expect(tmpl.render(), equals('2,3'));
-      tmpl = env.fromString('{{ [1, 2, 3]|difference([2, 3, 4])|sort|join(",") }}');
+      tmpl = env
+          .fromString('{{ [1, 2, 3]|difference([2, 3, 4])|sort|join(",") }}');
       expect(tmpl.render(), equals('1'));
     });
   });
@@ -64,7 +67,8 @@ void main() {
 
     test('urlize', () {
       var tmpl = env.fromString('{{ "Check https://google.com"|urlize }}');
-      expect(tmpl.render(), equals('Check <a href="https://google.com">https://google.com</a>'));
+      expect(tmpl.render(),
+          equals('Check <a href="https://google.com">https://google.com</a>'),);
     });
 
     test('indent', () {
@@ -101,8 +105,8 @@ void main() {
           {'type': 'a', 'val': 3},
         ],
       };
-      var tmpl = env
-          .fromString('{% for key, list in items|groupby("type")|dictsort %}{{ key }}:{{ list|map(attribute="val")|join(",") }};{% endfor %}');
+      var tmpl = env.fromString(
+          '{% for key, list in items|groupby("type")|dictsort %}{{ key }}:{{ list|map(attribute="val")|join(",") }};{% endfor %}',);
       expect(tmpl.render(data), equals('a:1,3;b:2;'));
     });
 
@@ -122,19 +126,22 @@ void main() {
       };
       // selectattr default test is 'defined', and false is defined.
       // Use 'true' test to filter by boolean truthiness.
-      var tmpl = env.fromString('{{ users|selectattr("active", "true")|map(attribute="name")|join(",") }}');
+      var tmpl = env.fromString(
+          '{{ users|selectattr("active", "true")|map(attribute="name")|join(",") }}',);
       expect(tmpl.render(data), equals('bob'));
     });
   });
 
   group('Globals', () {
     test('cycler', () async {
-      var tmpl = env.fromString('{% set c = cycler("a", "b") %}{{ c.next() }}{{ c.next() }}{{ c.next() }}');
+      var tmpl = env.fromString(
+          '{% set c = cycler("a", "b") %}{{ c.next() }}{{ c.next() }}{{ c.next() }}',);
       expect(await tmpl.renderAsync(), equals('aba'));
     });
 
     test('joiner', () async {
-      var tmpl = env.fromString('{% set sep = joiner("|") %}{{ sep() }}a{{ sep() }}b{{ sep() }}c');
+      var tmpl = env.fromString(
+          '{% set sep = joiner("|") %}{{ sep() }}a{{ sep() }}b{{ sep() }}c',);
       // Joiner is a callable object.
       // Previous error: `Invalid callable: Instance of 'Joiner'`
       // We fixed this in Context.call by checking for .call method dynamically.
@@ -149,7 +156,8 @@ void main() {
     });
 
     test('zip', () async {
-      var tmpl = env.fromString('{% for a, b in zip([1, 2], ["a", "b"]) %}{{ a }}{{ b }}{% endfor %}');
+      var tmpl = env.fromString(
+          '{% for a, b in zip([1, 2], ["a", "b"]) %}{{ a }}{{ b }}{% endfor %}',);
       expect(await tmpl.renderAsync(), equals('1a2b'));
     });
 
@@ -217,7 +225,8 @@ void main() {
 
   group('Regex Filters', () {
     test('regex_replace', () {
-      var tmpl = env.fromString('{{ "Hello World"|regex_replace("World", "Universe") }}');
+      var tmpl = env
+          .fromString('{{ "Hello World"|regex_replace("World", "Universe") }}');
       expect(tmpl.render(), equals('Hello Universe'));
     });
 
@@ -227,7 +236,8 @@ void main() {
     });
 
     test('regex_findall', () {
-      var tmpl = env.fromString('{{ "abc 123 def 456"|regex_findall("\\d+")|join(",") }}');
+      var tmpl = env.fromString(
+          '{{ "abc 123 def 456"|regex_findall("\\d+")|join(",") }}',);
       expect(tmpl.render(), equals('123,456'));
     });
   });

@@ -13,7 +13,7 @@ Goodbye!
 
     try {
       template.render({
-        'user': {'name': 'Alice'}
+        'user': {'name': 'Alice'},
       });
       fail('Should have thrown TemplateRuntimeError');
     } catch (e) {
@@ -21,7 +21,8 @@ Goodbye!
       final error = e as TemplateRuntimeError;
 
       print('Error message: ${error.message}');
-      print('Location: ${error.templatePath}, line ${error.node?.line}, column ${error.node?.column}');
+      print(
+          'Location: ${error.templatePath}, line ${error.node?.line}, column ${error.node?.column}',);
       print('Context Snippet:\n${error.contextSnippet}');
 
       expect(error.contextSnippet, contains('Your age is {{ user.age() }}.'));

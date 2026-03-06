@@ -18,7 +18,8 @@ void main() {
     test('copyWith', () {
       const node = Extends(template: Constant(value: 'base.html'));
       final copy = node.copyWith(template: const Constant(value: 'other.html'));
-      expect(copy.template, isA<Constant>().having((c) => c.value, 'value', 'other.html'));
+      expect(copy.template,
+          isA<Constant>().having((c) => c.value, 'value', 'other.html'),);
     });
   });
 
@@ -191,10 +192,10 @@ void main() {
       expect(node.toJson(), {
         'class': 'With',
         'targets': [
-          {'class': 'Name', 'name': 'x', 'context': 'load'}
+          {'class': 'Name', 'name': 'x', 'context': 'load'},
         ],
         'values': [
-          {'class': 'Constant', 'value': 1}
+          {'class': 'Constant', 'value': 1},
         ],
         'body': {'class': 'Data', 'data': 'foo'},
       });
@@ -218,7 +219,8 @@ void main() {
 
   group('Dict', () {
     test('toJson and toSource', () {
-      const node = Dict(pairs: [(key: Constant(value: 'a'), value: Constant(value: 1))]);
+      const node =
+          Dict(pairs: [(key: Constant(value: 'a'), value: Constant(value: 1))]);
       expect(node.toJson(), {
         'class': 'Dict',
         'pairs': [
@@ -268,7 +270,7 @@ void main() {
         'calling': {
           'class': 'Calling',
           'arguments': [
-            {'class': 'Name', 'name': 'foo', 'context': 'load'}
+            {'class': 'Name', 'name': 'foo', 'context': 'load'},
           ],
           'keywords': [],
         },
@@ -289,7 +291,7 @@ void main() {
         'calling': {
           'class': 'Calling',
           'arguments': [
-            {'class': 'Name', 'name': 'foo', 'context': 'load'}
+            {'class': 'Name', 'name': 'foo', 'context': 'load'},
           ],
           'keywords': [],
         },

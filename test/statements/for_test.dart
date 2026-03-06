@@ -40,22 +40,26 @@ void main() {
     });
 
     test('else', () {
-      var tmpl = env.fromString('{% for item in seq %}XXX{% else %}...{% endfor %}');
+      var tmpl =
+          env.fromString('{% for item in seq %}XXX{% else %}...{% endfor %}');
       expect(tmpl.render({'seq': range(0)}), equals('...'));
     });
 
     test('else scoping item', () {
-      var tmpl = env.fromString('{% for item in [] %}{% else %}{{ item }}{% endfor %}');
+      var tmpl = env
+          .fromString('{% for item in [] %}{% else %}{{ item }}{% endfor %}');
       expect(tmpl.render({'item': 42}), equals('42'));
     });
 
     test('empty blocks', () {
-      var tmpl = env.fromString('<{% for item in seq %}{% else %}{% endfor %}>');
+      var tmpl =
+          env.fromString('<{% for item in seq %}{% else %}{% endfor %}>');
       expect(tmpl.render({'seq': []}), equals('<>'));
     });
 
     test('map tuple', () {
-      var tmpl = env.fromString('{% for k, v in map %}<{{k}}:{{v}}>{% endfor %}');
+      var tmpl =
+          env.fromString('{% for k, v in map %}<{{k}}:{{v}}>{% endfor %}');
       var map = {'a': 1, 'b': 2};
       expect(tmpl.render({'map': map}), equals('<a:1><b:2>'));
     });
@@ -145,7 +149,8 @@ void main() {
             if (e is UndefinedError) return true;
             if (e is ArgumentError) return true;
             if (e is TemplateErrorWrapper) {
-              return e.originalError is ArgumentError || e.originalError is UndefinedError;
+              return e.originalError is ArgumentError ||
+                  e.originalError is UndefinedError;
             }
             return false;
           }),
@@ -244,8 +249,9 @@ void main() {
     });
 
     test('scoped special var', () {
-      var tmpl = env.fromString('{% for s in seq %}[{{ loop.first }}{% for c in s %}'
-          '|{{ loop.first }}{% endfor %}]{% endfor %}');
+      var tmpl =
+          env.fromString('{% for s in seq %}[{{ loop.first }}{% for c in s %}'
+              '|{{ loop.first }}{% endfor %}]{% endfor %}');
       var seq = ['ab', 'cd'];
       expect(
         tmpl.render({'seq': seq}),

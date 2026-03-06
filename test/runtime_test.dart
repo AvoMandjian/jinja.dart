@@ -3,7 +3,6 @@ library;
 
 import 'package:jinja/src/environment.dart';
 import 'package:jinja/src/exceptions.dart';
-import 'package:jinja/src/nodes.dart';
 import 'package:jinja/src/runtime.dart';
 import 'package:jinja/src/defaults.dart';
 import 'package:test/test.dart';
@@ -16,7 +15,8 @@ void main() {
       final context = Context(env, data: {'a': 1});
       final derived = context.derived(data: {'b': 2});
       expect(derived.context['b'], equals(2));
-      expect(derived.parent, isEmpty); // Base Context.derived just passes this.parent
+      expect(derived.parent,
+          isEmpty,); // Base Context.derived just passes this.parent
     });
 
     test('has', () {
@@ -28,14 +28,17 @@ void main() {
     test('call LoopContext error', () {
       final context = Context(env);
       final loop = LoopContext([1, 2, 3], 0, (data, [depth = 0]) => '');
-      expect(() => context.call(loop, null, []),
-          throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('requires an iterable argument'))));
+      expect(
+          () => context.call(loop, null, []),
+          throwsA(isA<TemplateRuntimeError>().having((e) => e.message,
+              'message', contains('requires an iterable argument'),),),);
     });
 
     test('call error wrapping', () {
       final context = Context(env);
       // Function throwing non-TemplateError should be wrapped
-      expect(() => context.call(() => throw Exception('test'), null), throwsA(isA<TemplateErrorWrapper>()));
+      expect(() => context.call(() => throw Exception('test'), null),
+          throwsA(isA<TemplateErrorWrapper>()),);
     });
 
     test('resolveAsync with Future', () async {

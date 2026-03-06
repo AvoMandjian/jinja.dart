@@ -17,12 +17,13 @@ void main() {
     setUp(() {
       context = StringSinkRenderContext(env, StringBuffer(), data: {
         'x': 10,
-        'm': {'y': 20}
-      });
+        'm': {'y': 20},
+      },);
     });
 
     test('visitConstant', () {
-      expect(evaluator.visitConstant(const Constant(value: 42), context), equals(42));
+      expect(evaluator.visitConstant(const Constant(value: 42), context),
+          equals(42),);
     });
 
     test('visitName', () {
@@ -35,7 +36,8 @@ void main() {
     });
 
     test('visitItem', () {
-      final node = Item(value: const Name(name: 'm'), key: const Constant(value: 'y'));
+      final node =
+          Item(value: const Name(name: 'm'), key: const Constant(value: 'y'));
       expect(evaluator.visitItem(node, context), equals(20));
     });
 
@@ -54,12 +56,21 @@ void main() {
     });
 
     test('UnsupportedError', () {
-      expect(() => evaluator.visitAssign(const Assign(target: Name(name: 'a'), value: Constant(value: 1)), context), throwsUnsupportedError);
-      expect(() => evaluator.visitIf(const If(test: Constant(value: true), body: Data(data: 'ok')), context), throwsUnsupportedError);
+      expect(
+          () => evaluator.visitAssign(
+              const Assign(target: Name(name: 'a'), value: Constant(value: 1)),
+              context,),
+          throwsUnsupportedError,);
+      expect(
+          () => evaluator.visitIf(
+              const If(test: Constant(value: true), body: Data(data: 'ok')),
+              context,),
+          throwsUnsupportedError,);
     });
 
     test('UnimplementedError', () {
-      expect(() => evaluator.visitArray(const Array(values: []), context), throwsUnimplementedError);
+      expect(() => evaluator.visitArray(const Array(values: []), context),
+          throwsUnimplementedError,);
     });
   });
 }

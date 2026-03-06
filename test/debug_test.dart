@@ -34,12 +34,14 @@ void main() {
         return Future.value(info);
       };
 
-      await template.renderDebug({'name': 'World'}, debugController: controller);
+      await template
+          .renderDebug({'name': 'World'}, debugController: controller);
       expect(hit, isTrue);
     });
 
     test('conditional breakpoint (hit)', () async {
-      var template = env.fromString('{% for i in [1, 2, 3] %}\n{{ i }}\n{% endfor %}');
+      var template =
+          env.fromString('{% for i in [1, 2, 3] %}\n{{ i }}\n{% endfor %}');
       var bp = controller.addBreakpoint(line: 2, condition: 'i == 2');
       var hitCount = 0;
 
@@ -55,7 +57,8 @@ void main() {
     });
 
     test('conditional breakpoint (miss)', () async {
-      var template = env.fromString('{% for i in [1, 2, 3] %}\n{{ i }}\n{% endfor %}');
+      var template =
+          env.fromString('{% for i in [1, 2, 3] %}\n{{ i }}\n{% endfor %}');
       controller.addBreakpoint(line: 2, condition: 'i == 4');
       var hit = false;
 

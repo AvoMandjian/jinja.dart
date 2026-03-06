@@ -50,7 +50,8 @@ void main() {
 
     test('raw3', () {
       var env = Environment(leftStripBlocks: true, trimBlocks: true);
-      var tmpl = env.fromString('bar\n{% raw %}\n  {{baz}}2 spaces\n{% endraw %}\nfoo');
+      var tmpl = env
+          .fromString('bar\n{% raw %}\n  {{baz}}2 spaces\n{% endraw %}\nfoo');
       expect(
         tmpl.render({'baz': 'test'}),
         equals('bar\n\n  {{baz}}2 spaces\nfoo'),
@@ -398,7 +399,8 @@ ${item} ## the rest of the stuff
 
     test('lstrip trim blocks comment', () {
       var env = Environment(leftStripBlocks: true, trimBlocks: true);
-      var tmpl = env.fromString(' {# 1 space #}\n  {# 2 spaces #}    {# 4 spaces #}');
+      var tmpl =
+          env.fromString(' {# 1 space #}\n  {# 2 spaces #}    {# 4 spaces #}');
       expect(tmpl.render(), equals('    '));
     });
 
@@ -644,7 +646,8 @@ ${item} ## the rest of the stuff
 
     test('raw no trim lstrip', () {
       var env = Environment(leftStripBlocks: true);
-      var tmpl = env.fromString('{{x}}{% raw %}\n\n    {% endraw %}\n\n{{ y }}');
+      var tmpl =
+          env.fromString('{{x}}{% raw %}\n\n    {% endraw %}\n\n{{ y }}');
       expect(tmpl.render({'x': 1, 'y': 2}), equals('1\n\n\n\n2'));
     });
 

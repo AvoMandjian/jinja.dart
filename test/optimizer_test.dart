@@ -19,23 +19,28 @@ void main() {
           'foo': {'bar': 42},
         },
       );
-      final node = Attribute(value: const Constant(value: {'bar': 42}), attribute: 'bar');
+      final node = Attribute(
+          value: const Constant(value: {'bar': 42}), attribute: 'bar',);
       final optimized = optimizer.visitAttribute(node, context);
       expect(optimized, isA<Constant>().having((c) => c.value, 'value', 42));
     });
 
     test('visitItem constant folding', () {
       final context = Context(env);
-      final node = Item(value: const Constant(value: {'a': 1}), key: const Constant(value: 'a'));
+      final node = Item(
+          value: const Constant(value: {'a': 1}),
+          key: const Constant(value: 'a'),);
       final optimized = optimizer.visitItem(node, context);
       expect(optimized, isA<Constant>().having((c) => c.value, 'value', 1));
     });
 
     test('visitConcat constant folding', () {
       final context = Context(env);
-      final node = Concat(values: [const Constant(value: 'foo'), const Constant(value: 'bar')]);
+      final node = Concat(
+          values: [const Constant(value: 'foo'), const Constant(value: 'bar')],);
       final optimized = optimizer.visitConcat(node, context);
-      expect(optimized, isA<Constant>().having((c) => c.value, 'value', 'foobar'));
+      expect(
+          optimized, isA<Constant>().having((c) => c.value, 'value', 'foobar'),);
     });
 
     test('visitDict constant folding for all-constant pairs', () {
@@ -75,7 +80,11 @@ void main() {
 
     test('visitBlock', () {
       final context = Context(env);
-      const node = Block(name: 'test', scoped: false, required: false, body: Data(data: 'foo'));
+      const node = Block(
+          name: 'test',
+          scoped: false,
+          required: false,
+          body: Data(data: 'foo'),);
       final optimized = optimizer.visitBlock(node, context);
       expect(optimized, isA<Block>());
     });
