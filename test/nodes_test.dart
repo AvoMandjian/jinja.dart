@@ -2,9 +2,160 @@
 library;
 
 import 'package:jinja/src/nodes.dart';
+import 'package:jinja/src/visitor.dart';
 import 'package:test/test.dart';
 
+final class _TestExpression extends Expression {
+  const _TestExpression();
+
+  @override
+  R accept<C, R>(Visitor<C, R> visitor, C context) {
+    // Never called in these tests.
+    throw UnimplementedError();
+  }
+
+  @override
+  _TestExpression copyWith() {
+    return this;
+  }
+
+  @override
+  Iterable<T> findAll<T extends Node>() sync* {}
+
+  @override
+  String toSource() {
+    return 'expr';
+  }
+}
+
 void main() {
+  group('Data', () {
+    test('literal escapes quotes and newlines', () {
+      const data = Data(data: 'a"b\r\nc\nd');
+      expect(data.literal, '"a\\"b\\nc\\nd"');
+    });
+
+    test('copyWith updates data', () {
+      const original = Data(data: 'x');
+      final copy = original.copyWith(data: 'y');
+      expect(copy.data, 'y');
+    });
+  });
+
+  group('Expression base', () {
+    test('toJson uses Expression class name', () {
+      const expr = _TestExpression();
+      final json = expr.toJson();
+      expect(json['class'], equals('Expression'));
+    });
+  });
+
+  group('Slice', () {
+    test('findAll, toJson and toSource', () {
+      const value = Constant(value: 10);
+      const start = Constant(value: 1);
+      const stop = Constant(value: 3);
+
+      const slice = Slice(value: value, start: start, stop: stop);
+
+      final found = slice.findAll<Constant>().toList();
+      expect(found, contains(value));
+
+      final json = slice.toJson();
+      expect(json['class'], equals('Slice'));
+      expect(json['start'], isNotNull);
+      expect(json['stop'], isNotNull);
+
+      expect(slice.toSource(), equals('10[1:3]'));
+    });
+  });
+
+  group('Interpolation', () {
+    test('copyWith, findAll, toJson and toSource', () {
+      const value = Constant(value: 1);
+      const interpolation = Interpolation(value: value);
+
+      final updated = interpolation.copyWith(
+        value: Constant(value: 2),
+      );
+      expect(updated.value, isA<Constant>());
+
+      final unchanged = interpolation.copyWith();
+      expect(unchanged.value, same(value));
+
+      final found = interpolation.findAll<Constant>().toList();
+      expect(found, contains(value));
+
+      final json = interpolation.toJson();
+      expect(json['class'], equals('Interpolation'));
+      expect(json['value'], isNotNull);
+
+      expect(interpolation.toSource(), equals('{{ 1 }}'));
+    });
+  });
+
+  group('Output', () {
+    test('findAll, toJson and toSource', () {
+      const first = Data(data: 'Hello');
+      const second = Data(data: 'World');
+
+      const output = Output(nodes: <Node>[first, second]);
+
+      final found = output.findAll<Data>().toList();
+      expect(found, equals(<Data>[first, second]));
+
+      final json = output.toJson();
+      expect(json['class'], equals('Output'));
+      expect((json['nodes'] as List).length, equals(2));
+
+      expect(output.toSource(), equals('HelloWorld'));
+    });
+  });
+
+  group('TemplateNode', () {
+    test('copyWith, findAll, toJson and toSource', () {
+      const body = Data(data: 'root');
+
+      final block = Block(
+        name: 'b',
+        scoped: false,
+        required: false,
+        body: TemplateNode(body: Data(data: 'block')),
+      );
+
+      final macro = Macro(
+        name: 'm',
+        body: TemplateNode(body: Data(data: 'macro')),
+      );
+
+      final template = TemplateNode(
+        blocks: <Block>[block],
+        macros: <Macro>[macro],
+        body: body,
+      );
+
+      final updated = template.copyWith(
+        body: Data(data: 'updated'),
+      );
+      expect(updated.body, isA<Data>());
+
+      final unchanged = template.copyWith();
+      expect(unchanged.body, same(body));
+
+      final found = template.findAll<Data>().toList();
+      expect(found, contains(body));
+
+      final json = template.toJson();
+      expect(json['class'], equals('TemplateNode'));
+      final blocks = json['blocks'] as List;
+      final macros = json['macros'] as List;
+      expect(blocks, isNotEmpty);
+      expect(macros, isNotEmpty);
+
+      expect(template.toSource(), equals('root'));
+    });
+  });
+
   group('Extends', () {
     test('toJson and toSource', () {
       const node = Extends(template: Constant(value: 'base.html'));
@@ -17,18 +168,20 @@ void main() {
 
     test('copyWith', () {
       const node = Extends(template: Constant(value: 'base.html'));
-      final copy = node.copyWith(template: const Constant(value: 'other.html'));
-      expect(copy.template,
-          isA<Constant>().having((c) => c.value, 'value', 'other.html'),);
+      final copy = node.copyWith(template: Constant(value: 'other.html'));
+      expect(
+        copy.template,
+        isA<Constant>().having((c) => c.value, 'value', 'other.html'),
+      );
     });
   });
 
   group('For', () {
     test('toJson and toSource', () {
       final node = For(
-        target: const Name(name: 'item'),
-        iterable: const Name(name: 'items'),
-        body: const Data(data: 'foo'),
+        target: Name(name: 'item'),
+        iterable: Name(name: 'items'),
+        body: Data(data: 'foo'),
       );
       expect(node.toJson(), {
         'class': 'For',
@@ -41,9 +194,9 @@ void main() {
 
     test('findAll', () {
       final node = For(
-        target: const Name(name: 'item'),
-        iterable: const Name(name: 'items'),
-        body: const Data(data: 'foo'),
+        target: Name(name: 'item'),
+        iterable: Name(name: 'items'),
+        body: Data(data: 'foo'),
       );
       expect(node.findAll<Name>(), hasLength(2));
       expect(node.findAll<Data>(), hasLength(1));
@@ -97,8 +250,8 @@ void main() {
   group('AssignBlock', () {
     test('toJson and toSource', () {
       final node = AssignBlock(
-        target: const Name(name: 'var'),
-        body: const Data(data: 'foo'),
+        target: Name(name: 'var'),
+        body: Data(data: 'foo'),
       );
       expect(node.toJson(), {
         'class': 'AssignBlock',
@@ -131,8 +284,8 @@ void main() {
     test('toJson and toSource', () {
       final node = CallBlock(
         name: 'caller',
-        call: const Call(value: Name(name: 'test')),
-        body: const Data(data: 'foo'),
+        call: Call(value: Name(name: 'test')),
+        body: Data(data: 'foo'),
       );
       expect(node.toJson(), {
         'class': 'CallBlock',
@@ -151,7 +304,7 @@ void main() {
 
   group('Do', () {
     test('toJson and toSource', () {
-      final node = Do(value: const Call(value: Name(name: 'func')));
+      final node = Do(value: Call(value: Name(name: 'func')));
       expect(node.toJson(), {
         'class': 'Do',
         'value': {
@@ -219,8 +372,9 @@ void main() {
 
   group('Dict', () {
     test('toJson and toSource', () {
-      const node =
-          Dict(pairs: [(key: Constant(value: 'a'), value: Constant(value: 1))]);
+      const node = Dict(
+        pairs: [(key: Constant(value: 'a'), value: Constant(value: 1))],
+      );
       expect(node.toJson(), {
         'class': 'Dict',
         'pairs': [

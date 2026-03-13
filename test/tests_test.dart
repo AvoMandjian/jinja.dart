@@ -416,4 +416,54 @@ void main() {
       expect(env.callTest('test', ['badName']), isFalse);
     });
   });
+
+  group('Additional core tests for coverage', () {
+    var env = Environment();
+
+    test('divisibleby', () {
+      expect(env.fromString('{{ 4 is divisibleby 2 }}').render(), 'true');
+      expect(env.fromString('{{ 4 is divisibleby 3 }}').render(), 'false');
+      expect(env.fromString('{{ 4 is divisibleby 0 }}').render(), 'false');
+    });
+
+    test('undefined', () {
+      expect(env.fromString('{{ missing is undefined }}').render(), 'true');
+      expect(env.fromString('{{ 1 is undefined }}').render(), 'false');
+    });
+
+    test('in type errors', () {
+      expect(() => env.fromString('{{ "a" is in 1 }}').render(), throwsA(isA<TemplateErrorWrapper>()));
+      expect(() => env.fromString('{{ 1 is in "a" }}').render(), throwsA(isA<TemplateErrorWrapper>()));
+    });
+
+    test('subset and superset', () {
+      expect(env.fromString('{{ [1, 2] is subsetof [1, 2, 3] }}').render(), 'true');
+      expect(env.fromString('{{ [1, 4] is subsetof [1, 2, 3] }}').render(), 'false');
+      expect(env.fromString('{{ [1, 2, 3] is supersetof [1, 2] }}').render(), 'true');
+      expect(env.fromString('{{ [1, 2] is supersetof [1, 2, 3] }}').render(), 'false');
+    });
+
+    test('version comparison operators', () {
+      expect(env.fromString('{{ "1.2.0" is version("1.2.0", "==") }}').render(), 'true');
+      expect(env.fromString('{{ "1.2.0" is version("1.2.0", "eq") }}').render(), 'true');
+      
+      expect(env.fromString('{{ "1.2.0" is version("1.1.0", "!=") }}').render(), 'true');
+      expect(env.fromString('{{ "1.2.0" is version("1.1.0", "ne") }}').render(), 'true');
+      
+      expect(env.fromString('{{ "1.2.0" is version("1.1.0", ">") }}').render(), 'true');
+      expect(env.fromString('{{ "1.2.0" is version("1.1.0", "gt") }}').render(), 'true');
+      
+      expect(env.fromString('{{ "1.2.0" is version("1.1.0", ">=") }}').render(), 'true');
+      expect(env.fromString('{{ "1.2.0" is version("1.1.0", "ge") }}').render(), 'true');
+      
+      expect(env.fromString('{{ "1.1.0" is version("1.2.0", "<") }}').render(), 'true');
+      expect(env.fromString('{{ "1.1.0" is version("1.2.0", "lt") }}').render(), 'true');
+      
+      expect(env.fromString('{{ "1.1.0" is version("1.2.0", "<=") }}').render(), 'true');
+      expect(env.fromString('{{ "1.1.0" is version("1.2.0", "le") }}').render(), 'true');
+
+      // Default should throw
+      expect(() => env.fromString('{{ "1.0.0" is version("1.0.0", "unknown") }}').render(), throwsA(isA<TemplateRuntimeError>()));
+    });
+  });
 }

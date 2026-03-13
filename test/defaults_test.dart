@@ -61,4 +61,51 @@ void main() {
       expect(() => getItem('a', 42), throwsA(isA<TemplateRuntimeError>()));
     });
   });
+
+  group('Additional core tests for coverage', () {
+    test('getAttribute unknown cycler attribute', () {
+      final cycler = Cycler([1]);
+      expect(() => getAttribute('bad', cycler), throwsA(isA<UndefinedError>()));
+    });
+
+    test('getItem on null', () {
+      expect(() => getItem('a', null), throwsA(isA<UndefinedError>()));
+    });
+
+    test('Cycler empty', () {
+      final cycler = Cycler([]);
+      expect(cycler.current, isNull);
+      expect(cycler.next(), isNull);
+    });
+
+    test('lipsum html false', () {
+      final text = lipsum(n: 1, html: false);
+      expect(text, isNot(contains('<p>')));
+    });
+
+    test('zip multiple', () {
+      final z = zip([1, 2], [3, 4], [5, 6], [7, 8], [9, 10]);
+      expect(z.toList(), [
+        [1, 3, 5, 7, 9],
+        [2, 4, 6, 8, 10]
+      ]);
+    });
+
+    test('now', () {
+      final d = now();
+      expect(d, isA<DateTime>());
+    });
+
+    test('dict edge cases', () {
+      expect(dict([
+        [const MapEntry('a', 1)]
+      ]), {'a': 1});
+      expect(() => dict([
+        [123]
+      ]), throwsA(isA<TemplateRuntimeError>()));
+      expect(() => dict([
+        456
+      ]), throwsA(isA<TemplateRuntimeError>()));
+    });
+  });
 }

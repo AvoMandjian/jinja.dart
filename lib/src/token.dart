@@ -1,4 +1,4 @@
-part of 'lexer.dart';
+part of 'package:jinja/src/lexer.dart';
 
 const Map<String, String> tokenDescriptions = <String, String>{
   'add': '+',
@@ -95,6 +95,8 @@ abstract final class Token {
     'tilde': '~',
   };
 
+  const Token._();
+
   const factory Token(int line, int column, String type, String value) = ValueToken;
 
   const factory Token.simple(int line, int column, String type) = SimpleToken;
@@ -129,8 +131,8 @@ abstract final class Token {
   bool testAny(Iterable<(String, String?)> expressions);
 }
 
-abstract final class BaseToken implements Token {
-  const BaseToken();
+abstract final class BaseToken extends Token {
+  const BaseToken() : super._();
 
   @override
   int get length {

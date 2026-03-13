@@ -7,6 +7,11 @@ import 'package:jinja/src/nodes.dart';
 import 'package:jinja/src/utils.dart' show captureCallStack;
 import 'package:test/test.dart';
 
+class BadToString {
+  @override
+  String toString() => throw UnimplementedError();
+}
+
 void main() {
   group('Enhanced TemplateError', () {
     test('creates with all context fields', () {
@@ -336,6 +341,84 @@ void main() {
 
       expect(errorString, contains("'nullVar': null"));
       expect(errorString, contains("'stringVar': value"));
+    });
+  });
+
+  group('Additional core tests for coverage', () {
+    test('TemplateError toString context value throwing error', () {
+      final contextSnapshot = {'badValue': BadToString()};
+      final error = TemplateRuntimeError(
+        'Test error',
+        contextSnapshotValue: contextSnapshot,
+      );
+      expect(error.toString(), contains('(toString failed: UnimplementedError)'));
+    });
+
+    test('TemplateError toString generic node type', () {
+      final error = TemplateRuntimeError(
+        'Test error',
+        nodeValue: Data(),
+      );
+      expect(error.toString(), contains('Node: Data'));
+    });
+
+    test('TemplateNotFound toString', () {
+      // With message
+      var error = TemplateNotFound(name: 'test.html', message: 'Not here');
+      expect(error.toString(), contains('TemplateNotFound: Not here'));
+
+      // Without message but with name
+      error = TemplateNotFound(name: 'test.html');
+      expect(error.toString(), contains('TemplateNotFound: test.html'));
+
+      // Without search paths
+      error = TemplateNotFound(name: 'test.html', message: 'Not here');
+      expect(error.toString(), isNot(contains('Searched paths:')));
+    });
+
+    test('TemplatesNotFound toString', () {
+      var error = TemplatesNotFound(names: ['a.html', 'b.html'], message: 'Not here');
+      expect(error.toString(), contains('TemplatesNotFound: Not here'));
+
+      error = TemplatesNotFound(names: ['a.html', 'b.html']);
+      expect(error.toString(), contains('none of the templates given were found: a.html, b.html'));
+
+      error = TemplatesNotFound();
+      expect(error.toString(), contains('TemplatesNotFound'));
+    });
+
+    test('UndefinedError toString variations', () {
+      // Without anything
+      var error = UndefinedError('Msg');
+      expect(error.toString(), contains('UndefinedError: Msg'));
+      
+      // With variable name but no similar names
+      error = UndefinedError('Msg', variableNameValue: 'foo');
+      expect(error.toString(), contains("Variable: 'foo'"));
+      expect(error.toString(), isNot(contains("Similar variables found:")));
+    });
+
+    test('TemplateSyntaxError toString variations', () {
+      // Without contextSnippet
+      var error = TemplateSyntaxError('Syntax', path: 'a.html', line: 1, column: 2);
+      expect(error.toString(), isNot(contains('Snippet:')));
+      expect(error.toString(), contains('Syntax'));
+    });
+
+    test('TemplateRuntimeError stack trace and call stack', () {
+      final error = TemplateRuntimeError(
+        'Error',
+        stackTraceValue: StackTrace.fromString("foo\nbar\nbaz"),
+        callStackValue: ['frame1', 'frame2'],
+      );
+      final string = error.toString();
+      expect(string, contains('foo'));
+      expect(string, contains('frame1'));
+    });
+
+    test('TemplateError toString operation but no node', () {
+      final error = TemplateRuntimeError('Error', operationValue: 'Running test');
+      expect(error.toString(), contains('Operation: Running test'));
     });
   });
 }

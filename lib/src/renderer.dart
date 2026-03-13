@@ -1235,7 +1235,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
         if (targetMacro == null) {
           throw TemplateRuntimeError(
-            "The '${template.path}' does not export the requested name.",
+            "The '${template.path}' does not export the requested name: '$name'",
           );
         }
 
@@ -2334,7 +2334,7 @@ class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?
 
         if (targetMacro == null) {
           throw TemplateRuntimeError(
-            "The '${template.path}' does not export the requested name.",
+            "The '${template.path}' does not export the requested name: '$name'",
           );
         }
 

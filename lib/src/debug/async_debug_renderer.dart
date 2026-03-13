@@ -69,11 +69,15 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
           shouldBreak = true;
           break;
         }
-        var expr = context.environment.parse(bp.condition!);
-        var result = expr.accept(const ExpressionEvaluator(), context);
-        if (result is bool && result) {
-          shouldBreak = true;
-          break;
+        try {
+          var template = context.environment.fromString('{{ ${bp.condition} }}');
+          var result = template.render(context.getAllVariables());
+          if (result == 'true') {
+            shouldBreak = true;
+            break;
+          }
+        } catch (e) {
+          // Ignore errors in condition evaluation
         }
       }
 

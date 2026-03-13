@@ -1,3 +1,4 @@
+library;
 import 'environment.dart';
 import 'exceptions.dart';
 import 'package:string_scanner/string_scanner.dart';
