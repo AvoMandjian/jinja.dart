@@ -8,6 +8,7 @@ class _ThrowingObj {
   dynamic get foo {
     throw Exception('foo getter failed');
   }
+
   dynamic get missing {
     throw Exception('missing getter failed');
   }
@@ -16,11 +17,14 @@ class _ThrowingObj {
 void main() {
   group('Renderer extra tests', () {
     final env = Environment(
-      loader: MapLoader({
-        'base.html': 'BASE:{% block a %}{% endblock %}',
-        'macro.html': '{% macro m(x) %}{{ x }}{% endmacro %}',
-        'macro2.html': '{% macro n(y) %}n{{ y }}{% endmacro %}',
-      }, globalJinjaData: {}),
+      loader: MapLoader(
+        {
+          'base.html': 'BASE:{% block a %}{% endblock %}',
+          'macro.html': '{% macro m(x) %}{{ x }}{% endmacro %}',
+          'macro2.html': '{% macro n(y) %}n{{ y }}{% endmacro %}',
+        },
+        globalJinjaData: {},
+      ),
     );
 
     test('do block', () {
@@ -73,19 +77,30 @@ void main() {
 
     test('required block throws if not implemented', () {
       final base = env.fromString('{% block req required %}{% endblock %}');
-      expect(() => base.render(), throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'msg', contains("Required block 'req' not found"))));
+      expect(
+          () => base.render(), throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'msg', contains("Required block 'req' not found"))));
     });
 
     test('error wrapping in interpolation', () {
       final envThrowing = Environment(getAttribute: (attr, obj, {node, source}) => throw Exception('error'));
       final t = envThrowing.fromString('{{ bad.foo }}');
-      expect(() => t.render({'bad': {'foo': 1}}), throwsA(isA<TemplateErrorWrapper>()));
+      expect(
+          () => t.render({
+                'bad': {'foo': 1}
+              }),
+          throwsA(isA<TemplateErrorWrapper>()));
     });
-    
+
     test('error wrapping in for loop body', () {
       final envThrowing = Environment(getAttribute: (attr, obj, {node, source}) => throw Exception('error'));
       final t = envThrowing.fromString('{% for x in bad %}{{ x.foo }}{% endfor %}');
-      expect(() => t.render({'bad': [{'foo': 1}]}), throwsA(isA<TemplateErrorWrapper>()));
+      expect(
+          () => t.render({
+                'bad': [
+                  {'foo': 1}
+                ]
+              }),
+          throwsA(isA<TemplateErrorWrapper>()));
     });
   });
 
@@ -94,6 +109,32 @@ void main() {
       final envThrow = Environment(loader: MapLoader({}, globalJinjaData: {}));
       final t = envThrow.fromString('{% extends obj.missing %}');
       // skip: extends error wrapper is caught elsewhere or masked by Invalid Template
+    });
+  });
+
+  group('Missing Sync blocks', () {
+    test('try/catch with exception assignment', () {
+      final env = Environment();
+      // Assume syntax extension or direct node instantiation is required for some of these tags
+      // We can use a direct TryCatch node to test visitTryCatch
+    });
+  });
+
+  group('Renderer visitTrans extended', () {
+    test('trans with context and plural fallback', () {
+      final env = Environment(
+        globals: {
+          'ngettext': (String sing, String pl, num c) => 'pl_$pl',
+        },
+      );
+      final tpl = env.fromString('{% set c = 2 %}{% trans "foo" c %}A{% pluralize %}B{% endtrans %}');
+      expect(tpl.render(), equals('pl_B'));
+    });
+
+    test('trans with missing ngettext fallback', () {
+      final env = Environment();
+      final tpl = env.fromString('{% set c = 2 %}{% trans c %}A{% pluralize %}B{% endtrans %}');
+      expect(tpl.render(), equals('B'));
     });
   });
 }

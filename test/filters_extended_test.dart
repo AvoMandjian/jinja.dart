@@ -141,10 +141,15 @@ void main() {
     });
 
     test('makeAttributeGetter with int/index', () {
-      final lists = [[1, 2], [3, 4]];
+      final lists = [
+        [1, 2],
+        [3, 4]
+      ];
       // skip strict map argument exception due to dynamic test limits
-      
-      final maps = [{'a': 1}];
+
+      final maps = [
+        {'a': 1}
+      ];
       // skip item limit
     });
 
@@ -181,7 +186,7 @@ void main() {
 
     test('doSort caseInsensitive', () {
       final list = ['B', 'a', 'C'];
-      final sorted = doSort(env, list, caseSensitive: false);
+      final sorted = doSort(env, list);
       expect(sorted, equals(['a', 'B', 'C']));
     });
 
@@ -192,6 +197,74 @@ void main() {
     test('doRoundToEven decimals', () {
       expect(doRoundToEven(2.5), equals(2.0));
       expect(doRoundToEven(3.5), equals(4.0));
+    });
+  });
+
+  group('Filters Async Selection', () {
+    final env = Environment(
+      tests: {
+        'is_async_true': (Object? _) => Future.value(true),
+        'is_async_false': (Object? _) => Future.value(false),
+      },
+    );
+    final context = Context(env);
+
+    test('doSelect async', () async {
+      final list = [1, 2];
+      final result = doSelect(context, list, 'is_async_true');
+      expect(result, equals([1, 2]));
+
+      final result2 = doSelect(context, list, 'is_async_false');
+      expect(result2, equals([]));
+    });
+
+    test('doReject async', () async {
+      final list = [1, 2];
+      final result = doReject(context, list, 'is_async_true');
+      expect(result, equals([]));
+
+      final result2 = doReject(context, list, 'is_async_false');
+      expect(result2, equals([1, 2]));
+    });
+
+    test('doSelectAttr async', () async {
+      final items = [
+        {'a': 1},
+        {'a': 2}
+      ];
+      final result = doSelectAttr(context, items, 'a', 'is_async_true');
+      expect(result as List, hasLength(2));
+    });
+
+    test('doRejectAttr async', () async {
+      final items = [
+        {'a': 1},
+        {'a': 2}
+      ];
+      final result = doRejectAttr(context, items, 'a', 'is_async_true');
+      expect(result as List, isEmpty);
+    });
+  });
+
+  group('doUnique case sensitivity and attribute', () {
+    final env = Environment();
+
+    test('doUnique case insensitive with attribute', () {
+      final items = [
+        {'name': 'A'},
+        {'name': 'a'},
+        {'name': 'B'}
+      ];
+      final result = doUnique(env, items, attribute: 'name');
+      expect(result, hasLength(2));
+      expect((result[0] as Map)['name'], equals('A'));
+      expect((result[1] as Map)['name'], equals('B'));
+    });
+
+    test('doUnique case insensitive without attribute', () {
+      final list = ['A', 'a', 'B'];
+      final result = doUnique(env, list);
+      expect(result, equals(['A', 'B']));
     });
   });
 }

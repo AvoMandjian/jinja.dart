@@ -111,4 +111,21 @@ void main() {
       await expectLater(() => t.renderAsync(), throwsA(isA<TemplateRuntimeError>()));
     });
   });
+
+  group('Async specific tricky edge cases', () {
+    test('async missing Name triggers checkFuture logic', () async {
+      final env = Environment();
+      // 'unknown' is missing, triggers checkFuture waiting logic 
+      final t = env.fromString('{{ unknown }}');
+      final out = await t.renderAsync();
+      expect(out, equals(''));
+    });
+
+    test('async assignment wait path', () async {
+      final env = Environment(globals: {'f': Future.value(42)});
+      final t = env.fromString('{% set x = f %}{{ x }}');
+      final out = await t.renderAsync();
+      expect(out, equals('42'));
+    });
+  });
 }

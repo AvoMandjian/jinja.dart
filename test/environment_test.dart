@@ -216,6 +216,27 @@ void main() {
       expect(captured, isEmpty);
     });
   });
+
+  group('Environment extra lines', () {
+    test('callTest async error path', () async {
+      final envAsyncFail = Environment(
+        tests: {
+          'fail_async': (Object? _) => Future.error(Exception('async test fail')),
+        },
+      );
+      await expectLater(
+        () => envAsyncFail.callTest('fail_async', [Future.value(1)]),
+        throwsA(isA<TemplateErrorWrapper>()),
+      );
+    });
+
+    test('Environment operator == and hashCode edge cases', () {
+      final env1 = Environment();
+      final env2 = Environment(autoEscape: true);
+      expect(env1 == env2, isFalse);
+      expect(env1.hashCode == env2.hashCode, isFalse);
+    });
+  });
 }
 
 class _TestLogger implements JinjaLogger {
