@@ -162,8 +162,31 @@ void main() async {
     );
     // example 2: real world example
     print('\n=== Example 2: Real world example ===');
+    final debugController = DebugController()..enabled = true;
+    debugController.breakOnLoopIteration = true;
+    debugController.addBreakpoint(line: 16);
+    debugController.addBreakpoint(line: 17);
+    debugController.addBreakpoint(line: 18);
+    debugController.addBreakpoint(line: 19);
+    debugController.addBreakpoint(line: 20);
+    debugController.addBreakpoint(line: 21);
+    debugController.addBreakpoint(line: 8);
+    debugController.onBreakpoint = (info) async {
+      print('--- BREAKPOINT HIT ---');
+      print('Line: ${info.lineNumber}');
+      print('Node type: ${info.nodeType}');
+      if (info.nodeName != null) print('Node name: ${info.nodeName}');
+      print('Variables:');
+      info.variables.forEach((key, value) {
+        if (key == 'loop' || key == 'item' || key == 'title' || key == 'items') {
+          print('  $key: $value (type: ${value.runtimeType})');
+        }
+      });
+      print('Current Output: ${info.currentOutput}');
+      print('----------------------');
+    };
     var template2 = env.fromString(jinjaScript);
-    var result2 = await template2.renderDebug(data: jinjaData, debugController: DebugController());
+    var result2 = await template2.renderDebug(data: jinjaData, debugController: debugController);
     print('Result length: ${result2.length}');
     print('--------------------------------------------------------------------------------------------------------------------------------');
     print(result2);
