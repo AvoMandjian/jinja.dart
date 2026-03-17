@@ -2,19 +2,40 @@
 
 import 'dart:async';
 
+import 'package:jinja/debug.dart';
 import 'package:jinja/jinja.dart';
 
 import 'get_jinja.dart';
 
 final jinjaScript = '''
-{% from "macro_property" import macro_property, macro_padding %}
-
 {
-    "padding": {{ macro_padding(6, 10, 17, 17) }},
-    "icon_color": {{ macro_property("icon_color", "Icon Color", "color", "color_picker", "dark", "dark") }}
+  "widget_type": "container",
+  "content": {
+    "title": "{{ title }}",
+    "items": [
+      {% for item in items %}
+      {
+        "name": "{{ item.name }}",
+        "value": {{ item.value }}
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
 }
 ''';
-final Map<String, dynamic> jinjaData = {};
+final Map<String, dynamic> jinjaData = {
+  'title': 'Test Widget',
+  'items': [
+    {
+      'name': 'Item 1',
+      'value': 10,
+    },
+    {
+      'name': 'Item 2',
+      'value': 20,
+    }
+  ],
+};
 
 void main() async {
   try {
@@ -142,7 +163,7 @@ void main() async {
     // example 2: real world example
     print('\n=== Example 2: Real world example ===');
     var template2 = env.fromString(jinjaScript);
-    var result2 = await template2.renderAsync(jinjaData);
+    var result2 = await template2.renderDebug(data: jinjaData, debugController: DebugController());
     print('Result length: ${result2.length}');
     print('--------------------------------------------------------------------------------------------------------------------------------');
     print(result2);

@@ -143,14 +143,16 @@ void main() {
     test('makeAttributeGetter with int/index', () {
       final lists = [
         [1, 2],
-        [3, 4]
+        [3, 4],
       ];
       // skip strict map argument exception due to dynamic test limits
+      expect(lists, isNotEmpty);
 
       final maps = [
-        {'a': 1}
+        {'a': 1},
       ];
       // skip item limit
+      expect(maps, isNotEmpty);
     });
 
     test('doReplaceEach without count', () {
@@ -211,37 +213,37 @@ void main() {
 
     test('doSelect async', () async {
       final list = [1, 2];
-      final result = doSelect(context, list, 'is_async_true');
+      final result = await (doSelect(context, list, 'is_async_true') as Future);
       expect(result, equals([1, 2]));
 
-      final result2 = doSelect(context, list, 'is_async_false');
+      final result2 = await (doSelect(context, list, 'is_async_false') as Future);
       expect(result2, equals([]));
     });
 
     test('doReject async', () async {
       final list = [1, 2];
-      final result = doReject(context, list, 'is_async_true');
+      final result = await (doReject(context, list, 'is_async_true') as Future);
       expect(result, equals([]));
 
-      final result2 = doReject(context, list, 'is_async_false');
+      final result2 = await (doReject(context, list, 'is_async_false') as Future);
       expect(result2, equals([1, 2]));
     });
 
     test('doSelectAttr async', () async {
       final items = [
         {'a': 1},
-        {'a': 2}
+        {'a': 2},
       ];
-      final result = doSelectAttr(context, items, 'a', 'is_async_true');
+      final result = await (doSelectAttr(context, items, 'a', 'is_async_true') as Future);
       expect(result as List, hasLength(2));
     });
 
     test('doRejectAttr async', () async {
       final items = [
         {'a': 1},
-        {'a': 2}
+        {'a': 2},
       ];
-      final result = doRejectAttr(context, items, 'a', 'is_async_true');
+      final result = await (doRejectAttr(context, items, 'a', 'is_async_true') as Future);
       expect(result as List, isEmpty);
     });
   });
@@ -253,7 +255,7 @@ void main() {
       final items = [
         {'name': 'A'},
         {'name': 'a'},
-        {'name': 'B'}
+        {'name': 'B'},
       ];
       final result = doUnique(env, items, attribute: 'name');
       expect(result, hasLength(2));

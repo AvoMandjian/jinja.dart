@@ -2284,9 +2284,7 @@ class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?
 
       var loop = LoopContext(values, depth, recurse);
 
-      int iteration = 0;
       for (var value in loop) {
-        iteration++;
         var data = _baseRenderer.getDataForTargets(targets, value);
         var forContext = context.derived(data: data);
         forContext.set('loop', loop);
@@ -2393,7 +2391,14 @@ class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?
   ) async {
     var value = await node.value.accept(this, context);
     var finalized = context.finalize(value);
-    context.write(finalized);
+
+    if (finalized is SafeString) {
+      context.write(finalized.toString());
+    } else if (context.autoEscape) {
+      context.write(escape(finalized?.toString() ?? ''));
+    } else {
+      context.write(finalized);
+    }
   }
 
   @override
