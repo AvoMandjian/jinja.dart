@@ -1,0 +1,4 @@
+{
+  "summary": "Fixed `loop.last` bug in `AsyncDebugRenderer.visitFor` by introducing `LoopContext`.",
+  "current_status": "All tests pass, code is clean, bug is successfully resolved."
+}

@@ -7,7 +7,6 @@ import '../utils.dart';
 import '../visitor.dart';
 import 'debug_controller.dart';
 import 'debug_renderer.dart';
-import 'evaluator.dart';
 
 /// Async version of the renderer for debugging
 class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
@@ -89,9 +88,8 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
         var totalOutput = context.outputSoFar;
         var current = currentOutput ?? '';
-        var soFar = (current.isNotEmpty && totalOutput.endsWith(current))
-            ? totalOutput.substring(0, totalOutput.length - current.length)
-            : totalOutput;
+        var soFar =
+            (current.isNotEmpty && totalOutput.endsWith(current)) ? totalOutput.substring(0, totalOutput.length - current.length) : totalOutput;
 
         var info = BreakpointInfo(
           nodeType: nodeType,
@@ -184,9 +182,7 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     if (boolean(testResult)) {
       return await node.trueValue.accept(this, context);
     }
-    return node.falseValue != null
-        ? await node.falseValue!.accept(this, context)
-        : null;
+    return node.falseValue != null ? await node.falseValue!.accept(this, context) : null;
   }
 
   @override
@@ -432,13 +428,42 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
       values = list(iterable);
     }
 
-    if (values.isEmpty && node.orElse != null) {
-      await node.orElse!.accept(this, context);
+    if (values.isEmpty) {
+      if (node.orElse != null) {
+        await node.orElse!.accept(this, context);
+      }
       return;
     }
 
-    for (var i = 0; i < values.length; i++) {
-      var value = values[i];
+    if (node.test != null) {
+      var test = node.test!;
+      var filtered = <Object?>[];
+      for (var value in values) {
+        var data = _baseRenderer.getDataForTargets(targets, value);
+        var newContext = context.derived(data: data);
+        if (boolean(await test.accept(this, newContext))) {
+          filtered.add(value);
+        }
+      }
+      values = filtered;
+
+      if (values.isEmpty) {
+        if (node.orElse != null) {
+          await node.orElse!.accept(this, context);
+        }
+        return;
+      }
+    }
+
+    String recurse(Object? data, [int depth = 0]) {
+      // Recursive loops are not supported in async mode yet.
+      return '';
+    }
+
+    var loop = LoopContext(values, 0, recurse);
+
+    int i = 0;
+    for (var value in loop) {
       // When iterating, we clear the lines hit inside the loop body so that
       // breakpoints can be triggered again for each iteration.
       // But we need to be careful not to clear lines that shouldn't be repeated
@@ -457,6 +482,7 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
       }
       var data = _baseRenderer.getDataForTargets(targets, value);
       var forContext = context.derived(data: data);
+      forContext.set('loop', loop);
 
       var outputBeforeIteration = context.outputSoFar;
       await node.body.accept(this, forContext);
@@ -481,6 +507,7 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
           await context.debugController.handleBreakpoint(info);
         }
       }
+      i++;
     }
   }
 
