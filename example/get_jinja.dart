@@ -1117,6 +1117,43 @@ class GetJinja {
           }
         },
 
+        /// Removes a key from a map and returns the modified map.
+        'remove_key': (Map map, String key) {
+          try {
+            try {
+              map.remove(key);
+              return map;
+            } catch (_) {
+              final Map newMap = Map.from(map);
+              newMap.remove(key);
+              return newMap;
+            }
+          } catch (e) {
+            valueListenableJinjaError(e.toString());
+            return map;
+          }
+        },
+
+        /// Removes the last item of a list and returns the modified list.
+        'remove_last': (List list) {
+          try {
+            if (list.isNotEmpty) {
+              try {
+                list.removeLast();
+                return list;
+              } catch (_) {
+                final List newList = List.from(list);
+                newList.removeLast();
+                return newList;
+              }
+            }
+            return list;
+          } catch (e) {
+            valueListenableJinjaError(e.toString());
+            return list;
+          }
+        },
+
         /// Appends a value to a list, optionally parsing as JSON map.
         'append': (List list, value, [String? type = 'MAP']) {
           try {

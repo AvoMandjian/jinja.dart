@@ -1,0 +1,1 @@
+{"summary": "Replaced python string format with format_number filter", "current_status": "Replaced the python format strings with Jinja filters as requested."}

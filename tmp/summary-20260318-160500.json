@@ -1,0 +1,1 @@
+{"summary": "Added remove_key and remove_last filters to example/get_jinja.dart", "current_status": "Added the requested filters and updated data_types_test.dart to use remove_key. Test fails with Invalid callable {} due to jinja kwargs limitations."}

@@ -204,7 +204,7 @@ Return default string representation for an object.
 Return string representation for a number.
 #}
 {% macro number_view(n) -%}
-    {{ "{:,.2f}".format(n) }}
+    {{ n | format_number('#,##0.00') }}
 {%- endmacro %}
 
 {#
@@ -218,7 +218,7 @@ Return string representation for a boolean.
 Return string representation for money.
 #}
 {% macro money_view(v) -%}
-    {{ v.currency_symb }}{{ "{:,.2f}".format(v.amount) }}
+    {{ v.currency_symb }}{{ v.amount | format_number('#,##0.00') }}
 {%- endmacro %}
 
 {#
@@ -663,7 +663,7 @@ Create a list data by iterating over a value (auxiliary).
 {% macro _list_data(value, param) -%}
     {# vars #}
     {% set func = param.macro %}
-    {% do param.pop("macro") %}
+    {% do param | remove_key("macro") %}
 
     {# output #}
     [
@@ -709,7 +709,7 @@ Create map data by iterating over kwargs (auxiliary).
     {
     {% for k, v in kwargs.items() -%}
         {% set func = v.macro %}
-        {% do v.pop("macro") %}
+        {% do v | remove_key("macro") %}
         {% do _isident(k) %}
         "{{ k }}": {{ func(value[k], v) }}{% if not loop.last %},{% endif %}
     {%- endfor %}

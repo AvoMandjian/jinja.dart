@@ -254,15 +254,33 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       var mandatoryLength = node.positional.length;
 
       try {
+        var remaining = named.keys.toSet();
+
         // 1. Mandatory positional arguments
         for (; index < mandatoryLength; index += 1) {
           var key = node.positional[index].accept(this, context) as String;
-          derived.set(key, positional[index]);
+
+          if (index < positional.length) {
+            derived.set(key, positional[index]);
+          } else if (remaining.remove(key)) {
+            derived.set(key, named[key]);
+          } else if (remaining.remove(Symbol(key))) {
+            derived.set(key, named[Symbol(key)]);
+          } else if (key == 'default' && remaining.remove('defaultValue')) {
+            derived.set(key, named['defaultValue']);
+          } else if (key == 'default' && remaining.remove(Symbol('defaultValue'))) {
+            derived.set(key, named[Symbol('defaultValue')]);
+          } else if (key == 'defaultValue' && remaining.remove('default')) {
+            derived.set(key, named['default']);
+          } else if (key == 'defaultValue' && remaining.remove(Symbol('default'))) {
+            derived.set(key, named[Symbol('default')]);
+          } else {
+            // Missing arguments become null (Undefined in python jinja)
+            derived.set(key, null);
+          }
         }
 
         // 2. Optional arguments (node.named) - fill from positional if available, else named/default
-        var remaining = named.keys.toSet();
-
         for (var (argument, defaultValue) in node.named) {
           var key = argument.accept(this, context) as String;
 
@@ -276,6 +294,14 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
               derived.set(key, named[key]);
             } else if (remaining.remove(Symbol(key))) {
               derived.set(key, named[Symbol(key)]);
+            } else if (key == 'default' && remaining.remove('defaultValue')) {
+              derived.set(key, named['defaultValue']);
+            } else if (key == 'default' && remaining.remove(Symbol('defaultValue'))) {
+              derived.set(key, named[Symbol('defaultValue')]);
+            } else if (key == 'defaultValue' && remaining.remove('default')) {
+              derived.set(key, named['default']);
+            } else if (key == 'defaultValue' && remaining.remove(Symbol('default'))) {
+              derived.set(key, named[Symbol('default')]);
             } else {
               // Evaluate default value
               if (defaultValue is Name) {
