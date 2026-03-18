@@ -69,7 +69,8 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
           break;
         }
         try {
-          var template = context.environment.fromString('{{ ${bp.condition} }}');
+          var template =
+              context.environment.fromString('{{ ${bp.condition} }}');
           var result = template.render(context.getAllVariables());
           if (result == 'true') {
             shouldBreak = true;
@@ -88,8 +89,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
         var totalOutput = context.outputSoFar;
         var current = currentOutput ?? '';
-        var soFar =
-            (current.isNotEmpty && totalOutput.endsWith(current)) ? totalOutput.substring(0, totalOutput.length - current.length) : totalOutput;
+        var soFar = (current.isNotEmpty && totalOutput.endsWith(current))
+            ? totalOutput.substring(0, totalOutput.length - current.length)
+            : totalOutput;
 
         var info = BreakpointInfo(
           nodeType: nodeType,
@@ -124,14 +126,20 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     Attribute node,
     DebugRenderContext context,
   ) async {
-    // Don't check breakpoints on Attribute nodes - they're part of expression evaluation
+    // Check breakpoints on Attribute nodes with the attribute name
+    await _checkBreakpoint(node, context, 'Attribute',
+        nodeName: node.attribute);
     var value = await node.value.accept(this, context);
     return context.attribute(node.attribute, value, node);
   }
 
   @override
   Future<Object?> visitCall(Call node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Call');
+    String? nodeName;
+    if (node.value is Name) {
+      nodeName = (node.value as Name).name;
+    }
+    await _checkBreakpoint(node, context, 'Call', nodeName: nodeName);
     var function = await node.value.accept(this, context);
     var params = await node.calling.accept(this, context) as Parameters;
     var (positional, named) = params;
@@ -182,7 +190,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     if (boolean(testResult)) {
       return await node.trueValue.accept(this, context);
     }
-    return node.falseValue != null ? await node.falseValue!.accept(this, context) : null;
+    return node.falseValue != null
+        ? await node.falseValue!.accept(this, context)
+        : null;
   }
 
   @override
@@ -219,8 +229,8 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<Object?> visitItem(Item node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Item');
     var key = await node.key.accept(this, context);
+    await _checkBreakpoint(node, context, 'Item', nodeData: key);
     var value = await node.value.accept(this, context);
     return context.item(key, value, node);
   }
@@ -564,12 +574,20 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     // Check breakpoint after writing output so "Output so far" includes this interpolation
     // Force the line number to match the current context line if node.line is null
     var currentLine = node.line ?? context.currentLine;
+
+    // Extract nodeName from the value if it's a simple name or attribute chain
+    String? nodeName;
+    if (node.value is Name) {
+      nodeName = (node.value as Name).name;
+    }
+
     var info = BreakpointInfo(
       nodeType: 'Interpolation',
       variables: context.getAllVariables(),
       outputSoFar: outputBefore,
       currentOutput: currentOutput,
       lineNumber: currentLine,
+      nodeName: nodeName,
       nodeData: finalized.toString(),
     );
 
