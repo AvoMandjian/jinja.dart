@@ -570,6 +570,12 @@ class GetJinja {
 
     return Environment(
       globals: <String, Object?>{
+        'datetime': {
+          'fromisoformat': (String s) => s,
+        },
+        'UUID': (String s) => s,
+        'uuid': () => '00000000-0000-0000-0000-000000000000',
+
         /// Executes an action based on the target type (widget, db, or app).
         ///
         /// **Usage:**
@@ -1081,6 +1087,22 @@ class GetJinja {
       },
       loader: loader,
       filters: {
+        /// Decode a base64 encoded string.
+        'frombase64': (String? s) {
+          if (s == null) return null;
+          try {
+            return utf8.decode(base64.decode(s));
+          } catch (_) {
+            return s;
+          }
+        },
+
+        /// Encode a string to base64.
+        'tobase64': (String? s) {
+          if (s == null) return null;
+          return base64.encode(utf8.encode(s));
+        },
+
         /// Fetches data asynchronously (filter version).
         'fetchDataFilter': (dynamic value) async {
           final result = await fetchData();

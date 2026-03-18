@@ -109,7 +109,7 @@ Helpers
 Raise AssertionError if value is not defined (auxiliary).
 #}
 {% macro _isdefined(value) %}
-{% do assert(value or value is boolean or value is number, "Required value is not defined: " ~ value) %}
+    {% do assert(value or value is boolean or value is number, "Required value is not defined: " ~ value) %}
 {% endmacro %}
 
 {#
@@ -118,7 +118,7 @@ Raise assertion error if value is not an instance of a given type (auxiliary).
 {% macro _isinstance(value, type) %}
     {% if type == "text" %}
         {% do assert(value is string, "Not a `text`: " ~ value) %}
-    {% elif type == "number" %}
+    {% elif type == "number"  %}
         {% do assert(value is not boolean and value is number, "Not a `number`: " ~ value) %}
     {% elif type == "boolean" %}
         {% do assert(value is boolean, "Not a `boolean`: " ~ value) %}
@@ -139,53 +139,53 @@ Raise AssertionError if value is not a valid identifier (auxiliary).
 {#
 Convert value into an object of a given type or raise AssertionError (auxiliary).
 #}
-{% macro _convert(value, type, strict) %}
-    {% if strict %}
+{%- macro _convert(value, type, strict) -%}
+    {%- if strict -%}
         {% do _isinstance(value, type) %}
         {{ value | tojson }}
-    {% else %}
-        {% if type == "text" %}
+    {%- else -%}
+        {%- if type == "text" -%}
             "{{ value | string }}"
-        {% elif type == "number" %}
+        {%- elif type == "number" -%}
                 {{ value | float | tojson }}
-        {% elif type == "boolean" %}
+        {%- elif type == "boolean" -%}
             {{ value | bool | tojson }}
-        {% else %}
-            {% do assert(false, "Invalid data type: ") %}
-        {% endif %}
-    {% endif %}
-{% endmacro %}
+        {%- else -%}
+            {% do assert(false, "Invalid data type: " ~ type) %}
+        {%- endif -%}
+    {%- endif -%}
+{%- endmacro -%}
 
 {#
 Deduce value based on given arguments or raise AssertionError (auxiliary).
 #}
-{% macro _populate(value, type, strict, optional, default) %}
-    {% if value is undefined or value is none %}
-        {% if default %}
+{%- macro _populate(value, type, strict, optional, default) -%}
+    {%- if value is undefined or value is none -%}
+        {%- if default -%}
             {{ _convert(default, type, strict) }}
-        {% elif optional %}
-            null
-        {% else %}
+        {%- elif optional -%}
+            none
+        {%- else -%}
             {% do assert(false, "Required value is undefined") %}
-        {% endif %}
-    {% else %}
-        {{ _convert(value, type, strict) }}
-    {% endif %}
-{% endmacro %}
+        {%- endif %}
+    {%- else -%}
+        {{- _convert(value, type, strict) -}}
+    {%- endif %}
+{%- endmacro -%}
 
 {#
 Return uid (if it's not none) or generate uuid (auxiliary).
 #}
-{% macro _getuid(uid) %}
+{% macro _getuid(uid) -%}
     {{ uid | string if uid is not none else uuid() }}
-{% endmacro %}
+{%- endmacro %}
 
 {#
 Return first defined object (auxiliary).
 #}
-{% macro _fallback(fst, sec) %}
+{% macro _fallback(fst, sec) -%}
     {{ fst if fst is not none and fst is defined else sec }}
-{% endmacro %}
+{%- endmacro %}
 
 {#
 -------------------------------------------------------------------------------
@@ -196,36 +196,36 @@ Views
 {#
 Return default string representation for an object.
 #}
-{% macro plain_view(v) %}
+{% macro plain_view(v) -%}
     {{ v }}
-{% endmacro %}
+{%- endmacro %}
 
 {#
 Return string representation for a number.
 #}
-{% macro number_view(n) %}
+{% macro number_view(n) -%}
     {{ "{:,.2f}".format(n) }}
-{% endmacro %}
+{%- endmacro %}
 
 {#
 Return string representation for a boolean.
 #}
-{% macro boolean_view(b) %}
+{% macro boolean_view(b) -%}
     {{ "On" if b else "Off" }}
-{% endmacro %}
+{%- endmacro %}
 
 {#
 Return string representation for money.
 #}
-{% macro money_view(v) %}
+{% macro money_view(v) -%}
     {{ v.currency_symb }}{{ "{:,.2f}".format(v.amount) }}
-{% endmacro %}
+{%- endmacro %}
 
 {#
-Return null regardless of the input.
+Return none regardless of the input.
 #}
-{% macro empty_view(_) %}
-{% endmacro %}
+{% macro empty_view(_) -%}
+{%- endmacro %}
 
 
 {#
@@ -237,27 +237,27 @@ Basic types
 {#
 Reusable fields for data objects (auxiliary).
 #}
-{% macro _preamble(uid, ui_widget, property_label, property_id) %}
-    {% set fields = [] %}
+{% macro _preamble(uid, ui_widget, property_label, property_id) -%}
+    {%- set fields = [] -%}
 
-    {% do fields | append('"id": "' ~ _getuid(uid) ~ '"') %}
+    {%- do fields | append('"id": "' ~ _getuid(uid) ~ '"') -%}
 
-    {% if ui_widget is not none %}
-        {% do _isident(ui_widget) %}
-        {% do fields | append('"ui_widget": ' ~ ui_widget | tojson) %}
-    {% endif %}
+    {%- if ui_widget is not none -%}
+        {%- do _isident(ui_widget) -%}
+        {%- do fields | append('"ui_widget": ' ~ ui_widget | tojson) -%}
+    {%- endif -%}
 
-    {% if property_label is not none %}
-        {% do fields | append('"property_label": ' ~ property_label | tojson) %}
-    {% endif %}
+    {%- if property_label is not none -%}
+        {%- do fields | append('"property_label": ' ~ property_label | tojson) -%}
+    {%- endif -%}
 
-    {% if property_id is not none %}
-        {% do _isident(property_id) %}
-        {% do fields | append('"property_id": ' ~ property_id | tojson) %}
-    {% endif %}
+    {%- if property_id is not none -%}
+        {%- do _isident(property_id) -%}
+        {%- do fields | append('"property_id": ' ~ property_id | tojson) -%}
+    {%- endif -%}
 
     {{ fields | join(',\n        ') }}
-{% endmacro %}
+{%- endmacro %}
 
 {#
 Create a raw text (auxiliary).
@@ -307,8 +307,8 @@ Args:
 	property_label: Property label for Designer.
 	property_id: Property ID for Designer.
 	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
+	optional: If true, input data is not mandatory (can be none or undefined).
+	default: Default in case of input data is none or undefined.
 	uid: Unique identifier for data object.
 	min_length: Min length of string.
 	max_length: Max length of string.
@@ -317,12 +317,12 @@ Args:
 {% macro create_dt_text(value, view=plain_view,
                         ui_widget=none, property_label=none, property_id=none,
                         strict=false, optional=false, default=none, uid=none,
-                        min_length=none, max_length=none, pattern=none) %}
-    {{ _raw_text(value, view, "dt_text",
+                        min_length=none, max_length=none, pattern=none) -%}
+    {{- _raw_text(value, view, "dt_text",
                   ui_widget, property_label, property_id,
                   strict, optional, default, uid,
-                  min_length, max_length, pattern) }}
-{% endmacro %}
+                  min_length, max_length, pattern) -}}
+{%- endmacro %}
 
 
 {#
@@ -335,23 +335,44 @@ Args:
 	property_label: Property label for Designer.
 	property_id: Property ID for Designer.
 	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
+	optional: If true, input data is not mandatory (can be none or undefined).
+	default: Default in case of input data is none or undefined.
 	uid: Unique identifier for data object.
 #}
-{% macro create_dt_datetime(value, view=plain_view,
-                            ui_widget=none, property_label=none, property_id=none,
-                            strict=false, optional=false, default=none, uid=none) %}
+
+{% macro create_dt_date(value, view=plain_view,
+                        ui_widget=none, property_label=none, property_id=none,
+                        strict=false, optional=false, default=none, uid=none) -%}
     {# variables #}
     {% set value = _populate(value, "text", strict, optional, default) | fromjson %}
 
     {# data #}
-    {{ _raw_text(value[:19], view, "dt_datetime",
+    {% if value[:19] | match("^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$") -%}
+        {{- _raw_text(value[:10], view, "dt_date",
+                      ui_widget, property_label, property_id,
+                      strict, optional, default, uid,
+                      min_length=none, max_length=none, pattern=none) -}}
+    {%- else -%}
+        {{- _raw_text(value, view, "dt_date",
+                      ui_widget, property_label, property_id,
+                      strict, optional, default, uid,
+                      min_length=none, max_length=none,
+                      pattern="^\d{4}-\d{2}-\d{2}$") -}}
+    {%- endif %}
+{%- endmacro %}
+{% macro create_dt_datetime(value, view=plain_view,
+                            ui_widget=none, property_label=none, property_id=none,
+                            strict=false, optional=false, default=none, uid=none) -%}
+    {# variables #}
+    {% set value = _populate(value, "text", strict, optional, default) | fromjson %}
+
+    {# data #}
+    {{- _raw_text(value[:19], view, "dt_datetime",
                   ui_widget, property_label, property_id,
                   strict, optional, default, uid,
                   min_length=none, max_length=none,
-                  pattern="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$") }}
-{% endmacro %}
+                  pattern="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$") -}}
+{%- endmacro %}
 
 {#
 Create a date.
@@ -363,30 +384,30 @@ Args:
 	property_label: Property label for Designer.
 	property_id: Property ID for Designer.
 	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
+	optional: If true, input data is not mandatory (can be none or undefined).
+	default: Default in case of input data is none or undefined.
 	uid: Unique identifier for data object.
 #}
 {% macro create_dt_date(value, view=plain_view,
                         ui_widget=none, property_label=none, property_id=none,
-                        strict=false, optional=false, default=none, uid=none) %}
+                        strict=false, optional=false, default=none, uid=none) -%}
     {# variables #}
     {% set value = _populate(value, "text", strict, optional, default) | fromjson %}
 
     {# data #}
-    {% if value[:19] | match("\^d{4}\-d{2}-\d{2}\d{2}:\d{2}:\d{2}$") %}
-        {{ _raw_text(value[:10], view, "dt_date",
+    {% if value[:19] | match("^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$") -%}
+        {{- _raw_text(value[:10], view, "dt_date",
                       ui_widget, property_label, property_id,
                       strict, optional, default, uid,
-                      min_length=none, max_length=none, pattern=none) }}
-    {% else %}
-        {{ _raw_text(value, view, "dt_date",
+                      min_length=none, max_length=none, pattern=none) -}}
+    {%- else -%}
+        {{- _raw_text(value, view, "dt_date",
                       ui_widget, property_label, property_id,
                       strict, optional, default, uid,
                       min_length=none, max_length=none,
-                      pattern="^\d{4}-\d{2}-\d{2}$") }}
-    {% endif %}
-{% endmacro %}
+                      pattern="^\d{4}-\d{2}-\d{2}$") -}}
+    {%- endif %}
+{%- endmacro %}
 
 {#
 Create a time.
@@ -398,30 +419,30 @@ Args:
 	property_label: Property label for Designer.
 	property_id: Property ID for Designer.
 	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
+	optional: If true, input data is not mandatory (can be none or undefined).
+	default: Default in case of input data is none or undefined.
 	uid: Unique identifier for data object.
 #}
 {% macro create_dt_time(value, view=plain_view,
                      ui_widget=none, property_label=none, property_id=none,
-                     strict=false, optional=false, default=none, uid=none) %}
+                     strict=false, optional=false, default=none, uid=none) -%}
     {# variables #}
     {% set value = _populate(value, "text", strict, optional, default) | fromjson %}
 
     {# data #}
-    {% if value[:19] | match("^\d{4}\-d{2}\-d{2} \d{2}:\d{2}:\d{2}$") %}
-        {{ _raw_text(value[11:19], view, "dt_time",
+    {% if value[:19] | match("^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$") -%}
+        {{- _raw_text(value[11:19], view, "dt_time",
                       ui_widget, property_label, property_id,
                       strict, optional, default, uid,
-                      min_length=none, max_length=none, pattern=none) }}
-    {% else %}
-        {{ _raw_text(value, view, "dt_time",
+                      min_length=none, max_length=none, pattern=none) -}}
+    {%- else -%}
+        {{- _raw_text(value, view, "dt_time",
                       ui_widget, property_label, property_id,
                       strict, optional, default, uid,
                       min_length=none, max_length=none,
-                      pattern="^\d{2}:\d{2}:\d{2}$") }}
-    {% endif %}
-{% endmacro %}
+                      pattern="^\d{2}:\d{2}:\d{2}$") -}}
+    {%- endif %}
+{%- endmacro %}
 
 {#
 Create a uuid data object.
@@ -433,19 +454,19 @@ Args:
 	property_label: Property label for Designer.
 	property_id: Property ID for Designer.
 	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
+	optional: If true, input data is not mandatory (can be none or undefined).
+	default: Default in case of input data is none or undefined.
 	uid: Unique identifier for data object.
 #}
 {% macro create_dt_uuid(value, view=plain_view,
                         ui_widget=none, property_label=none, property_id=none,
-                        strict=false, optional=false, default=none, uid=none) %}
-    {{ _raw_text(value, view, "dt_uuid",
+                        strict=false, optional=false, default=none, uid=none) -%}
+    {{- _raw_text(value, view, "dt_uuid",
                   ui_widget, property_label, property_id,
                   strict, optional, default, uid,
                   min_length=none, max_length=none,
-                  pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$") }}
-{% endmacro %}
+                  pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$") -}}
+{%- endmacro %}
 
 {#
 Create a base64 data object.
@@ -457,8 +478,8 @@ Args:
 	property_label: Property label for Designer.
 	property_id: Property ID for Designer.
 	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
+	optional: If true, input data is not mandatory (can be none or undefined).
+	default: Default in case of input data is none or undefined.
 	uid: Unique identifier for data object.
 	min_length: Min length of decoded string.
 	max_length: Max length of decoded string.
@@ -467,10 +488,10 @@ Args:
                           ui_widget=none, property_label=none, property_id=none,
                           strict=false, optional=false, default=none, uid=none,
                           min_length=none, max_length=none) %}
-    {{ _raw_text(value, view, "dt_base64", ui_widget, property_label, property_id,
+    {{- _raw_text(value, view, "dt_base64", ui_widget, property_label, property_id,
                   strict, optional, default, uid,
                   min_length, max_length,
-                  pattern="^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$") }}
+                  pattern="^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$") -}}
 {% endmacro %}
 
 {#
@@ -483,8 +504,8 @@ Args:
 	property_label: Property label for Designer.
 	property_id: Property ID for Designer.
 	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
+	optional: If true, input data is not mandatory (can be none or undefined).
+	default: Default in case of input data is none or undefined.
 	uid: Unique identifier for data object.
     gt: Greater than check.
     ge: Greater or equal check.
@@ -571,8 +592,8 @@ Args:
 	property_label: Property label for Designer.
 	property_id: Property ID for Designer.
 	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
+	optional: If true, input data is not mandatory (can be none or undefined).
+	default: Default in case of input data is none or undefined.
 	uid: Unique identifier for data object.
 #}
 {% macro create_dt_boolean(value, view=boolean_view,
@@ -602,13 +623,11 @@ Args:
 	property_label: Property label for Designer.
 	property_id: Property ID for Designer.
 	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
+	optional: If true, input data is not mandatory (can be none or undefined).
+	default: Default in case of input data is none or undefined.
 	uid: Unique identifier for data object.
 #}
-{% macro create_dt_money(amount, currency_id, currency_symb, convert_rate=None,
-                         view=money_view, uid=none, ui_widget=none, property_label=none,
-                         property_id=none) %}
+{% macro create_dt_money(amount, currency_id, currency_symb, convert_rate=none, view=money_view, uid=none, ui_widget=none, property_label=none, property_id=none) -%}
     {# vars #}
     {% set amount = _populate(amount, "number", strict=false, optional=false, default=none) | fromjson %}
     {% set currency_id = _populate(currency_id, "text", strict=false, optional=false, default=none) | fromjson %}
@@ -630,7 +649,7 @@ Args:
             "value_text": {{ view(value) | tojson }}
         }
     }
-{% endmacro %}
+{%- endmacro %}
 
 {#
 -------------------------------------------------------------------------------
@@ -641,18 +660,18 @@ Compound types
 {#
 Create a list data by iterating over a value (auxiliary).
 #}
-{% macro _list_data(value, param) %}
+{% macro _list_data(value, param) -%}
     {# vars #}
     {% set func = param.macro %}
     {% do param.pop("macro") %}
 
     {# output #}
     [
-    {% for item in value %}
-        {{ func(item, param) }}{% if not loop.last %},{% endif %}
-    {% endfor %}
+    {% for item in value -%}
+        {{- func(item, param) -}}{% if not loop.last %},{% endif %}
+    {%- endfor %}
     ]
-{% endmacro %}
+{%- endmacro %}
 
 {#
 Create a list.
@@ -668,7 +687,7 @@ Args:
 #}
 {% macro create_dt_list(value, param, data_type=none, view=empty_view,
                         ui_widget=none, property_label=none, property_id=none,
-                        uid=none) %}
+                        uid=none) -%}
     {# vars #}
     {% set data = _list_data(value, param) %}
 
@@ -681,21 +700,21 @@ Args:
             "value_text": {{ view(data) | tojson }}
         }
     }
-{% endmacro %}
+{%- endmacro %}
 
 {#
 Create map data by iterating over kwargs (auxiliary).
 #}
-{% macro _object_data(value) %}
+{% macro _object_data(value) -%}
     {
-    {% for k, v in kwargs.items() %}
+    {% for k, v in kwargs.items() -%}
         {% set func = v.macro %}
         {% do v.pop("macro") %}
         {% do _isident(k) %}
         "{{ k }}": {{ func(value[k], v) }}{% if not loop.last %},{% endif %}
-    {% endfor %}
+    {%- endfor %}
     }
-{% endmacro %}
+{%- endmacro %}
 
 {#
 Create a map.
@@ -711,7 +730,7 @@ Args:
 #}
 {% macro create_dt_object(value, data_type=none, view=empty_view,
                           ui_widget=none, property_label=none, property_id=none,
-                          uid=none) %}
+                          uid=none) -%}
     {# vars #}
     {% set data = _object_data(value, kwargs) %}
 
@@ -724,8 +743,7 @@ Args:
             "value_text": {{ view(data) | tojson }}
         }
     }
-{% endmacro %}
-
+{%- endmacro %}
 ''',
       },
       globalJinjaData: jinjaData,
