@@ -113,11 +113,11 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     Array node,
     DebugRenderContext context,
   ) async {
-    await _checkBreakpoint(node, context, 'Array');
     var result = <Object?>[];
     for (var value in node.values) {
       result.add(await value.accept(this, context));
     }
+    await _checkBreakpoint(node, context, 'Array', nodeData: result);
     return result;
   }
 
@@ -127,10 +127,16 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     DebugRenderContext context,
   ) async {
     // Check breakpoints on Attribute nodes with the attribute name
-    await _checkBreakpoint(node, context, 'Attribute',
-        nodeName: node.attribute);
     var value = await node.value.accept(this, context);
-    return context.attribute(node.attribute, value, node);
+    var attributeValue = context.attribute(node.attribute, value, node);
+    await _checkBreakpoint(
+      node,
+      context,
+      'Attribute',
+      nodeName: node.attribute,
+      nodeData: attributeValue,
+    );
+    return attributeValue;
   }
 
   @override
@@ -139,11 +145,13 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     if (node.value is Name) {
       nodeName = (node.value as Name).name;
     }
-    await _checkBreakpoint(node, context, 'Call', nodeName: nodeName);
     var function = await node.value.accept(this, context);
     var params = await node.calling.accept(this, context) as Parameters;
     var (positional, named) = params;
-    return context.call(function, node, positional, named);
+    var result = context.call(function, node, positional, named);
+    await _checkBreakpoint(node, context, 'Call',
+        nodeName: nodeName, nodeData: result);
+    return result;
   }
 
   @override
@@ -166,18 +174,20 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<bool> visitCompare(Compare node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Compare');
-    return _baseRenderer.visitCompare(node, context);
+    var result = _baseRenderer.visitCompare(node, context);
+    await _checkBreakpoint(node, context, 'Compare', nodeData: result);
+    return result;
   }
 
   @override
   Future<Object?> visitConcat(Concat node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Concat');
     var buffer = StringBuffer();
     for (var value in node.values) {
       buffer.write(await value.accept(this, context));
     }
-    return buffer.toString();
+    var result = buffer.toString();
+    await _checkBreakpoint(node, context, 'Concat', nodeData: result);
+    return result;
   }
 
   @override
@@ -185,14 +195,17 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     Condition node,
     DebugRenderContext context,
   ) async {
-    await _checkBreakpoint(node, context, 'Condition');
     var testResult = await node.test.accept(this, context);
+    Object? result;
     if (boolean(testResult)) {
-      return await node.trueValue.accept(this, context);
+      result = await node.trueValue.accept(this, context);
+    } else {
+      result = node.falseValue != null
+          ? await node.falseValue!.accept(this, context)
+          : null;
     }
-    return node.falseValue != null
-        ? await node.falseValue!.accept(this, context)
-        : null;
+    await _checkBreakpoint(node, context, 'Condition', nodeData: result);
+    return result;
   }
 
   @override
@@ -208,13 +221,13 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     Dict node,
     DebugRenderContext context,
   ) async {
-    await _checkBreakpoint(node, context, 'Dict');
     var result = <Object?, Object?>{};
     for (var (:key, :value) in node.pairs) {
       var k = await key.accept(this, context);
       var v = await value.accept(this, context);
       result[k] = v;
     }
+    await _checkBreakpoint(node, context, 'Dict', nodeData: result);
     return result;
   }
 
@@ -237,8 +250,9 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<Object?> visitLogical(Logical node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Logical');
-    return _baseRenderer.visitLogical(node, context);
+    var result = _baseRenderer.visitLogical(node, context);
+    await _checkBreakpoint(node, context, 'Logical', nodeData: result);
+    return result;
   }
 
   @override
@@ -267,10 +281,17 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<Object?> visitTest(Test node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Test', nodeName: node.name);
     var params = await node.calling.accept(this, context) as Parameters;
     var (positional, named) = params;
-    return context.test(node.name, positional, named);
+    var result = context.test(node.name, positional, named);
+    await _checkBreakpoint(
+      node,
+      context,
+      'Test',
+      nodeName: node.name,
+      nodeData: result,
+    );
+    return result;
   }
 
   @override
@@ -282,13 +303,15 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     for (var value in node.values) {
       result.add(await value.accept(this, context));
     }
+    await _checkBreakpoint(node, context, 'Tuple', nodeData: result);
     return result;
   }
 
   @override
   Future<Object?> visitUnary(Unary node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Unary');
-    return _baseRenderer.visitUnary(node, context);
+    var result = _baseRenderer.visitUnary(node, context);
+    await _checkBreakpoint(node, context, 'Unary', nodeData: result);
+    return result;
   }
 
   @override
@@ -302,7 +325,6 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     } else {
       nodeName = node.target.toString();
     }
-    await _checkBreakpoint(node, context, 'Assign', nodeName: nodeName);
 
     // Evaluate target and value in the async debug context.
     var target = await node.target.accept(this, context);
@@ -321,6 +343,13 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
       }
     }
 
+    await _checkBreakpoint(
+      node,
+      context,
+      'Assign',
+      nodeName: nodeName,
+      nodeData: value,
+    );
     context.assignTargets(target, value);
   }
 
@@ -396,8 +425,8 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
   @override
   Future<void> visitDo(Do node, DebugRenderContext context) async {
-    await _checkBreakpoint(node, context, 'Do');
-    await node.value.accept(this, context);
+    var value = await node.value.accept(this, context);
+    await _checkBreakpoint(node, context, 'Do', nodeData: value);
   }
 
   @override
@@ -426,10 +455,17 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     } else {
       nodeName = node.target.toString();
     }
-    await _checkBreakpoint(node, context, 'For', nodeName: nodeName);
 
     var targets = await node.target.accept(this, context);
     var iterable = await node.iterable.accept(this, context);
+
+    await _checkBreakpoint(
+      node,
+      context,
+      'For',
+      nodeName: nodeName,
+      nodeData: iterable,
+    );
 
     List<Object?> values;
     if (iterable is Map) {
