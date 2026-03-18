@@ -1,0 +1,21 @@
+--- lib/src/optimizer.dart
++++ lib/src/optimizer.dart
+@@ -194,5 +194,8 @@
+   Calling visitCalling(Calling node, Context context) {
+-    return node.copyWith(
++    var args = visitNodes<Expression>(node.arguments, context);
++    var kwargs = <Keyword>[
++      for (var (:key, :value) in node.keywords) (key: key, value: visitNode<Expression>(value, context)),
++    ];
++    var newNode = node.copyWith(
+-      arguments: visitNodes<Expression>(node.arguments, context),
+-      keywords: <Keyword>[
+-        for (var (:key, :value) in node.keywords) (key: key, value: visitNode<Expression>(value, context)),
+-      ],
++      arguments: args,
++      keywords: kwargs,
+     );
++    print("Optimizer visitCalling: original args=\${node.arguments.map((e) => e.runtimeType)} keywords=\${node.keywords.length}");
++    print("Optimizer visitCalling: returning args=\${newNode.arguments.map((e) => e.runtimeType)} keywords=\${newNode.keywords.length}");
++    return newNode;
+   }

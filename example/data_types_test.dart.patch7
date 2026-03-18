@@ -1,0 +1,8 @@
+--- example/data_types_test.dart
++++ example/data_types_test.dart
+@@ -772,3 +772,4 @@
+     for (var i = 0; i < interps.length; i++) {
+-       print("AST runtime interp " + i.toString() + ": " + interps[i].toSource());
++       var call = interps[i].value as Call;
++       print("AST runtime interp \$i args: \${call.calling.arguments.map((e) => e.runtimeType)}");
+     }

@@ -388,6 +388,20 @@ base class Environment {
       } else if (function is EnvFilter) {
         positional = <Object?>[this, ...positional];
         func = function.function;
+      } else if (function is MacroFunction) {
+        // Jinja.dart's RuntimeCompiler wraps known macro arguments into [Array, Dict]
+        // where the Dict keys are Symbols. We need to unwrap them if so.
+        // If it's a macro passed as a variable, it won't be wrapped.
+        if (positional.length == 2 && 
+            positional[0] is List && 
+            positional[1] is Map && 
+            named.isEmpty &&
+            (positional[1] as Map).keys.every((k) => k is Symbol)) {
+          var unrwappedPos = positional[0] as List<Object?>;
+          var unwrappedNamed = (positional[1] as Map).cast<Symbol, Object?>();
+          return function(unrwappedPos, unwrappedNamed);
+        }
+        return function(positional, named);
       } else if (function is Function) {
         func = function;
       } else {

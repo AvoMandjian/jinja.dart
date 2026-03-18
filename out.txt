@@ -1,0 +1,389 @@
+
+=== Example 2: Real world example ===
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name, Constant) keywords=0
+Optimizer visitCalling: returning args=(Name, Constant) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Constant, Name) keywords=3
+Optimizer visitCalling: returning args=(Constant, Name) keywords=3
+Optimizer visitCalling: original args=(Constant, Name) keywords=2
+Optimizer visitCalling: returning args=(Constant, Name) keywords=2
+Optimizer visitCalling: original args=(Constant) keywords=1
+Optimizer visitCalling: returning args=(Constant) keywords=1
+Optimizer visitCalling: original args=(Constant) keywords=0
+Optimizer visitCalling: returning args=(Constant) keywords=0
+Optimizer visitCalling: original args=(Constant) keywords=0
+Optimizer visitCalling: returning args=(Constant) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Constant) keywords=0
+Optimizer visitCalling: returning args=(Constant) keywords=0
+Optimizer visitCalling: original args=(Constant) keywords=0
+Optimizer visitCalling: returning args=(Constant) keywords=0
+Optimizer visitCalling: original args=(Constant) keywords=0
+Optimizer visitCalling: returning args=(Constant) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Constant, Name) keywords=0
+Optimizer visitCalling: returning args=(Constant, Name) keywords=0
+Optimizer visitCalling: original args=() keywords=3
+Optimizer visitCalling: returning args=() keywords=3
+Optimizer visitCalling: original args=(Array) keywords=1
+Optimizer visitCalling: returning args=(Constant) keywords=1
+Optimizer visitCalling: original args=(Dict) keywords=3
+Optimizer visitCalling: returning args=(Constant) keywords=3
+AST runtime interp 0: types.create_dt_text() args=(Array, Dict)
+AST runtime interp 1: types.create_dt_number() args=(Array, Dict)
+AST runtime interp 2: types.create_dt_boolean() args=(Array, Dict)
+AST runtime interp 3: types.create_dt_datetime() args=(Array, Dict)
+AST runtime interp 4: types.create_dt_datetime() args=(Array, Dict)
+AST runtime interp 5: types.create_dt_date() args=(Array, Dict)
+AST runtime interp 6: types.create_dt_time() args=(Array, Dict)
+AST runtime interp 7: types.create_dt_uuid() args=(Array, Dict)
+AST runtime interp 8: types.create_dt_base64() args=(Array, Dict)
+AST runtime interp 9: types.create_dt_money() args=(Array, Dict)
+AST runtime interp 10: types.create_dt_list() args=(Array, Dict)
+AST runtime interp 11: types.create_dt_object() args=(Array, Dict)
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Logical, Concat) keywords=0
+Optimizer visitCalling: returning args=(Logical, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Test, Concat) keywords=0
+Optimizer visitCalling: returning args=(Test, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Logical, Concat) keywords=0
+Optimizer visitCalling: returning args=(Logical, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Test, Concat) keywords=0
+Optimizer visitCalling: returning args=(Test, Concat) keywords=0
+Optimizer visitCalling: original args=(Constant, Concat) keywords=0
+Optimizer visitCalling: returning args=(Constant, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name, Constant) keywords=0
+Optimizer visitCalling: returning args=(Name, Constant) keywords=0
+Optimizer visitCalling: original args=(Filter, Concat) keywords=0
+Optimizer visitCalling: returning args=(Filter, Concat) keywords=0
+Optimizer visitCalling: original args=(Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Filter) keywords=0
+Optimizer visitCalling: returning args=(Filter) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Filter) keywords=0
+Optimizer visitCalling: returning args=(Filter) keywords=0
+Optimizer visitCalling: original args=(Constant, Constant) keywords=0
+Optimizer visitCalling: returning args=(Constant, Constant) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Constant, Constant) keywords=0
+Optimizer visitCalling: returning args=(Constant, Constant) keywords=0
+Optimizer visitCalling: original args=(Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=() keywords=0
+Optimizer visitCalling: returning args=() keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Attribute) keywords=0
+Optimizer visitCalling: returning args=(Attribute) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name, Concat) keywords=0
+Optimizer visitCalling: returning args=(Name, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name, Concat) keywords=0
+Optimizer visitCalling: returning args=(Name, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name, Concat) keywords=0
+Optimizer visitCalling: returning args=(Name, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name, Concat) keywords=0
+Optimizer visitCalling: returning args=(Name, Concat) keywords=0
+Optimizer visitCalling: original args=(Name, Constant) keywords=0
+Optimizer visitCalling: returning args=(Name, Constant) keywords=0
+Optimizer visitCalling: original args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Compare, Concat) keywords=0
+Optimizer visitCalling: returning args=(Compare, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Compare, Concat) keywords=0
+Optimizer visitCalling: returning args=(Compare, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name) keywords=0
+Optimizer visitCalling: original args=(Filter, Concat) keywords=0
+Optimizer visitCalling: returning args=(Filter, Concat) keywords=0
+Optimizer visitCalling: original args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Name, Name, Constant, Name, Name, Name, Name, Name, Name, ..., Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name, Constant, Name, Name, Name, Name, Name, Name, ..., Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Slice, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: returning args=(Slice, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: original args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Slice, Constant) keywords=0
+Optimizer visitCalling: returning args=(Slice, Constant) keywords=0
+Optimizer visitCalling: original args=(Slice, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: returning args=(Slice, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: original args=(Name, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: returning args=(Name, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: original args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Slice, Constant) keywords=0
+Optimizer visitCalling: returning args=(Slice, Constant) keywords=0
+Optimizer visitCalling: original args=(Slice, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: returning args=(Slice, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: original args=(Name, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: returning args=(Name, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: original args=(Name, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: returning args=(Name, Name, Constant, Name, Name, Name, Name, Name, Name, Name) keywords=3
+Optimizer visitCalling: original args=(Name, Name, Constant, Name, Name, Name, Name, Name, Name, Name, Name, Name) keywords=1
+Optimizer visitCalling: returning args=(Name, Name, Constant, Name, Name, Name, Name, Name, Name, Name, Name, Name) keywords=1
+Optimizer visitCalling: original args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Compare, Concat) keywords=0
+Optimizer visitCalling: returning args=(Compare, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Compare, Concat) keywords=0
+Optimizer visitCalling: returning args=(Compare, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Compare, Concat) keywords=0
+Optimizer visitCalling: returning args=(Compare, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Compare, Concat) keywords=0
+Optimizer visitCalling: returning args=(Compare, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Compare, Concat) keywords=0
+Optimizer visitCalling: returning args=(Compare, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Filter, Constant, Constant) keywords=0
+Optimizer visitCalling: returning args=(Filter, Constant, Constant) keywords=0
+Optimizer visitCalling: original args=(Filter, Constant, Constant) keywords=0
+Optimizer visitCalling: returning args=(Filter, Constant, Constant) keywords=0
+Optimizer visitCalling: original args=(Filter) keywords=0
+Optimizer visitCalling: returning args=(Filter) keywords=0
+Optimizer visitCalling: original args=(Compare, Concat) keywords=0
+Optimizer visitCalling: returning args=(Compare, Concat) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Constant) keywords=0
+Optimizer visitCalling: returning args=(Constant) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Item) keywords=0
+Optimizer visitCalling: returning args=(Item) keywords=0
+Optimizer visitCalling: original args=(Compare, Concat) keywords=0
+Optimizer visitCalling: returning args=(Compare, Concat) keywords=0
+Optimizer visitCalling: original args=(Compare, Concat) keywords=0
+Optimizer visitCalling: returning args=(Compare, Concat) keywords=0
+Optimizer visitCalling: original args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Constant, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Name, Constant) keywords=3
+Optimizer visitCalling: returning args=(Name, Constant) keywords=3
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Name, Constant) keywords=3
+Optimizer visitCalling: returning args=(Name, Constant) keywords=3
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Name, Constant) keywords=3
+Optimizer visitCalling: returning args=(Name, Constant) keywords=3
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Name, Constant) keywords=2
+Optimizer visitCalling: returning args=(Name, Constant) keywords=2
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=(Constant) keywords=0
+Optimizer visitCalling: returning args=(Constant) keywords=0
+Optimizer visitCalling: original args=(Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name, Constant) keywords=0
+Optimizer visitCalling: returning args=(Name, Constant) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+Optimizer visitCalling: original args=() keywords=0
+Optimizer visitCalling: returning args=() keywords=0
+Optimizer visitCalling: original args=(Constant) keywords=0
+Optimizer visitCalling: returning args=(Constant) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Item, Name) keywords=0
+Optimizer visitCalling: returning args=(Item, Name) keywords=0
+Optimizer visitCalling: original args=(Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: returning args=(Name, Name, Name, Name) keywords=0
+Optimizer visitCalling: original args=(Name, Constant) keywords=0
+Optimizer visitCalling: returning args=(Name, Constant) keywords=0
+Optimizer visitCalling: original args=(Name) keywords=0
+Optimizer visitCalling: returning args=(Name) keywords=0
+Optimizer visitCalling: original args=(Call) keywords=0
+Optimizer visitCalling: returning args=(Call) keywords=0
+DEBUG AST: argument=Instance of 'Array' (type: Array)
+DEBUG Async visitCalling: arg=Array => ['test string', title_view] evaluated to [test string, Closure: (List<Object?>, Map<Object?, Object?>) => Object?]
+DEBUG AST: argument=Instance of 'Dict' (type: Dict)
+DEBUG Async visitCalling: arg=Dict => {Symbol("ui_widget"): 'single_line_text', Symbol("property_label"): 'Font Name', Symbol("property_id"): 'font_name'} evaluated to {Symbol("ui_widget"): single_line_text, Symbol("property_label"): Font Name, Symbol("property_id"): font_name}
+DEBUG Async visitCalling: positional = [[test string, Closure: (List<Object?>, Map<Object?, Object?>) => Object?], {Symbol("ui_widget"): single_line_text, Symbol("property_label"): Font Name, Symbol("property_id"): font_name}]
+DEBUG Async visitCalling: named = {}
+DEBUG callCommon: function IS MacroFunction
+DEBUG callCommon: positional = [[test string, Closure: (List<Object?>, Map<Object?, Object?>) => Object?], {Symbol("ui_widget"): single_line_text, Symbol("property_label"): Font Name, Symbol("property_id"): font_name}]
+DEBUG callCommon: named = {}
+DEBUG: macro create_dt_text called with positional=[[test string, Closure: (List<Object?>, Map<Object?, Object?>) => Object?], {Symbol("ui_widget"): single_line_text, Symbol("property_label"): Font Name, Symbol("property_id"): font_name}], named={}
+DEBUG AST StringSink: argument=Instance of 'Array' (type: Array)
+DEBUG StringSink visitCalling: arg=Array => [[test string, Closure: (List<Object?>, Map<Object?, Object?>) => Object?], {Symbol("ui_widget"): single_line_text, Symbol("property_label"): Font Name, Symbol("property_id"): font_name}, dt_text, null, null, null, false, false, null, null, null, null, null]
+DEBUG AST StringSink: argument=Instance of 'Dict' (type: Dict)
+DEBUG StringSink visitCalling: arg=Dict => {}
+DEBUG visitCalling: positional = [[[test string, Closure: (List<Object?>, Map<Object?, Object?>) => Object?], {Symbol("ui_widget"): single_line_text, Symbol("property_label"): Font Name, Symbol("property_id"): font_name}, dt_text, null, null, null, false, false, null, null, null, null, null], {}]
+DEBUG visitCalling: named = {}
+DEBUG callCommon: function IS MacroFunction
+DEBUG callCommon: positional = [[[test string, Closure: (List<Object?>, Map<Object?, Object?>) => Object?], {Symbol("ui_widget"): single_line_text, Symbol("property_label"): Font Name, Symbol("property_id"): font_name}, dt_text, null, null, null, false, false, null, null, null, null, null], {}]
+DEBUG callCommon: named = {}
+DEBUG: macro _raw_text called with positional=[[[test string, Closure: (List<Object?>, Map<Object?, Object?>) => Object?], {Symbol("ui_widget"): single_line_text, Symbol("property_label"): Font Name, Symbol("property_id"): font_name}, dt_text, null, null, null, false, false, null, null, null, null, null], {}], named={}
+
+!!! UNHANDLED EXCEPTION !!!
+TemplateRuntimeError: Error at macro _raw_text,
+            expected arguments count: 13 (mandatory: 3)
+            given arguments count: 2
+            given arguments: [[[test string, Closure: (List<Object?>, Map<Object?, Object?>) => Object?], {Symbol("ui_widget"): single_line_text, Symbol("property_label"): Font Name, Symbol("property_id"): font_name}, dt_text, null, null, null, false, false, null, null, null, null, null], {}],
+            error: RangeError (length): Invalid value: Not in inclusive range 0..1: 2
+            
+#0      StringSinkRenderer.getMacroFunction.macro (package:jinja/src/renderer.dart:329:9)
+#1      Environment.callCommon (package:jinja/src/environment.dart:395:24)
+#2      Context.call (package:jinja/src/runtime.dart:39:28)
+#3      StringSinkRenderer.visitCall (package:jinja/src/renderer.dart:419:28)
+#4      Call.accept (package:jinja/src/nodes/expressions.dart:430:20)
+#5      StringSinkRenderer.visitInterpolation (package:jinja/src/renderer.dart:1407:30)
+#6      Interpolation.accept (package:jinja/src/nodes.dart:138:20)
+#7      StringSinkRenderer.visitOutput (package:jinja/src/renderer.dart:1568:19)
+#8      Output.accept (package:jinja/src/nodes.dart:180:20)
+#9      StringSinkRenderer.getMacroFunction.macro (package:jinja/src/renderer.dart:344:19)
+#10     Environment.callCommon (package:jinja/src/environment.dart:395:24)
+#11     Context.call (package:jinja/src/runtime.dart:39:28)
+#12     AsyncStringSinkRenderer.visitCall (package:jinja/src/renderer.dart:2022:20)
+<asynchronous suspension>
+#13     AsyncStringSinkRenderer.visitInterpolation (package:jinja/src/renderer.dart:2439:17)
+<asynchronous suspension>
+#14     AsyncStringSinkRenderer.visitOutput (package:jinja/src/renderer.dart:2477:7)
+<asynchronous suspension>
+#15     AsyncStringSinkRenderer.visitTemplateNode (package:jinja/src/renderer.dart:2574:5)
+<asynchronous suspension>
+#16     AsyncRenderer.render (package:jinja/src/renderer.dart:2995:9)
+<asynchronous suspension>
+#17     Template.renderToAsync.<anonymous closure> (package:jinja/src/environment.dart:1026:9)
+<asynchronous suspension>
+#18     Template.renderToAsync (package:jinja/src/environment.dart:1013:5)
+<asynchronous suspension>
+#19     Template.renderAsync (package:jinja/src/environment.dart:1001:5)
+<asynchronous suspension>
+#20     main (file:///Users/avo/Documents/Workplace/Projects/forked_projects/jinja.dart/example/data_types_test.dart:780:19)
+<asynchronous suspension>
+

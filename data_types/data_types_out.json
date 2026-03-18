@@ -1,0 +1,151 @@
+[
+  {
+    "id": "59c13ba6-5d9d-47d3-a07b-849f6e4cddc8",
+    "ui_widget": "single_line_text",
+    "property_label": "Font Name",
+    "property_id": "font_name",
+    "data_type": "dt_text",
+    "data": {
+      "value": "test string",
+      "value_text": "Test String"
+    }
+  },
+  {
+    "id": "18247f00-a053-4bd6-958d-b3c18b952dd4",
+    "ui_widget": "number_input",
+    "data_type": "dt_number",
+    "data": {
+      "value": 1000.252,
+      "value_text": "1000.25"
+    }
+  },
+  {
+    "id": "10de1795-369b-4bce-a8e0-4b352d6bc6f7",
+    "ui_widget": "switch",
+    "data_type": "dt_boolean",
+    "data": {
+      "value": true,
+      "value_text": "On"
+    }
+  },
+  {
+    "id": "7e12e051-074c-4986-97ff-de6315c5141c",
+    "data_type": "dt_datetime",
+    "data": {
+      "value": "2026-10-10 10:10:10",
+      "value_text": "2026-10-10 10:10:10"
+    }
+  },
+  {
+    "id": "6ae9e341-033e-4278-9a44-3e059e3af819",
+    "data_type": "dt_datetime",
+    "data": {
+      "value": "2026-10-10 10:10:10",
+      "value_text": "2026-10-10 10:10:10"
+    }
+  },
+  {
+    "id": "0ffd1c3d-522d-4f38-810e-1672d865ca21",
+    "data_type": "dt_date",
+    "data": {
+      "value": "2026-10-10",
+      "value_text": "2026-10-10"
+    }
+  },
+  {
+    "id": "91c5fdd0-a482-43d5-922e-28ff83a1bb63",
+    "data_type": "dt_time",
+    "data": {
+      "value": "10:10:10",
+      "value_text": "10:10:10"
+    }
+  },
+  {
+    "id": "2528d877-c88d-492f-aef0-f323ac7e7848",
+    "data_type": "dt_uuid",
+    "data": {
+      "value": "065d4098-8c9e-4ec1-8348-9a6beaf6a135",
+      "value_text": "065d4098-8c9e-4ec1-8348-9a6beaf6a135"
+    }
+  },
+  {
+    "id": "af58b344-42e9-43c7-92f2-d3200b17687f",
+    "data_type": "dt_base64",
+    "data": {
+      "value": "SGVsbG8gV29ybGQ=",
+      "value_text": "Hello World"
+    }
+  },
+  {
+    "id": "b4efb85a-55cf-4626-821d-4e91f312f640",
+    "data_type": "dt_money",
+    "data": {
+      "value": {
+        "amount": 1000,
+        "convert_rate": null,
+        "currency_id": "USD",
+        "currency_symb": "$"
+      },
+      "value_text": "$1,000.00"
+    }
+  },
+  {
+    "id": "e78cc247-604c-456c-b4e0-c22d09b941ab",
+    "data_type": "dt_list",
+    "data": {
+      "value": [
+        {
+          "id": "f4abfe65-91ab-4804-88eb-489d85d2b83c",
+          "data_type": "dt_number",
+          "data": {
+            "value": 1,
+            "value_text": "1.00"
+          }
+        },
+        {
+          "id": "52311881-2d99-49fb-9152-8a262e3f83f2",
+          "data_type": "dt_number",
+          "data": {
+            "value": 2,
+            "value_text": "2.00"
+          }
+        },
+        {
+          "id": "5e81b9ae-3b18-450c-ae8c-76e5fe642981",
+          "data_type": "dt_number",
+          "data": {
+            "value": 3,
+            "value_text": "3.00"
+          }
+        }
+      ],
+      "value_text": ""
+    }
+  },
+  {
+    "id": "d593e337-dbf8-492d-be4c-1ac4c29ea27c",
+    "ui_widget": "complex_object",
+    "data_type": "dt_object",
+    "data": {
+      "value": {
+        "a": {
+          "id": "7bdd0979-b792-4568-bd59-4f3c2e614a6d",
+          "data_type": "dt_number",
+          "data": {
+            "value": 1,
+            "value_text": "1.00"
+          }
+        },
+        "b": {
+          "id": "1a50692f-1c0b-4889-b10b-950c8d97a293",
+          "data_type": "dt_text",
+          "data": {
+            "value": "2",
+            "value_text": "2"
+          }
+        }
+      },
+      "value_text": ""
+    }
+  }
+]

@@ -1,0 +1,7 @@
+--- lib/src/renderer.dart
++++ lib/src/renderer.dart
+@@ -2028,3 +2028,3 @@
+     for (var argument in node.arguments) {
+-      print('DEBUG AST: argument=\${argument} (type: \${argument.runtimeType})');
++      print('DEBUG Async visitCalling: argument is \${argument.runtimeType} => \${argument.toSource()}');
+       var res = await argument.accept(this, context);

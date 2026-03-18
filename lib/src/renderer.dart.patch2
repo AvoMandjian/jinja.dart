@@ -1,0 +1,6 @@
+--- lib/src/renderer.dart
++++ lib/src/renderer.dart
+@@ -434,2 +434,3 @@
+     for (var argument in node.arguments) {
++      print('DEBUG AST StringSink: argument=${argument} (type: ${argument.runtimeType})');
+       var res = argument.accept(this, context);

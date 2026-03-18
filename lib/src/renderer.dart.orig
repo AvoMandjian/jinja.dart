@@ -284,13 +284,6 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
                 // Check both String and Symbol keys
                 var defaultValueValue = named[defaultValue.name];
                 defaultValueValue ??= named[Symbol(defaultValue.name)];
-
-                if (defaultValueValue == null && !named.containsKey(defaultValue.name) && !named.containsKey(Symbol(defaultValue.name))) {
-                  // Not provided in named arguments. Let's resolve it in the derived context,
-                  // which contains already parsed positional arguments and globals.
-                  defaultValueValue = defaultValue.accept(this, derived);
-                }
-
                 derived.set(key, defaultValueValue);
               } else {
                 // For other defaults, evaluate in outer context
@@ -434,9 +427,9 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   Parameters visitCalling(Calling node, StringSinkRenderContext context) {
     var positional = <Object?>[];
     for (var argument in node.arguments) {
-      print('DEBUG AST StringSink: argument=$argument (type: ${argument.runtimeType})');
+      print('DEBUG AST StringSink: argument=${argument} (type: ${argument.runtimeType})');
       var res = argument.accept(this, context);
-      print('DEBUG StringSink visitCalling: arg=${argument.runtimeType} => $res');
+      print("DEBUG StringSink visitCalling: arg=${argument.runtimeType} => $res");
       positional.add(res);
     }
 
@@ -1907,33 +1900,6 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       var start = node.start?.accept(this, context) ?? 0;
       var stop = node.stop?.accept(this, context);
 
-      if (value is String && start is int && stop is int?) {
-        if (start < 0 || (stop != null && stop < start)) {
-          final suggestions = <String>[
-            'Slice start must be >= 0',
-            'Slice stop must be >= start',
-            'Check if the slice indices are valid',
-          ];
-          throw TemplateRuntimeError(
-            'Invalid slice indices: start=$start, stop=$stop',
-            nodeValue: node,
-            operationValue: 'Slicing string',
-            suggestionsValue: suggestions,
-            templatePathValue: context.template,
-          );
-        }
-        if (start >= value.length) {
-          return ''; // In Python, slicing past the end of a string returns an empty string
-        }
-
-        var actualStop = stop;
-        if (actualStop != null && actualStop > value.length) {
-          actualStop = value.length;
-        }
-
-        return value.substring(start, actualStop);
-      }
-
       if (value is List && start is int && stop is int?) {
         if (start < 0 || (stop != null && stop < start)) {
           final suggestions = <String>[
@@ -1966,13 +1932,13 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       }
 
       final suggestions = <String>[
-        'Slice operation only works on lists and strings',
-        'Value type: ${value.runtimeType}, expected List or String',
+        'Slice operation only works on lists',
+        'Value type: ${value.runtimeType}, expected List',
         'Start type: ${start.runtimeType}, expected int',
         if (stop != null) 'Stop type: ${stop.runtimeType}, expected int',
       ];
       throw TemplateRuntimeError(
-        'Invalid slice operation: value is ${value.runtimeType}, not List or String.',
+        'Invalid slice operation: value is ${value.runtimeType}, not List.',
         nodeValue: node,
         operationValue: 'Slicing ${value.runtimeType}',
         suggestionsValue: suggestions,
@@ -2063,9 +2029,9 @@ class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?
   ) async {
     var positional = <Object?>[];
     for (var argument in node.arguments) {
-      print('DEBUG AST: argument=$argument (type: ${argument.runtimeType})');
+      print('DEBUG AST: argument=${argument} (type: ${argument.runtimeType})');
       var res = await argument.accept(this, context);
-      print('DEBUG Async visitCalling: arg=${argument.runtimeType} => ${argument.toSource()} evaluated to $res');
+      print("DEBUG Async visitCalling: arg=${argument.runtimeType} => $res");
       positional.add(res);
     }
 

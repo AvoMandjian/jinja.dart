@@ -1,0 +1,6 @@
+@@ -772,3 +772,3 @@
+     for (var i = 0; i < interps.length; i++) {
+-       var call = interps[i].value as Call;
+-       print("AST runtime interp " + i.toString() + " args: " + call.calling.arguments.map((e) => e.runtimeType).toString());
++       var val = interps[i].value;
++       if (val is Call) {

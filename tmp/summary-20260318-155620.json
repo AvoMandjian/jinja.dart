@@ -1,0 +1,1 @@
+{"summary": "Fixed Jinja string concatenation with async values and MacroFunction execution bug", "current_status": "Fixed visitConcat to handle Future values, updated callCommon to properly invoke MacroFunctions, and fixed fromjson and append filters in get_jinja.dart"}

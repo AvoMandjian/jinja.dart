@@ -1,0 +1,33 @@
+{% import "data_types.jinja" as types %}
+
+{% macro title_view(s) -%}
+    {{ s | title }}
+{%- endmacro %}
+
+{% macro round_view(n) -%}
+    {{ n | round(2) }}
+{%- endmacro %}
+
+{% macro switch_view(b) -%}
+    {{ "On" if b else "Off" }}
+{%- endmacro %}
+
+{% macro decode_view(s) -%}
+    {{ s | frombase64 }}
+{%- endmacro %}
+
+[
+{{ types.create_dt_text("test string", title_view, ui_widget="single_line_text", property_label="Font Name", property_id="font_name")}},
+{{ types.create_dt_number(1000.252, round_view, ui_widget="number_input", ge=0) }},
+{{ types.create_dt_boolean(1, ui_widget="switch") }},
+{{ types.create_dt_datetime("2026-10-10 10:10:10") }},
+{{ types.create_dt_datetime(datetime.fromisoformat("2026-10-10 10:10:10")) }},
+{{ types.create_dt_date("2026-10-10") }},
+{{ types.create_dt_date("2026-10-10 10:10:10") }},
+{{ types.create_dt_time("2026-10-10 10:10:10") }},
+{{ types.create_dt_uuid(UUID("065d4098-8c9e-4ec1-8348-9a6beaf6a135")) }},
+{{ types.create_dt_base64("SGVsbG8gV29ybGQ=", decode_view) }},
+{{ types.create_dt_money(amount=1000, currency_id="USD", currency_symb="$") }},
+{{ types.create_dt_list([1, 2, 3], param={"macro": types.create_dt_number}) }},
+{{ types.create_dt_object({"a": 1, "b": 2, "c": 3}, a={"macro": types.create_dt_number}, b={"macro": types.create_dt_text}, ui_widget="complex_object")}}
+]

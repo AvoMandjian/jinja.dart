@@ -1,0 +1,6 @@
+@@ -432,2 +432,4 @@
+     var positional = <Object?>[
+-      for (var argument in node.arguments) argument.accept(this, context),
++      for (var argument in node.arguments) {
++        print('DEBUG StringSink visitCalling: argument=${argument.runtimeType} => ${argument.accept(this, context)}')
++      }

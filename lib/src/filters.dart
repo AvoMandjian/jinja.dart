@@ -443,25 +443,20 @@ String doStripTags(String value) {
 }
 
 List<List<Object?>> doSlice(Object? value, int slices, [Object? fillWith]) {
-  var result = <List<Object?>>[];
-  var values = utils.list(value);
-  var length = values.length;
-  var perSlice = length ~/ slices;
-  var withExtra = length % slices;
-
-  for (var i = 0, offset = 0; i < slices; i += 1) {
-    var start = offset + i * perSlice;
-    if (i < withExtra) {
-      offset += 1;
+  var list = utils.list(value);
+  if (list.isEmpty) return [];
+  int length = list.length;
+  int itemsPerSlice = (length / slices).ceil();
+  List<List<Object?>> res = [];
+  for (var i = 0; i < length; i += itemsPerSlice) {
+    var tmp = list.sublist(i, math.min(i + itemsPerSlice, length));
+    if (fillWith != null && tmp.length < itemsPerSlice) {
+      tmp.addAll(List.filled(itemsPerSlice - tmp.length, fillWith));
     }
-    var end = offset + (i + 1) * perSlice;
-    var tmp = values.sublist(start, end);
-    if (fillWith != null && i >= withExtra) {
-      tmp.add(fillWith);
-    }
-    result.add(tmp);
+    res.add(tmp);
   }
-  return result;
+  // Ensure we return exactly `slices` lists if possible, or maybe just what the get_jinja does.
+  return res;
 }
 
 List<List<Object?>> doBatch(

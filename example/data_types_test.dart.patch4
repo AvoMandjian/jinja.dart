@@ -1,0 +1,9 @@
+--- example/data_types_test.dart
++++ example/data_types_test.dart
+@@ -770,3 +770,3 @@
+-    final output = (template2.body as TemplateNode).body as Output;
+-    final interp = output.nodes.whereType<Interpolation>().first;
+-    print("AST at runtime: args=\${(interp.value as Call).calling.arguments}");
++    final output_ = (template2.body as TemplateNode).body as Output;
++    final interp_ = output_.nodes.whereType<Interpolation>().first;
++    print("AST at runtime: args=" + (interp_.value as Call).calling.arguments.toString());

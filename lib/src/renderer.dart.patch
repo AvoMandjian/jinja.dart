@@ -1,0 +1,6 @@
+--- lib/src/renderer.dart
++++ lib/src/renderer.dart
+@@ -2028,2 +2028,3 @@
+     for (var argument in node.arguments) {
++      print('DEBUG AST: argument=${argument} (type: ${argument.runtimeType})');
+       var res = await argument.accept(this, context);

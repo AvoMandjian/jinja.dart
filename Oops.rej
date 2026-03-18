@@ -1,0 +1,11 @@
+@@ -438,2 +440,2 @@
+     print('DEBUG visitCalling: positional = $positional');
+     print('DEBUG visitCalling: named = $named');
+@@ -2025,4 +2027,6 @@
+     var positional = <Object?>[];
+     for (var argument in node.arguments) {
+-      positional.add(await argument.accept(this, context));
++      var res = await argument.accept(this, context);
++      print('DEBUG Async visitCalling: argument=${argument.runtimeType} => $res');
++      positional.add(res);
+     }

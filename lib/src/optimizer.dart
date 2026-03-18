@@ -56,18 +56,24 @@ class Optimizer implements Visitor<Context, Node> {
   @override
   Call visitCall(Call node, Context context) {
     return node.copyWith(
+      value: visitNode<Expression>(node.value, context),
       calling: visitNode<Calling>(node.calling, context),
     );
   }
 
   @override
   Calling visitCalling(Calling node, Context context) {
-    return node.copyWith(
-      arguments: visitNodes<Expression>(node.arguments, context),
-      keywords: <Keyword>[
-        for (var (:key, :value) in node.keywords) (key: key, value: visitNode<Expression>(value, context)),
-      ],
+    var args = visitNodes<Expression>(node.arguments, context);
+    var kwargs = <Keyword>[
+      for (var (:key, :value) in node.keywords) (key: key, value: visitNode<Expression>(value, context)),
+    ];
+    var newNode = node.copyWith(
+      arguments: args,
+      keywords: kwargs,
     );
+    print("Optimizer visitCalling: original args=" + node.arguments.map((e) => e.runtimeType).toString() + " keywords=" + node.keywords.length.toString());
+    print("Optimizer visitCalling: returning args=" + newNode.arguments.map((e) => e.runtimeType).toString() + " keywords=" + newNode.keywords.length.toString());
+    return newNode;
   }
 
   @override

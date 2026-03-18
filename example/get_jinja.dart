@@ -586,6 +586,12 @@ class GetJinja {
         ///
         /// **Returns:**
         /// The result of the action (if any), or void/null.
+        ///
+        'assert': (bool condition, String message) {
+          if (!condition) {
+            throw TemplateAssertionError(message);
+          }
+        },
         'jinja_action': ([
           String? widgetId,
           String? target,
@@ -1080,6 +1086,14 @@ class GetJinja {
           final result = await fetchData();
           return result;
         },
+        'match': (String value, String pattern) {
+          try {
+            return RegExp(pattern).hasMatch(value);
+          } catch (e) {
+            valueListenableJinjaError(e.toString());
+            return false;
+          }
+        },
 
         /// Appends a value to a list, optionally parsing as JSON map.
         'append': (List list, value, [String? type = 'MAP']) {
@@ -1087,7 +1101,11 @@ class GetJinja {
             if (value != null) {
               if (type == 'MAP') {
                 if (value is String) {
-                  list.add(jsonDecode(value));
+                  try {
+                    list.add(jsonDecode(value));
+                  } catch (_) {
+                    list.add(value);
+                  }
                 } else {
                   list.add(value);
                 }
@@ -1114,9 +1132,9 @@ class GetJinja {
         },
 
         /// Parses a JSON string into an object.
-        'fromjson': (String? value) {
+        'fromjson': (dynamic value) {
           try {
-            return jsonDecode(value ?? '{}');
+            return jsonDecode(value?.toString() ?? '{}');
           } catch (e) {
             return {};
           }
