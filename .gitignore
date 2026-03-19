@@ -11,3 +11,9 @@ pubspec.lock
 
 # FVM Version Cache
 .fvm/
+.understand-anything/
+.serena/
+.cursor/
+design-log/
+hooks/
+tmp/
