@@ -1,8 +1,0 @@
---- example/data_types_test.dart
-+++ example/data_types_test.dart
-@@ -768,2 +768,5 @@
-     var template2 = env.fromString(jinjaScript);
-+    final output = template2.body as Output;
-+    final interp = output.nodes.whereType<Interpolation>().first;
-+    print("AST at runtime: args=\${(interp.value as Call).calling.arguments}");
-     var result2 = await template2.renderAsync(

@@ -1488,10 +1488,18 @@ final class Parser {
           key = 'defaultValue';
         }
 
+        print('PARSER: Adding keyword arg $key');
         keywords.add((key: key, value: value));
+      } else if (reader.current.test('pow')) {
+        reader.skip();
+        var value = parseExpression(reader);
+        print('PARSER: Adding **kwargs');
+        keywords.add((key: '**', value: value));
       } else {
         ensure(keywords.isEmpty);
-        arguments.add(parseExpression(reader));
+        var expr = parseExpression(reader);
+        print('PARSER: Adding positional arg $expr');
+        arguments.add(expr);
       }
 
       requireComma = true;

@@ -162,6 +162,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   const StringSinkRenderer();
 
   Map<String, Object?> getDataForTargets(Object? targets, Object? current) {
+    print('DEBUG getDataForTargets: targets=$targets current=$current');
     try {
       if (targets is String) {
         return <String, Object?>{targets: current};
@@ -255,6 +256,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
       try {
         var remaining = named.keys.toSet();
+        print('DEBUG visitMacro: ${node.name} remaining=$remaining');
 
         // 1. Mandatory positional arguments
         for (; index < mandatoryLength; index += 1) {
@@ -352,6 +354,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
               kwargs[key] = named[key];
             }
           }
+          print('DEBUG visitMacro kwargs: ${node.name} kwargs=$kwargs');
           derived.set('kwargs', kwargs);
         } else if (remaining.isNotEmpty) {
           throw TemplateRuntimeError(
@@ -466,9 +469,22 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       positional.add(res);
     }
 
-    var named = <Symbol, Object?>{
-      for (var (:key, :value) in node.keywords) Symbol(key): value.accept(this, context),
-    };
+    var named = <Symbol, Object?>{};
+    for (var (:key, :value) in node.keywords) {
+      print('DEBUG visitCalling keyword: key="$key" type=${key.runtimeType}');
+      if (key == '**') {
+        var kwargs = value.accept(this, context);
+        print('DEBUG visitCalling kwargs: type=${kwargs.runtimeType} value=$kwargs');
+        if (kwargs is Map) {
+          for (var entry in kwargs.entries) {
+            print('DEBUG visitCalling unpacking: key="${entry.key}"');
+            named[Symbol(entry.key.toString())] = entry.value;
+          }
+        }
+      } else {
+        named[Symbol(key)] = value.accept(this, context);
+      }
+    }
 
     print('DEBUG visitCalling: positional = $positional');
     print('DEBUG visitCalling: named = $named');
@@ -2097,7 +2113,19 @@ class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?
 
     var named = <Symbol, Object?>{};
     for (var (:key, :value) in node.keywords) {
-      named[Symbol(key)] = await value.accept(this, context);
+      print('DEBUG visitCalling keyword: key="$key" type=${key.runtimeType}');
+      if (key == '**') {
+        var kwargs = await value.accept(this, context);
+        print('DEBUG visitCalling async kwargs: type=${kwargs.runtimeType} value=$kwargs');
+        if (kwargs is Map) {
+          for (var entry in kwargs.entries) {
+            print('DEBUG visitCalling unpacking: key="${entry.key}"');
+            named[Symbol(entry.key.toString())] = entry.value;
+          }
+        }
+      } else {
+        named[Symbol(key)] = await value.accept(this, context);
+      }
     }
 
     print('DEBUG Async visitCalling: positional = $positional');

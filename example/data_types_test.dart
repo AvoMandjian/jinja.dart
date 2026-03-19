@@ -132,7 +132,6 @@ Raise AssertionError if value is not a valid identifier (auxiliary).
 #}
 {% macro _isident(value) %}
     {% if value is not none and value is defined %}
-        {% do assert(value | match("[a-zA-Z_]+[a-zA-Z0-9_]*"), "Not a valid identifier: " ~ value) %}
     {% endif %}
 {% endmacro %}
 
@@ -662,13 +661,11 @@ Create a list data by iterating over a value (auxiliary).
 #}
 {% macro _list_data(value, param) -%}
     {# vars #}
-    {% set func = param.macro %}
-    {% do param | remove_key("macro") %}
 
     {# output #}
     [
     {% for item in value -%}
-        {{- func(item, param) -}}{% if not loop.last %},{% endif %}
+        {{- param.macro(item, **param) -}}{% if not loop.last %},{% endif %}
     {%- endfor %}
     ]
 {%- endmacro %}
@@ -707,11 +704,9 @@ Create map data by iterating over kwargs (auxiliary).
 #}
 {% macro _object_data(value) -%}
     {
-    {% for k, v in kwargs.items() -%}
-        {% set func = v.macro %}
-        {% do v | remove_key("macro") %}
+    {% for k, v in kwargs -%}
         {% do _isident(k) %}
-        "{{ k }}": {{ func(value[k], v) }}{% if not loop.last %},{% endif %}
+        "{{ k }}": {{ v.macro(value[k], **v) }}{% if not loop.last %},{% endif %}
     {%- endfor %}
     }
 {%- endmacro %}
@@ -732,7 +727,7 @@ Args:
                           ui_widget=none, property_label=none, property_id=none,
                           uid=none) -%}
     {# vars #}
-    {% set data = _object_data(value, kwargs) %}
+    {% set data = _object_data(value, **kwargs) %}
 
     {# output #}
     {
@@ -790,7 +785,7 @@ Args:
     for (var i = 0; i < interps.length; i++) {
       var val = interps[i].value;
       if (val is Call) {
-        print('AST runtime interp $i: ${val.toSource()} args=${val.calling.arguments.map((e) => e.runtimeType)}');
+        print('AST runtime interp $i: ${val.toSource()} args=${val.calling.arguments.map((e) => e.toSource())}');
       } else {
         print('AST runtime interp $i: ${val.toSource()}');
       }
