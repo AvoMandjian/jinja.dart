@@ -652,7 +652,30 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   @override
   Future<void> visitMacro(Macro node, DebugRenderContext context) async {
     await _checkBreakpoint(node, context, 'Macro', nodeName: node.name);
-    _baseRenderer.visitMacro(node, context);
+    // Use the existing sync implementation, but wrap it for async debug support
+    // and proper async macro body handling.
+    final syncContext = StringSinkRenderContext(
+      context.environment,
+      AsyncCollectingSink(StringBuffer(), context.environment),
+      template: context.template,
+      blocks: context.blocks,
+      parent: context.parent,
+      data: context.context,
+      autoEscape: context.autoEscape,
+    );
+
+    // Use this (AsyncDebugRenderer) to visit macro body for proper async handling
+    final function = _baseRenderer.getMacroFunction(
+      node,
+      syncContext,
+      visitor: _AsyncDebugRendererWrapper(this, context),
+    );
+
+    // Register macro on both the async context (for normal calls) and the
+    // sync context used by the underlying macro implementation so that
+    // recursive macros can resolve their own name.
+    syncContext.set(node.name, function);
+    context.set(node.name, function);
   }
 
   @override
@@ -722,5 +745,244 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   Future<Object?> visitSlice(Slice node, DebugRenderContext context) async {
     await _checkBreakpoint(node, context, 'Slice');
     return _baseRenderer.visitSlice(node, context);
+  }
+}
+
+/// Internal wrapper to use an async debug renderer with a synchronous context.
+///
+/// This is used inside macros to allow the macro body to be rendered
+/// asynchronously while still being compatible with the synchronous
+/// macro calling convention.
+class _AsyncDebugRendererWrapper extends Visitor<StringSinkRenderContext, Object?> {
+  _AsyncDebugRendererWrapper(this.asyncRenderer, this.debugContext);
+
+  final AsyncDebugRenderer asyncRenderer;
+  final DebugRenderContext debugContext;
+
+  DebugRenderContext _toDebug(StringSinkRenderContext context) {
+    return DebugRenderContext(
+      context.environment,
+      context.sink,
+      blocks: context.blocks,
+      parent: context.parent,
+      data: context.context,
+      autoEscape: context.autoEscape,
+      debugController: debugContext.debugController,
+    );
+  }
+
+  @override
+  Object? visitArray(Array node, StringSinkRenderContext context) {
+    return asyncRenderer.visitArray(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitAttribute(Attribute node, StringSinkRenderContext context) {
+    return asyncRenderer.visitAttribute(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitCall(Call node, StringSinkRenderContext context) {
+    return asyncRenderer.visitCall(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitCalling(Calling node, StringSinkRenderContext context) {
+    return asyncRenderer.visitCalling(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitCompare(Compare node, StringSinkRenderContext context) {
+    return asyncRenderer.visitCompare(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitConcat(Concat node, StringSinkRenderContext context) {
+    return asyncRenderer.visitConcat(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitCondition(Condition node, StringSinkRenderContext context) {
+    return asyncRenderer.visitCondition(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitConstant(Constant node, StringSinkRenderContext context) {
+    return asyncRenderer.visitConstant(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitDict(Dict node, StringSinkRenderContext context) {
+    return asyncRenderer.visitDict(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitFilter(Filter node, StringSinkRenderContext context) {
+    return asyncRenderer.visitFilter(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitItem(Item node, StringSinkRenderContext context) {
+    return asyncRenderer.visitItem(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitLogical(Logical node, StringSinkRenderContext context) {
+    return asyncRenderer.visitLogical(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitName(Name node, StringSinkRenderContext context) {
+    return asyncRenderer.visitName(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitNamespaceRef(NamespaceRef node, StringSinkRenderContext context) {
+    return asyncRenderer.visitNamespaceRef(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitScalar(Scalar node, StringSinkRenderContext context) {
+    return asyncRenderer.visitScalar(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitTest(Test node, StringSinkRenderContext context) {
+    return asyncRenderer.visitTest(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitTuple(Tuple node, StringSinkRenderContext context) {
+    return asyncRenderer.visitTuple(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitUnary(Unary node, StringSinkRenderContext context) {
+    return asyncRenderer.visitUnary(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitAssign(Assign node, StringSinkRenderContext context) {
+    return asyncRenderer.visitAssign(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitAssignBlock(AssignBlock node, StringSinkRenderContext context) {
+    return asyncRenderer.visitAssignBlock(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitAutoEscape(AutoEscape node, StringSinkRenderContext context) {
+    return asyncRenderer.visitAutoEscape(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitBlock(Block node, StringSinkRenderContext context) {
+    return asyncRenderer.visitBlock(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitBreak(Break node, StringSinkRenderContext context) {
+    return asyncRenderer.visitBreak(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitCallBlock(CallBlock node, StringSinkRenderContext context) {
+    return asyncRenderer.visitCallBlock(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitContinue(Continue node, StringSinkRenderContext context) {
+    return asyncRenderer.visitContinue(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitData(Data node, StringSinkRenderContext context) {
+    return asyncRenderer.visitData(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitDebug(Debug node, StringSinkRenderContext context) {
+    return asyncRenderer.visitDebug(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitDo(Do node, StringSinkRenderContext context) {
+    return asyncRenderer.visitDo(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitExtends(Extends node, StringSinkRenderContext context) {
+    return asyncRenderer.visitExtends(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitFilterBlock(FilterBlock node, StringSinkRenderContext context) {
+    return asyncRenderer.visitFilterBlock(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitFor(For node, StringSinkRenderContext context) {
+    return asyncRenderer.visitFor(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitFromImport(FromImport node, StringSinkRenderContext context) {
+    return asyncRenderer.visitFromImport(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitIf(If node, StringSinkRenderContext context) {
+    return asyncRenderer.visitIf(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitImport(Import node, StringSinkRenderContext context) {
+    return asyncRenderer.visitImport(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitInclude(Include node, StringSinkRenderContext context) {
+    return asyncRenderer.visitInclude(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitInterpolation(Interpolation node, StringSinkRenderContext context) {
+    return asyncRenderer.visitInterpolation(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitMacro(Macro node, StringSinkRenderContext context) {
+    return asyncRenderer.visitMacro(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitOutput(Output node, StringSinkRenderContext context) {
+    return asyncRenderer.visitOutput(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitTemplateNode(TemplateNode node, StringSinkRenderContext context) {
+    return asyncRenderer.visitTemplateNode(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitTrans(Trans node, StringSinkRenderContext context) {
+    return asyncRenderer.visitTrans(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitTryCatch(TryCatch node, StringSinkRenderContext context) {
+    return asyncRenderer.visitTryCatch(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitWith(With node, StringSinkRenderContext context) {
+    return asyncRenderer.visitWith(node, _toDebug(context));
+  }
+
+  @override
+  Object? visitSlice(Slice node, StringSinkRenderContext context) {
+    return asyncRenderer.visitSlice(node, _toDebug(context));
   }
 }

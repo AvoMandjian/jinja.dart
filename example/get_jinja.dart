@@ -790,9 +790,15 @@ class GetJinja {
               'printed from jinja script: ${value.toString()}',
             );
           } else {
-            UtilFunctions.appLog(
-              'printed from jinja script: ${jsonEncode(value)}',
-            );
+            try {
+              UtilFunctions.appLog(
+                'printed from jinja script: ${jsonEncode(value)}',
+              );
+            } catch (_) {
+              UtilFunctions.appLog(
+                'printed from jinja script: ${value.toString()}',
+              );
+            }
           }
         },
 

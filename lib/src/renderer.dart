@@ -236,14 +236,16 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
   MacroFunction getMacroFunction(
     MacroCall node,
-    StringSinkRenderContext context,
-  ) {
+    StringSinkRenderContext context, {
+    Visitor<StringSinkRenderContext, Object?>? visitor,
+  }) {
     Object? macro(List<Object?> positional, Map<Object?, Object?> named) {
+      final v = visitor ?? this;
       // Use the same sink type as context to preserve async behavior
       StringSink buffer;
-      if (context.sink is _AsyncCollectingSink) {
+      if (context.sink is AsyncCollectingSink) {
         // For async contexts, use a new collecting sink
-        buffer = _AsyncCollectingSink(StringBuffer(), context.environment);
+        buffer = AsyncCollectingSink(StringBuffer(), context.environment);
       } else {
         buffer = StringBuffer();
       }
@@ -405,14 +407,17 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       final templatePath = derived.template ?? context.template ?? '<unknown>';
 
       // If buffer is an async collecting sink, return a Future that resolves it
-      if (buffer is _AsyncCollectingSink) {
-        final _AsyncCollectingSink asyncBuffer = buffer;
+      if (buffer is AsyncCollectingSink) {
+        final AsyncCollectingSink asyncBuffer = buffer;
         return withRenderFrameAsync<SafeString>(
           templatePath: templatePath,
           line: node.line,
           description: 'macro ${node.name}',
           body: () async {
-            node.body.accept(this, derived);
+            final res = node.body.accept(v, derived);
+            if (res is Future) {
+              await res;
+            }
             final content = await asyncBuffer.getResolvedContent();
             // Macro output should be safe if auto-escaping was enabled during rendering
             return SafeString(content);
@@ -427,7 +432,7 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         line: node.line,
         description: 'macro ${node.name}',
         body: () {
-          node.body.accept(this, derived);
+          node.body.accept(v, derived);
           return SafeString(buffer.toString());
         },
       );
@@ -765,8 +770,8 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         'visitAssign: Value is Future, type: ${values.runtimeType}',
       );
       // For async rendering, we need to await the Future before assigning
-      if (context.sink is _AsyncCollectingSink) {
-        final sink = context.sink as _AsyncCollectingSink;
+      if (context.sink is AsyncCollectingSink) {
+        final sink = context.sink as AsyncCollectingSink;
         // Create a Future that resolves and assigns
         final assignmentFuture = values.then((resolvedValue) {
           context.environment.debugJinja(
@@ -1158,14 +1163,14 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
         }
 
         // Check if we're in async context and should wait for Futures before throwing error
-        if (varNameToCheck != null && context.sink is _AsyncCollectingSink) {
+        if (varNameToCheck != null && context.sink is AsyncCollectingSink) {
           final varName = varNameToCheck; // Store in final variable for null safety
           context.environment.debugJinja(
             'visitFor: Iterable is null for "$varName", '
             'checking for Futures before throwing error',
           );
 
-          final sink = context.sink as _AsyncCollectingSink;
+          final sink = context.sink as AsyncCollectingSink;
           // Capture current Futures count BEFORE creating checkFuture to avoid circular dependency
           // The checkFuture itself will be added to _futures, so we exclude it from waitForAllFutures()
           final currentFuturesCount = sink.futuresCount;
@@ -1480,14 +1485,14 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
       final isNullOrEmpty = finalized == null || finalized == '' || (finalized is String && finalized == 'null');
 
-      if (isNullOrEmpty && varNameToCheck != null && context.sink is _AsyncCollectingSink) {
+      if (isNullOrEmpty && varNameToCheck != null && context.sink is AsyncCollectingSink) {
         final varName = varNameToCheck; // Store in final variable for null safety
         context.environment.debugJinja(
           'visitInterpolation: Value is null/empty/null-string for '
           '"$varName", checking for Futures',
         );
 
-        final sink = context.sink as _AsyncCollectingSink;
+        final sink = context.sink as AsyncCollectingSink;
         // Capture current Futures count BEFORE creating checkFuture to avoid circular dependency
         // The checkFuture itself will be added to _futures, so we exclude it from waitForAllFutures()
         final currentFuturesCount = sink.futuresCount;
@@ -2409,7 +2414,7 @@ class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?
       Object? value => throw ArgumentError.value(value, 'template'),
     };
 
-    var asyncModuleContext = context.derived(withContext: node.withContext, sink: _AsyncCollectingSink(StringBuffer(), context.environment));
+    var asyncModuleContext = context.derived(withContext: node.withContext, sink: AsyncCollectingSink(StringBuffer(), context.environment));
     await template.body.accept(this, asyncModuleContext);
     var syncModuleContext = _toSyncContext(asyncModuleContext);
 
@@ -2461,7 +2466,7 @@ class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?
 
     var namespace = Namespace();
 
-    var asyncModuleContext = context.derived(withContext: node.withContext, sink: _AsyncCollectingSink(StringBuffer(), context.environment));
+    var asyncModuleContext = context.derived(withContext: node.withContext, sink: AsyncCollectingSink(StringBuffer(), context.environment));
     await template.body.accept(this, asyncModuleContext);
     var syncModuleContext = _toSyncContext(asyncModuleContext);
 
@@ -2499,18 +2504,23 @@ class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?
   Future<void> visitMacro(Macro node, AsyncRenderContext context) async {
     // Build macro function using the existing sync implementation, but
     // register it on the async context so that async rendering can call it.
-    // We use an _AsyncCollectingSink so that macros can still work with
+    // We use an AsyncCollectingSink so that macros can still work with
     // async values inside their bodies and return a Future when needed.
     final syncContext = StringSinkRenderContext(
       context.environment,
-      _AsyncCollectingSink(StringBuffer(), context.environment),
+      AsyncCollectingSink(StringBuffer(), context.environment),
       template: context.template,
       blocks: context.blocks,
       parent: context.parent,
       data: context.context,
       autoEscape: context.autoEscape,
     );
-    final function = _baseRenderer.getMacroFunction(node, syncContext);
+    // Use this (AsyncStringSinkRenderer) to visit macro body for proper async handling
+    final function = _baseRenderer.getMacroFunction(
+      node,
+      syncContext,
+      visitor: _AsyncRendererWrapper(this, context),
+    );
     // Register macro on both the async context (for normal calls) and the
     // sync context used by the underlying macro implementation so that
     // recursive macros can resolve their own name.
@@ -2668,7 +2678,7 @@ class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?
 }
 
 /// Custom sink that collects Futures written during rendering.
-class _AsyncCollectingSink implements StringSink {
+class AsyncCollectingSink implements StringSink {
   final StringSink _delegate;
   final List<Future<Object?>> _futures = [];
   // Track if Future is from assignment (shouldn't output)
@@ -2677,7 +2687,7 @@ class _AsyncCollectingSink implements StringSink {
 
   final Environment _environment;
 
-  _AsyncCollectingSink(this._delegate, this._environment);
+  AsyncCollectingSink(this._delegate, this._environment);
 
   /// Get the current number of Futures being tracked
   int get futuresCount => _futures.length;
@@ -2687,7 +2697,7 @@ class _AsyncCollectingSink implements StringSink {
     if (obj is Future) {
       // Store the Future and write a placeholder
       _environment.debugJinja(
-        '_AsyncCollectingSink.write: Received Future '
+        'AsyncCollectingSink.write: Received Future '
         '(index ${_futures.length}), writing placeholder',
       );
       _futures.add(obj);
@@ -2695,7 +2705,7 @@ class _AsyncCollectingSink implements StringSink {
       _buffer.write('__FUTURE_${_futures.length - 1}__');
     } else {
       _environment.debugJinja(
-        '_AsyncCollectingSink.write: Writing value: $obj '
+        'AsyncCollectingSink.write: Writing value: $obj '
         '(type: ${obj.runtimeType})',
       );
       _buffer.write(obj);
@@ -2705,7 +2715,7 @@ class _AsyncCollectingSink implements StringSink {
   /// Write a Future from an assignment - this shouldn't output anything, just await it
   void writeAssignmentFuture(Future<Object?> future) {
     _environment.debugJinja(
-      '_AsyncCollectingSink.writeAssignmentFuture: Tracking assignment Future '
+      'AsyncCollectingSink.writeAssignmentFuture: Tracking assignment Future '
       '(index ${_futures.length})',
     );
     _futures.add(future);
@@ -2717,24 +2727,24 @@ class _AsyncCollectingSink implements StringSink {
   Future<void> waitForAssignmentFutures() async {
     final assignmentCount = _isAssignmentFuture.where((isAssignment) => isAssignment).length;
     _environment.debugJinja(
-      '_AsyncCollectingSink.waitForAssignmentFutures: Waiting for '
+      'AsyncCollectingSink.waitForAssignmentFutures: Waiting for '
       '$assignmentCount assignment Futures',
     );
     for (int i = 0; i < _futures.length; i++) {
       if (_isAssignmentFuture[i]) {
         _environment.debugJinja(
-          '_AsyncCollectingSink.waitForAssignmentFutures: '
+          'AsyncCollectingSink.waitForAssignmentFutures: '
           'Awaiting assignment Future $i',
         );
         await _futures[i];
         _environment.debugJinja(
-          '_AsyncCollectingSink.waitForAssignmentFutures: '
+          'AsyncCollectingSink.waitForAssignmentFutures: '
           'Assignment Future $i completed',
         );
       }
     }
     _environment.debugJinja(
-      '_AsyncCollectingSink.waitForAssignmentFutures: '
+      'AsyncCollectingSink.waitForAssignmentFutures: '
       'All assignment Futures completed',
     );
   }
@@ -2747,22 +2757,22 @@ class _AsyncCollectingSink implements StringSink {
     // This allows callers to exclude Futures added after waitForAllFutures() was called
     final futuresToAwait = maxIndex ?? _futures.length;
     _environment.debugJinja(
-      '_AsyncCollectingSink.waitForAllFutures: Waiting for '
+      'AsyncCollectingSink.waitForAllFutures: Waiting for '
       '$futuresToAwait Futures (current count: ${_futures.length}, '
       'maxIndex: $maxIndex)',
     );
     for (int i = 0; i < futuresToAwait; i++) {
       _environment.debugJinja(
-        '_AsyncCollectingSink.waitForAllFutures: Awaiting Future '
+        'AsyncCollectingSink.waitForAllFutures: Awaiting Future '
         '$i/$futuresToAwait (isAssignment: ${_isAssignmentFuture[i]})',
       );
       await _futures[i];
       _environment.debugJinja(
-        '_AsyncCollectingSink.waitForAllFutures: Future $i completed',
+        'AsyncCollectingSink.waitForAllFutures: Future $i completed',
       );
     }
     _environment.debugJinja(
-      '_AsyncCollectingSink.waitForAllFutures: All Futures completed',
+      'AsyncCollectingSink.waitForAllFutures: All Futures completed',
     );
   }
 
@@ -2797,18 +2807,18 @@ class _AsyncCollectingSink implements StringSink {
   Future<String> getResolvedContent() async {
     String content = _buffer.toString();
     _environment.debugJinja(
-      '_AsyncCollectingSink.getResolvedContent: Starting, '
+      'AsyncCollectingSink.getResolvedContent: Starting, '
       '${_futures.length} Futures to await',
     );
     _environment.debugJinja(
-      '_AsyncCollectingSink.getResolvedContent: Using delegate $_delegate',
+      'AsyncCollectingSink.getResolvedContent: Using delegate $_delegate',
     );
     _environment.debugJinja(
-      '_AsyncCollectingSink.getResolvedContent: Buffer content length: '
+      'AsyncCollectingSink.getResolvedContent: Buffer content length: '
       '${content.length}',
     );
     _environment.debugJinja(
-      '_AsyncCollectingSink.getResolvedContent: Buffer preview: '
+      'AsyncCollectingSink.getResolvedContent: Buffer preview: '
       '${content.length > 100 ? "${content.substring(0, 100)}..." : content}',
     );
 
@@ -2817,12 +2827,12 @@ class _AsyncCollectingSink implements StringSink {
     for (int i = 0; i < _futures.length; i++) {
       try {
         _environment.debugJinja(
-          '_AsyncCollectingSink.getResolvedContent: Awaiting Future '
+          'AsyncCollectingSink.getResolvedContent: Awaiting Future '
           '$i/${_futures.length} (isAssignment: ${_isAssignmentFuture[i]})',
         );
         resolvedValues.add(await _futures[i]);
         _environment.debugJinja(
-          '_AsyncCollectingSink.getResolvedContent: Future $i resolved to: '
+          'AsyncCollectingSink.getResolvedContent: Future $i resolved to: '
           '${resolvedValues[i]} (type: ${resolvedValues[i].runtimeType})',
         );
       } on BreakException {
@@ -2852,7 +2862,7 @@ class _AsyncCollectingSink implements StringSink {
 
     // Replace placeholders with resolved values (skip assignment Futures)
     _environment.debugJinja(
-      '_AsyncCollectingSink.getResolvedContent: Replacing placeholders '
+      'AsyncCollectingSink.getResolvedContent: Replacing placeholders '
       'in content',
     );
     for (int i = 0; i < resolvedValues.length; i++) {
@@ -2861,13 +2871,13 @@ class _AsyncCollectingSink implements StringSink {
         final placeholder = '__FUTURE_${i}__';
         final replacement = resolvedValues[i]?.toString() ?? 'null';
         _environment.debugJinja(
-          '_AsyncCollectingSink.getResolvedContent: Replacing $placeholder '
+          'AsyncCollectingSink.getResolvedContent: Replacing $placeholder '
           'with "$replacement"',
         );
         content = content.replaceAll(placeholder, replacement);
       } else {
         _environment.debugJinja(
-          '_AsyncCollectingSink.getResolvedContent: Skipping placeholder '
+          'AsyncCollectingSink.getResolvedContent: Skipping placeholder '
           'replacement for assignment Future $i',
         );
       }
@@ -2875,10 +2885,249 @@ class _AsyncCollectingSink implements StringSink {
     }
 
     _environment.debugJinja(
-      '_AsyncCollectingSink.getResolvedContent: Final content length: '
+      'AsyncCollectingSink.getResolvedContent: Final content length: '
       '${content.length}',
     );
     return content;
+  }
+}
+
+/// Internal wrapper to use an async renderer with a synchronous context.
+///
+/// This is used inside macros to allow the macro body to be rendered
+/// asynchronously while still being compatible with the synchronous
+/// macro calling convention.
+class _AsyncRendererWrapper extends Visitor<StringSinkRenderContext, Object?> {
+  _AsyncRendererWrapper(this.asyncRenderer, this.asyncContext);
+
+  final AsyncStringSinkRenderer asyncRenderer;
+  final AsyncRenderContext asyncContext;
+
+  AsyncRenderContext _toAsync(StringSinkRenderContext context) {
+    return AsyncRenderContext(
+      context.environment,
+      context.sink,
+      template: context.template,
+      blocks: context.blocks,
+      parent: context.parent,
+      data: context.context,
+      autoEscape: context.autoEscape,
+    );
+  }
+
+  @override
+  Object? visitArray(Array node, StringSinkRenderContext context) {
+    return asyncRenderer.visitArray(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitAttribute(Attribute node, StringSinkRenderContext context) {
+    return asyncRenderer.visitAttribute(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitCall(Call node, StringSinkRenderContext context) {
+    return asyncRenderer.visitCall(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitCalling(Calling node, StringSinkRenderContext context) {
+    return asyncRenderer.visitCalling(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitCompare(Compare node, StringSinkRenderContext context) {
+    return asyncRenderer.visitCompare(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitConcat(Concat node, StringSinkRenderContext context) {
+    return asyncRenderer.visitConcat(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitCondition(Condition node, StringSinkRenderContext context) {
+    return asyncRenderer.visitCondition(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitConstant(Constant node, StringSinkRenderContext context) {
+    return asyncRenderer.visitConstant(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitDict(Dict node, StringSinkRenderContext context) {
+    return asyncRenderer.visitDict(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitFilter(Filter node, StringSinkRenderContext context) {
+    return asyncRenderer.visitFilter(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitItem(Item node, StringSinkRenderContext context) {
+    return asyncRenderer.visitItem(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitLogical(Logical node, StringSinkRenderContext context) {
+    return asyncRenderer.visitLogical(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitName(Name node, StringSinkRenderContext context) {
+    return asyncRenderer.visitName(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitNamespaceRef(NamespaceRef node, StringSinkRenderContext context) {
+    return asyncRenderer.visitNamespaceRef(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitScalar(Scalar node, StringSinkRenderContext context) {
+    return asyncRenderer.visitScalar(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitTest(Test node, StringSinkRenderContext context) {
+    return asyncRenderer.visitTest(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitTuple(Tuple node, StringSinkRenderContext context) {
+    return asyncRenderer.visitTuple(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitUnary(Unary node, StringSinkRenderContext context) {
+    return asyncRenderer.visitUnary(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitAssign(Assign node, StringSinkRenderContext context) {
+    return asyncRenderer.visitAssign(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitAssignBlock(AssignBlock node, StringSinkRenderContext context) {
+    return asyncRenderer.visitAssignBlock(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitAutoEscape(AutoEscape node, StringSinkRenderContext context) {
+    return asyncRenderer.visitAutoEscape(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitBlock(Block node, StringSinkRenderContext context) {
+    return asyncRenderer.visitBlock(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitBreak(Break node, StringSinkRenderContext context) {
+    return asyncRenderer.visitBreak(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitCallBlock(CallBlock node, StringSinkRenderContext context) {
+    return asyncRenderer.visitCallBlock(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitContinue(Continue node, StringSinkRenderContext context) {
+    return asyncRenderer.visitContinue(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitData(Data node, StringSinkRenderContext context) {
+    return asyncRenderer.visitData(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitDebug(Debug node, StringSinkRenderContext context) {
+    return asyncRenderer.visitDebug(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitDo(Do node, StringSinkRenderContext context) {
+    return asyncRenderer.visitDo(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitExtends(Extends node, StringSinkRenderContext context) {
+    return asyncRenderer.visitExtends(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitFilterBlock(FilterBlock node, StringSinkRenderContext context) {
+    return asyncRenderer.visitFilterBlock(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitFor(For node, StringSinkRenderContext context) {
+    return asyncRenderer.visitFor(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitFromImport(FromImport node, StringSinkRenderContext context) {
+    return asyncRenderer.visitFromImport(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitIf(If node, StringSinkRenderContext context) {
+    return asyncRenderer.visitIf(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitImport(Import node, StringSinkRenderContext context) {
+    return asyncRenderer.visitImport(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitInclude(Include node, StringSinkRenderContext context) {
+    return asyncRenderer.visitInclude(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitInterpolation(Interpolation node, StringSinkRenderContext context) {
+    return asyncRenderer.visitInterpolation(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitMacro(Macro node, StringSinkRenderContext context) {
+    return asyncRenderer.visitMacro(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitOutput(Output node, StringSinkRenderContext context) {
+    return asyncRenderer.visitOutput(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitTemplateNode(TemplateNode node, StringSinkRenderContext context) {
+    return asyncRenderer.visitTemplateNode(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitTrans(Trans node, StringSinkRenderContext context) {
+    return asyncRenderer.visitTrans(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitTryCatch(TryCatch node, StringSinkRenderContext context) {
+    return asyncRenderer.visitTryCatch(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitWith(With node, StringSinkRenderContext context) {
+    return asyncRenderer.visitWith(node, _toAsync(context));
+  }
+
+  @override
+  Object? visitSlice(Slice node, StringSinkRenderContext context) {
+    return asyncRenderer.visitSlice(node, _toAsync(context));
   }
 }
 
@@ -2993,7 +3242,7 @@ base class AsyncRenderer {
         );
 
         // Create a custom sink that collects Futures
-        final collectingSink = _AsyncCollectingSink(
+        final collectingSink = AsyncCollectingSink(
           context.sink,
           context.environment,
         );
