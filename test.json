@@ -1,0 +1,130 @@
+[
+    {
+        "id": "71c4b318-6e12-44fe-ad64-aaa1a536b106",
+        "ui_widget": "single_line_text",
+        "property_label": "Font Name",
+        "property_id": "font_name",
+        "data_type": "dt_text",
+        "data": {
+            "value": "test string"
+        }
+    },
+    {
+        "id": "645cb482-e7f3-4d76-9962-75fff4c8191a",
+        "ui_widget": "number_input",
+        "data_type": "dt_number",
+        "data": {
+            "value": 1000.252
+        }
+    },
+    {
+        "id": "bd0d8ec3-7fd1-47a4-bc2c-4c2edef98ae0",
+        "ui_widget": "switch",
+        "data_type": "dt_boolean",
+        "data": {
+            "value": 1
+        }
+    },
+    {
+        "id": "4a219cca-f722-4326-9ce4-377a7e79344a",
+        "data_type": "dt_datetime",
+        "data": {
+            "value": "2026-10-10 10:10:10"
+        }
+    },
+    {
+        "id": "de946865-7ec1-4968-b921-8ce586f02441",
+        "data_type": "dt_datetime",
+        "data": {
+            "value": "2026-10-10 10:10:10"
+        }
+    },
+    {
+        "id": "998049fe-9211-44d1-85e1-223797bbae45",
+        "data_type": "dt_date",
+        "data": {
+            "value": "2026-10-10"
+        }
+    },
+    {
+        "id": "31e4514b-8a41-443b-96d0-a809f08e5929",
+        "data_type": "dt_time",
+        "data": {
+            "value": "10:10:10"
+        }
+    },
+    {
+        "id": "f2e7ccc9-8074-41ce-847f-3f0d90f7d2f0",
+        "data_type": "dt_uuid",
+        "data": {
+            "value": "065d4098-8c9e-4ec1-8348-9a6beaf6a135"
+        }
+    },
+    {
+        "id": "4b469973-0ba2-49cc-89b7-5355b1ff2510",
+        "data_type": "dt_base64",
+        "data": {
+            "value": "SGVsbG8gV29ybGQ="
+        }
+    },
+    {
+        "id": "85f50ad6-7d0b-48a4-b08b-1ac466d49ca3",
+        "data_type": "dt_money",
+        "data": {
+            "value": {
+                "amount": 1000,
+                "currency_id": "USD",
+                "currency_symb": "$",
+                "convert_rate": null
+            }
+        }
+    },
+    {
+        "id": "208b399a-b2ef-4af0-a6d1-af28b47e7186",
+        "data_type": "dt_list",
+        "data": [
+            {
+                "id": "00d438db-e37e-492c-8aa5-ccf4663a69b1",
+                "data_type": "dt_number",
+                "data": {
+                    "value": 1
+                }
+            },
+            {
+                "id": "2bf7e9e4-ab95-4ad2-89a9-e4b7b86b4841",
+                "data_type": "dt_number",
+                "data": {
+                    "value": 2
+                }
+            },
+            {
+                "id": "d8e3a75e-5edb-4676-81e9-5a2c7e514bc4",
+                "data_type": "dt_number",
+                "data": {
+                    "value": 3
+                }
+            }
+        ]
+    },
+    {
+        "id": "c823fdb5-9629-41ab-961d-796e0bf3551a",
+        "ui_widget": "complex_object",
+        "data_type": "dt_object",
+        "data": {
+            "a": {
+                "id": "cf030e1f-3296-4fcb-b9a0-09b0afdf7c28",
+                "data_type": "dt_number",
+                "data": {
+                    "value": 1
+                }
+            },
+            "b": {
+                "id": "422cfbf5-fd62-4be4-b598-faa77126eae9",
+                "data_type": "dt_text",
+                "data": {
+                    "value": 2
+                }
+            }
+        }
+    }
+]

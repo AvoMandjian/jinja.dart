@@ -230,6 +230,10 @@ Components
 {% macro _value_text(value, view) -%}
     {% if value %}
         {% set out = view(value) %}
+{{ print('_value_text')}}
+{{ print(value)}}
+{{ print(view)}}
+{{ print(out)}}
         {% if out %}
             , "value_text": "{{ out }}"
         {% endif %}

@@ -2609,8 +2609,11 @@ class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?
           }
 
           ctx.set('super', parent);
-          block.body.accept(_baseRenderer, ctx);
-          ctx.set('super', current);
+          try {
+            block.body.accept(_baseRenderer, ctx);
+          } finally {
+            ctx.set('super', current);
+          }
         }
 
         blocks.add(callback);

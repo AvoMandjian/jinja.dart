@@ -22,6 +22,7 @@ void main() {
         const Unary(operator: UnaryOperator.not, value: Constant(value: true)),
         const Scalar(operator: ScalarOperator.plus, left: Constant(value: 1), right: Constant(value: 2)),
         const Logical(operator: LogicalOperator.and, left: Constant(value: true), right: Constant(value: true)),
+        const NamespaceRef(name: 'ns', attribute: 'a'),
       ];
 
       for (var node in nodes) {

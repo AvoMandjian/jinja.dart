@@ -74,6 +74,7 @@ Project memory files are stored in `.serena/memories/`:
 - `DebugStoppedException` is used to interrupt rendering.
 - Template rendering in `defaults.dart` supports python-like numeric formatting.
 - `TemplateSyntaxError` field redundancy was removed to align with the base `TemplateError` implementation.
+- Test coverage significantly improved: `lib/src/filters.dart` (91.6%), `lib/src/environment.dart` (91.9%), `lib/src/exceptions.dart` (>95%), `lib/src/renderer.dart` (82.9%).
 
 ## Last Updated
 2026-03-20

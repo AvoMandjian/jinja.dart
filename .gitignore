@@ -9,7 +9,6 @@ web/
 **.pyc
 pubspec.lock
 
-# FVM Version Cache
 .fvm/
 .understand-anything/
 .serena/
@@ -19,3 +18,5 @@ hooks/
 tmp/
 .opencode
 .logs
+.serena
+.cursor

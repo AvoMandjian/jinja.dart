@@ -785,9 +785,15 @@ class GetJinja {
 
         /// Logs a value to the application logs and returns it.
         'print': (dynamic value) {
-          UtilFunctions.appLog(
-            'printed from jinja script: ${jsonEncode(value)}',
-          );
+          if (value is Function) {
+            UtilFunctions.appLog(
+              'printed from jinja script: ${value.toString()}',
+            );
+          } else {
+            UtilFunctions.appLog(
+              'printed from jinja script: ${jsonEncode(value)}',
+            );
+          }
         },
 
         // dbt-compatible globals
