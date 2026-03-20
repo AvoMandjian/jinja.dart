@@ -19,7 +19,7 @@ void main() {
 
       controller.onBreakpoint = (info) {
         hit = true;
-        return Future.value(info);
+        return Future.value(DebugAction.stop);
       };
 
       var result = await template.renderDebug({'name': 'World'}, debugController: controller);
@@ -34,7 +34,7 @@ void main() {
 
       controller.onBreakpoint = (info) {
         steps.add(info.lineNumber);
-        return Future.value(info);
+        return Future.value(DebugAction.stepOver);
       };
 
       await template.renderDebug({'a': 1, 'b': 2, 'c': 3}, debugController: controller);
@@ -48,7 +48,7 @@ void main() {
 
       controller.onBreakpoint = (info) {
         steps.add(info.lineNumber);
-        return Future.value(info);
+        return Future.value(DebugAction.stepOver);
       };
 
       await template.renderDebug({}, debugController: controller);

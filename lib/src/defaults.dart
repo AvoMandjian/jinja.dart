@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:collection/collection.dart';
+import 'package:intl/intl.dart';
 
 import 'exceptions.dart';
 import 'nodes.dart';
@@ -91,6 +92,48 @@ Object? getAttribute(String attribute, Object? object, {Object? node, String? so
 
   if (object is Namespace) {
     return object[attribute];
+  }
+
+  if (object is String && attribute == 'format') {
+    // Python-like numeric format support for strings like:
+    //   "{:,.2f}".format(1000)
+    //   "{:.2f}".format(1000)
+    //   "{:.0f}".format(1000)
+    //
+    // We translate the spec into an `intl` NumberFormat pattern.
+    final formatSpec = object.trim();
+    if (!formatSpec.startsWith('{:') || !formatSpec.endsWith('}')) return null;
+
+    final inner = formatSpec
+        .substring(2, formatSpec.length - 1) // after '{:' and before '}'
+        .replaceAll(RegExp(r'\s+'), '');
+
+    // Only handle `f` for now.
+    if (inner.isEmpty || inner[inner.length - 1] != 'f') return null;
+
+    final useGrouping = inner.contains(',');
+
+    // Python precision: default is 6 when omitted for `f`.
+    const defaultPrecision = 6;
+    final precisionMatch = RegExp(r'\.(\d+)').firstMatch(inner);
+    final precision = precisionMatch != null ? int.parse(precisionMatch.group(1)!) : defaultPrecision;
+
+    final integerPattern = useGrouping ? '#,##0' : '0';
+    final fractionPattern = precision > 0 ? '.${List.filled(precision, '0').join()}' : '';
+    final pattern = '$integerPattern$fractionPattern';
+
+    final formatter = NumberFormat(pattern);
+
+    return (Object? value) {
+      final num? number = switch (value) {
+        num n => n,
+        String s => num.tryParse(s.replaceAll(',', '')),
+        _ => null,
+      };
+
+      if (number == null) return null;
+      return formatter.format(number);
+    };
   }
 
   if (object is Cycler) {

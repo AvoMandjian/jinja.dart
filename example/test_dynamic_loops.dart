@@ -82,6 +82,7 @@ Future<void> testLoop(String testName, String templateSource, Map<String, Object
     if (loopVars.isNotEmpty) {
       print('  Loop variables: $loopVars');
     }
+    return DebugAction.continue_;
   };
 
   // Parse and render

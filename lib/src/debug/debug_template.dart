@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../environment.dart';
+import '../exceptions.dart';
 import '../nodes.dart';
 import 'async_debug_renderer.dart';
 import 'debug_controller.dart';
@@ -36,11 +37,15 @@ extension DebugTemplate on Template {
     );
 
     // If template source provided (for restart with new template)
-    if (templateSource != null) {
-      var newTemplate = environment.fromString(templateSource);
-      await _renderBodyAsync(newTemplate.body, context);
-    } else {
-      await _renderBodyAsync(body, context);
+    try {
+      if (templateSource != null) {
+        var newTemplate = environment.fromString(templateSource);
+        await _renderBodyAsync(newTemplate.body, context);
+      } else {
+        await _renderBodyAsync(body, context);
+      }
+    } on DebugStoppedException {
+      // Rendering stopped by debugger
     }
   }
 

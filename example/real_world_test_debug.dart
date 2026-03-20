@@ -184,6 +184,7 @@ void main() async {
       });
       print('Current Output: ${info.currentOutput}');
       print('----------------------');
+      return DebugAction.continue_;
     };
     var template2 = env.fromString(jinjaScript);
     var result2 = await template2.renderDebug(data: jinjaData, debugController: debugController);

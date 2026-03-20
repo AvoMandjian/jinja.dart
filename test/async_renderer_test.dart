@@ -12,8 +12,6 @@ class _ThrowingObj {
 
 void main() {
   group('Async renderer specific paths', () {
-    final env = Environment();
-
     test('async macro args missing', () async {
       final env = Environment();
       final t = env.fromString('{% macro m() %}A{% endmacro %}{{ m(1) }}');
@@ -27,7 +25,7 @@ void main() {
       final env = Environment(
         loader: MapLoader({
           'macro.html': '{% macro m(x) %}{{ x }}{% endmacro %}',
-        }, globalJinjaData: {}),
+        }, globalJinjaData: {},),
       );
       final t = env.fromString('{% import "macro.html" as m with context %}{{ m.m(1) }}');
       final out = await t.renderAsync({});
@@ -126,6 +124,16 @@ void main() {
       final t = env.fromString('{% set x = f %}{{ x }}');
       final out = await t.renderAsync();
       expect(out, equals('42'));
+    });
+
+    test('async macro passed as value and called', () async {
+      final env = Environment(trimBlocks: true);
+      final t = env.fromString('''
+{% macro view(x) %}{{ x }}{% endmacro %}
+{% macro use_view(v) %}{{ v('test string') }}{% endmacro %}
+{{ use_view(view) }}''');
+      final out = await t.renderAsync();
+      expect(out, equals('test string'));
     });
   });
 }

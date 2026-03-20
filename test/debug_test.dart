@@ -27,29 +27,27 @@ void main() {
       var bp = controller.addBreakpoint(line: 2);
       var hit = false;
 
-      controller.onBreakpoint = (info) {
+      controller.onBreakpoint = (info) async {
         hit = true;
         expect(info.lineNumber, bp.line);
         expect(info.variables['name'], 'World');
-        return Future.value(info);
+        return DebugAction.continue_;
       };
 
-      await template
-          .renderDebug({'name': 'World'}, debugController: controller);
+      await template.renderDebug({'name': 'World'}, debugController: controller);
       expect(hit, isTrue);
     });
 
     test('conditional breakpoint (hit)', () async {
-      var template =
-          env.fromString('{% for i in [1, 2, 3] %}\n{{ i }}\n{% endfor %}');
+      var template = env.fromString('{% for i in [1, 2, 3] %}\n{{ i }}\n{% endfor %}');
       var bp = controller.addBreakpoint(line: 2, condition: 'i == 2');
       var hitCount = 0;
 
-      controller.onBreakpoint = (info) {
+      controller.onBreakpoint = (info) async {
         hitCount++;
         expect(info.lineNumber, bp.line);
         // expect(info.variables['i'], 2); // Skipped: variable resolution issue
-        return Future.value(info);
+        return DebugAction.continue_;
       };
 
       await template.renderDebug({'i': 0}, debugController: controller);
@@ -57,14 +55,13 @@ void main() {
     });
 
     test('conditional breakpoint (miss)', () async {
-      var template =
-          env.fromString('{% for i in [1, 2, 3] %}\n{{ i }}\n{% endfor %}');
+      var template = env.fromString('{% for i in [1, 2, 3] %}\n{{ i }}\n{% endfor %}');
       controller.addBreakpoint(line: 2, condition: 'i == 4');
       var hit = false;
 
-      controller.onBreakpoint = (info) {
+      controller.onBreakpoint = (info) async {
         hit = true;
-        return Future.value(info);
+        return DebugAction.continue_;
       };
 
       await template.renderDebug({'i': 0}, debugController: controller);

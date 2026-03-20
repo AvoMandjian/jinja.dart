@@ -280,7 +280,7 @@ class TemplateSyntaxError extends TemplateError {
     this.path,
     this.line,
     this.column,
-    this.contextSnippet,
+    String? contextSnippet,
     StackTrace? stackTrace,
     Node? node,
     Map<String, Object?>? contextSnapshot,
@@ -307,10 +307,6 @@ class TemplateSyntaxError extends TemplateError {
 
   /// The column in the template that caused the error.
   final int? column;
-
-  /// Optional snippet of template source with caret.
-  @override
-  final String? contextSnippet;
 
   @override
   String toString() {
@@ -600,3 +596,6 @@ class BreakException implements Exception {}
 
 /// Used internally for continue statements in loops.
 class ContinueException implements Exception {}
+
+/// Exception thrown when template rendering is stopped by the debugger.
+class DebugStoppedException implements Exception {}

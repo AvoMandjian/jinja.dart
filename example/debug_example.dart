@@ -114,6 +114,7 @@ void main() async {
     //   default:
     //     return DebugAction.continueExecution;
     // }
+    return DebugAction.continue_;
   };
 
   print('Starting Jinja Debug Example');

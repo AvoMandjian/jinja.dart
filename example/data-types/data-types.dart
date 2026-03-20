@@ -61,7 +61,7 @@ void main() async {
     // Setup MapLoader with base templates for inheritance and inclusion
     final loader = MapLoader(
       {
-        'views.jinja': '''{# Macros implementing different views (text representation for stored data). #}
+        'views.jinja': r'''{# Macros implementing different views (text representation for stored data). #}
 
 {#
 -------------------------------------------------------------------------------
@@ -122,7 +122,7 @@ Money Views
     {{ v.currency_symb }}{{ "{:,.2f}".format(v.amount) }}
 {%- endmacro %}
 ''',
-        'native_types.jinja': '''
+        'native_types.jinja': r'''
 {# Data type macros implementing native data types (basic and compound). #}
 
 {% import "views.jinja" as views %}
@@ -333,7 +333,7 @@ Args:
                   ui_widget, property_label, property_id,
                   strict, optional, default, uid,
                   min_length=none, max_length=none,
-                  pattern="d{4}-d{2}-d{2} d{2}:d{2}:d{2}") -}}
+                  pattern="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}") -}}
 {%- endmacro %}
 
 {#
@@ -357,7 +357,7 @@ Args:
     {% set value = _populate(value, "text", strict, optional, default) | fromjson %}
 
     {# data #}
-    {% if value[:19] | match("d{4}-d{2}-d{2} d{2}:d{2}:d{2}") -%}
+    {% if value[:19] | match("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}") -%}
         {{- _raw_text(value[:10], view, "dt_date",
                       ui_widget, property_label, property_id,
                       strict, optional, default, uid,
@@ -367,7 +367,7 @@ Args:
                       ui_widget, property_label, property_id,
                       strict, optional, default, uid,
                       min_length=none, max_length=none,
-                      pattern="d{4}-d{2}-d{2}") -}}
+                      pattern="\d{4}-\d{2}-\d{2}") -}}
     {%- endif %}
 {%- endmacro %}
 
@@ -392,7 +392,7 @@ Args:
     {% set value = _populate(value, "text", strict, optional, default) | fromjson %}
 
     {# data #}
-    {% if value[:19] | match("d{4}-d{2}-d{2} d{2}:d{2}:d{2}") -%}
+    {% if value[:19] | match("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}") -%}
         {{- _raw_text(value[11:19], view, "dt_time",
                       ui_widget, property_label, property_id,
                       strict, optional, default, uid,
@@ -402,7 +402,7 @@ Args:
                       ui_widget, property_label, property_id,
                       strict, optional, default, uid,
                       min_length=none, max_length=none,
-                      pattern="d{2}:d{2}:d{2}") -}}
+                      pattern="\d{2}:\d{2}:\d{2}") -}}
     {%- endif %}
 {%- endmacro %}
 
@@ -619,7 +619,7 @@ Compound types
 {% macro _list_data(values, param) -%}
     [
     {% for v in values -%}
-        {{- materialize(v, param) -}}{% if not loop.last %},{% endif %}
+       {{- materialize(v, param) -}}{% if not loop.last %},{% endif %}
     {%- endfor %}
     ]
 {%- endmacro %}
@@ -653,7 +653,7 @@ Args:
 {# Create map data by iterating over params. #}
 {% macro _object_data(value, params, data_type) -%}
     {
-    {% for k, v in params.items() -%}
+    {% for k, v in params -%}
         {% do _isident(k) %}
         {% do _isdefined(k, data_type, value[k]) %}
         "{{ k }}": {{- materialize(value[k], v) -}}{% if not loop.last %},{% endif %}
@@ -687,7 +687,7 @@ Args:
     }
 {%- endmacro %}
 ''',
-        'media_types.jinja': '''
+        'media_types.jinja': r'''
 {% import "native_types.jinja" as native %}
 
 {% set max_image_size = 10485760 %} {# 10Mb #}
@@ -699,11 +699,11 @@ Args:
         data_type="dt_image",
         image_type={"macro": native.dt_text, "pattern": image_extensions | join('|')},
         image_content={"macro": native.dt_base64, "max_length": max_image_size},
-        image_size={"macro": native.dt_number, "ge": 0},
+        image_size={"macro": f.dt_number, "ge": 0},
         secure={"macro": native.dt_boolean, "default": false}) }}
 {%- endmacro %}
 ''',
-        'container_types.jinja': '''
+        'container_types.jinja': r'''
 {% import "native_types.jinja" as native %}
 {% import "media_types.jinja" as media %}
 {% import "views.jinja" as views %}
@@ -763,7 +763,7 @@ Option groups
         groups={"macro": dt_option_groups_list}) }}
 {%- endmacro %}
 ''',
-        'container_types_in.jinja': '''
+        'container_types_in.jinja': r'''
 {% import "container_types.jinja" as containers %}
 
 {# Input #}
@@ -835,7 +835,7 @@ Option groups
     final env = GetJinja.environment(
       MockBuildContext(),
       loader,
-      enableJinjaDebugLogging: true,
+      //   enableJinjaDebugLogging: true,
       valueListenableJinjaError: (error) {
         print('Jinja Error: $error');
         errors.add(error);
@@ -870,7 +870,7 @@ Option groups
     var result2 = await template2.renderAsync(jinjaData);
     print('Result length: ${result2.length}');
     print('--------------------------------------------------------------------------------------------------------------------------------');
-    print(result2);
+    print(result2.replaceAll('\n', ''));
     print('--------------------------------------------------------------------------------------------------------------------------------');
   } catch (e, stack) {
     print('\n!!! UNHANDLED EXCEPTION !!!');

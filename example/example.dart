@@ -19,14 +19,17 @@ Future<void> main() async {
         return '$hour:$minute';
       },
     },
-    loader: MapLoader({
-      'first_script__1__00': '''
+    loader: MapLoader(
+      {
+        'first_script__1__00': '''
 <p>First Script</p><p>{{subcategory_title}}</p>
 <p>Second Script</p><p>{{subcategory_title_2}}</p>
 <p>Third Script</p><p>{{subcategory_title_3}}</p>
 <p>Fourth Script</p><p>{{subcategory_title_4}}</p>
 ''',
-    }, globalJinjaData: {}),
+      },
+      globalJinjaData: {},
+    ),
     leftStripBlocks: true,
     trimBlocks: true,
     filters: {
@@ -89,6 +92,7 @@ Future<void> main() async {
   debugController.onBreakpoint = (info) async {
     // print('Variables: ${info.variables}');
     print('Output: ${info.lineNumber}');
+    return DebugAction.continue_;
   };
 
   await templateOfJinja

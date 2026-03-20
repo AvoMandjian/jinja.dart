@@ -1,27 +1,31 @@
 # Active Context
 
 ## Current Work
-- Refactoring MapLoader to support globalJinjaData
-- Enhancing template loading capabilities
-- Improving async globals example with macros
+- Verified all examples in `example/` folder.
+- Restored `DebugAction` support in `DebugController` and `AsyncDebugRenderer`.
+- Standardized breakpoint checking logic.
 
-## Recent Changes (2026-02-11)
-- **Refactored MapLoader** (commit 881a62e)
-  - Changed `const MapLoader` to `MapLoader` (removed const)
-  - Changed `final Map<String, dynamic> globalJinjaData` to `Map<String, dynamic> globalJinjaData` (mutable)
-  - Simplified `load` method signature formatting
-  - Reduced code complexity: 4 insertions, 12 deletions
-  - Improved globalJinjaData support for dynamic updates
+## Recent Changes (2026-03-20)
+- **Restored Debug Actions**
+  - Added `DebugAction` enum (`continue_`, `stop`, `stepOver`, `stepIn`, `stepOut`).
+  - Updated `DebugController.handleBreakpoint` to return `DebugAction`.
+  - Fixed `AsyncDebugRenderer` to respect `stop` and `stepOver` actions.
+- **Fixed Examples & Tests**
+  - Updated all 15 examples to use the new `onBreakpoint` API.
+  - Resolved failures in `test_debug_actions.dart`.
+- **Linter Cleanup**
+  - Fixed unreachable switch cases in `defaults.dart`.
+  - Removed unused variables and fixed duplicate keys.
 
 ## Priorities
-1. Continue improving template loading mechanisms
-2. Enhance async globals support
-3. Maintain code quality and test coverage
+1. Continue enhancing debugging features.
+2. Improve async rendering performance.
+3. Maintain 100% passing status for all examples.
 
 ## Code Quality Status
-- ✅ Zero lint errors
-- ✅ All tests passing
+- ✅ Zero lint errors (after cleanup)
+- ✅ All 15 examples passing
 - ✅ Code formatted
 
 ## Last Updated
-2026-02-11
+2026-03-20

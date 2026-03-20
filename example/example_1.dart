@@ -7,9 +7,12 @@ import 'package:json_path/json_path.dart';
 Map<String, dynamic> dataToPassToJinja = {'variable_1': 'the output is encoded to base64'};
 
 void main() {
-  var loader = MapLoader({
-    'first_script__1__00': '{{ foo|hello }}',
-  }, globalJinjaData: {});
+  var loader = MapLoader(
+    {
+      'first_script__1__00': '{{ variable_1|to_string }}',
+    },
+    globalJinjaData: {},
+  );
   var env = Environment(
     globals: <String, Object?>{
       'jsonPath': (Map<Object?, Object?> json, String query) {

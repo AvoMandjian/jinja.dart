@@ -17,3 +17,5 @@ pubspec.lock
 design-log/
 hooks/
 tmp/
+.opencode
+.logs

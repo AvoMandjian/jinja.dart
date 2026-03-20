@@ -88,11 +88,11 @@ base class Context {
         if (callMethod is Function) {
           return environment.callCommon(callMethod, positional, named, this);
         }
-      } catch (_) {
+      } catch (e) {
         environment.debugJinja(
           'Context.call: Error calling .call method on object: $object',
         );
-        environment.debugJinja('Context.call: Error: $_');
+        environment.debugJinja('Context.call: Error: $e');
         environment.debugJinja('Context.call: Node: $node');
         environment.debugJinja('Context.call: Positional: $positional');
         environment.debugJinja('Context.call: Named: $named');

@@ -1549,6 +1549,8 @@ debugController.onBreakpoint = (info) async {
   print('Node Type: ${info.nodeType}');
   print('Variables: ${info.variables}');
   print('Output so far: ${info.outputSoFar}');
+
+  return DebugAction.continue_;
 };
 
 var env = Environment();
@@ -1809,16 +1811,11 @@ corrections in the documentation and code comments.
 
 Post issues and feature requests on the GitHub [issue tracker][issues].
 
-[pub_icon]: https://img.shields.io/pub/v/jinja.svg
-[pub]: https://pub.dev/packages/jinja
-[test_ci_icon]: https://github.com/ykmnkmi/jinja.dart/actions/workflows/test.yaml/badge.svg
-[test_ci]: https://github.com/ykmnkmi/jinja.dart/actions/workflows/test.yaml
-[codecov_icon]: https://codecov.io/gh/ykmnkmi/jinja.dart/branch/main/graph/badge.svg?token=PRP3DHMO48
 [codecov]: https://codecov.io/gh/ykmnkmi/jinja.dart/branch/main/graph/badge.svg?token=PRP3DHMO48
-[jinja]: https://www.palletsprojects.com/p/jinja
-[jinja_templates]: https://jinja.palletsprojects.com/en/3.0.x/templates
-[conduit_example]: https://github.com/ykmnkmi/jinja_conduit_example
-[reflectable_example]: https://github.com/ykmnkmi/jinja_reflectable_example
-[filters]: https://github.com/ykmnkmi/jinja.dart/blob/master/lib/src/filters.dart
-[tests]: https://github.com/ykmnkmi/jinja.dart/blob/master/lib/src/tests.dart
+[codecov_icon]: https://codecov.io/gh/ykmnkmi/jinja.dart/branch/main/graph/badge.svg?token=PRP3DHMO48
 [issues]: https://github.com/ykmnkmi/jinja.dart/issues
+[jinja]: https://www.palletsprojects.com/p/jinja
+[pub]: https://pub.dev/packages/jinja
+[pub_icon]: https://img.shields.io/pub/v/jinja.svg
+[test_ci]: https://github.com/ykmnkmi/jinja.dart/actions/workflows/test.yaml
+[test_ci_icon]: https://github.com/ykmnkmi/jinja.dart/actions/workflows/test.yaml/badge.svg

@@ -47,18 +47,40 @@ class BreakpointInfo {
       };
 }
 
+/// Enum representing the next action to take in the debugger.
+enum DebugAction {
+  /// Continue execution until the next breakpoint is hit.
+  continue_,
+
+  /// Stop the current execution and return the results so far.
+  stop,
+
+  /// Step over the current line, hitting only breakpoints on other lines.
+  stepOver,
+
+  /// Step into the current node (not yet fully implemented in Jinja.dart).
+  stepIn,
+
+  /// Step out of the current context (not yet fully implemented in Jinja.dart).
+  stepOut,
+}
+
 /// Controller for debugging Jinja templates.
 class DebugController {
   final Map<int, List<Breakpoint>> _breakpoints = {};
   final List<BreakpointInfo> _history = [];
 
   /// Callback when a breakpoint is hit.
-  Future<void> Function(BreakpointInfo info)? onBreakpoint;
+  Future<DebugAction> Function(BreakpointInfo info)? onBreakpoint;
 
   /// Whether debugging is enabled.
-  bool _enabled = false;
-  bool get enabled => _enabled;
-  set enabled(bool value) => _enabled = value;
+  bool enabled = false;
+
+  /// Whether to stop the current execution.
+  bool stopped = false;
+
+  /// The current step-over line, if any.
+  int? stepOverLine;
 
   /// Whether to break on each iteration of a for loop.
   /// Defaults to false.
@@ -90,12 +112,19 @@ class DebugController {
   }
 
   /// Handle a breakpoint hit.
-  Future<void> handleBreakpoint(BreakpointInfo info) async {
+  Future<DebugAction> handleBreakpoint(BreakpointInfo info) async {
     _history.add(info);
 
     if (onBreakpoint != null) {
-      await onBreakpoint!(info);
+      final action = await onBreakpoint!(info);
+      if (action == DebugAction.stop) {
+        stopped = true;
+      } else if (action == DebugAction.stepOver) {
+        stepOverLine = info.lineNumber;
+      }
+      return action;
     }
+    return DebugAction.continue_;
   }
 
   /// Get the history of breakpoint hits.
@@ -109,5 +138,7 @@ class DebugController {
   /// Reset the controller.
   void reset() {
     clearHistory();
+    stopped = false;
+    stepOverLine = null;
   }
 }

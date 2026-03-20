@@ -83,9 +83,12 @@ void main() {
 
     test('include', () {
       var env = Environment(
-        loader: MapLoader({
-          'include': '{% macro test(foo) %}[{{ foo }}]{% endmacro %}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'include': '{% macro test(foo) %}[{{ foo }}]{% endmacro %}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       var tmpl = env.fromString('''
@@ -109,6 +112,14 @@ void main() {
 {% macro m(a, b=x, x=23) %}{{ a }}|{{ b }}|{{ x }}{% endmacro -%}
 {{ m(1) }},{{ m(1, b=2) }},{{ m(1, b=2, x=3) }},{{ m(1, x=7) }}''');
       expect(tmpl.render(), equals('1||23,1|2|23,1|2|3,1|7|7'));
+    });
+
+    test('macro passed as value and called', () {
+      final tmpl = env.fromString('''
+{% macro view(x) %}{{ x }}{% endmacro %}
+{% macro use_view(v) %}{{ v('test string') }}{% endmacro %}
+{{ use_view(view) }}''');
+      expect(tmpl.render(), equals('test string'));
     });
   });
 }

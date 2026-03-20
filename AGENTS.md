@@ -19,6 +19,7 @@ Jinja2 template engine port for Dart 3. Provides server-side template rendering 
 - Loader abstraction for template sources
 - Environment-based configuration
 - Debug support with breakpoints
+  - `onBreakpoint` callback must return a `DebugAction` (`continue_`, `stop`, `stepOver`, etc.).
 
 ## Architecture
 
@@ -35,6 +36,7 @@ Jinja2 template engine port for Dart 3. Provides server-side template rendering 
 - `lib/src/loaders.dart` - Template loaders
 - `lib/src/parser.dart` - Template parsing
 - `lib/src/lexer.dart` - Template lexing
+- `lib/src/debug/async_debug_renderer.dart` - Debug-aware async renderer
 
 ## Testing
 
@@ -59,20 +61,19 @@ Project memory files are stored in `.serena/memories/`:
 - `techContext.md` - Technology stack details
 - `productContext.md` - Product context and features
 
-## Common Tasks
+## Learned User Preferences
+- Use `dart run example/<file>.dart` to verify specific example functionality.
+- Prioritize fixing lints in core library files (`lib/src/`).
+- Debugging features should be robust and match Jinja2 capabilities.
+- When implementing `visitSlice`, handle `String` values by splitting, slicing, and re-joining.
 
-### Development Workflow
-1. Make changes
-2. Run `dart format .`
-3. Run `dart analyze`
-4. Run `dart test`
-5. Update documentation if needed
-
-### Code Quality
-- Zero lint errors required
-- All tests must pass
-- Follow existing code patterns
-- Maintain backward compatibility
+## Learned Workspace Facts
+- `example/get_jinja.dart` is a utility script that provides a pre-configured environment; it does not have a `main` function and should mirror `environment.py`.
+- `AsyncDebugRenderer` is the primary renderer used for `renderDebug`.
+- Debug actions (`stop`, `stepOver`) are critical; `onBreakpoint` must return a `DebugAction`.
+- `DebugStoppedException` is used to interrupt rendering.
+- Template rendering in `defaults.dart` supports python-like numeric formatting.
+- `TemplateSyntaxError` field redundancy was removed to align with the base `TemplateError` implementation.
 
 ## Last Updated
-2026-02-11
+2026-03-20

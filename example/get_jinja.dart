@@ -568,13 +568,12 @@ class GetJinja {
       return res?.toString() ?? '';
     }
 
-    return Environment(
+    final env = Environment(
       globals: <String, Object?>{
         'datetime': {
           'fromisoformat': (String s) => s,
         },
         'UUID': (String s) => s,
-        'uuid': () => '00000000-0000-0000-0000-000000000000',
 
         /// Executes an action based on the target type (widget, db, or app).
         ///
@@ -597,6 +596,72 @@ class GetJinja {
           if (!condition) {
             throw TemplateAssertionError(message);
           }
+        },
+        'check': (bool condition, String message) {
+          if (!condition) {
+            throw TemplateAssertionError(message);
+          }
+        },
+        // Dispatch helper for templates that accept a "type descriptor" like:
+        //   param = { "macro": native.'dt_number', "ge": 0, ... }
+        // The `data-types` example uses `materialize(value, param)` to invoke
+        // the specified macro with `value` and the remaining named options.
+        'materialize': (Object? v, dynamic param) {
+          if (param is Map) {
+            // Non-mutating version of data-types/environment.py:
+            //   macro = param.pop("macro")
+            //   res = macro(value, **param)
+            //
+            // In Dart, templates can execute async, so mutating the shared
+            // `param` map can lead to later calls seeing it cleared.
+            // Build an explicit fresh map to avoid any accidental aliasing
+            // of mutable dict instances across repeated macro invocations.
+            final src = param;
+            final copy = <Object?, Object?>{};
+            for (final entry in src.entries) {
+              copy[entry.key] = entry.value;
+            }
+
+            Object? macroKey;
+            if (copy.containsKey('macro')) {
+              macroKey = 'macro';
+            } else if (copy.containsKey(Symbol('macro'))) {
+              macroKey = Symbol('macro');
+            } else {
+              // Be tolerant to key types (String vs Symbol) depending on how
+              // template compilation packages dict literals.
+              for (final k in copy.keys) {
+                if (k == 'macro') {
+                  macroKey = k;
+                  break;
+                }
+                final ks = k.toString();
+                if (ks == 'macro' || ks.contains('macro')) {
+                  macroKey = k;
+                  break;
+                }
+              }
+            }
+
+            final macro = macroKey != null ? copy.remove(macroKey) : null;
+            if (macro == null) {
+              throw ArgumentError(
+                'materialize: param is missing "macro". '
+                'paramType=${param.runtimeType} '
+                'paramVal=$param',
+              );
+            }
+
+            // MacroFunction signature: (List<Object?> positional, Map<Object?, Object?> named)
+            return (macro as dynamic)(<Object?>[v], copy);
+          }
+
+          // If `param` itself is a macro closure/function.
+          if (param is Function) {
+            return (param as dynamic)(<Object?>[v], const <Object?, Object?>{});
+          }
+
+          throw ArgumentError('materialize: expected param to be a Map or macro function.');
         },
         'jinja_action': ([
           String? widgetId,
@@ -3007,5 +3072,7 @@ class GetJinja {
       enableJinjaDebugLogging: enableJinjaDebugLogging,
       logger: logger,
     );
+    print("GetJinja.environment globals keys: ${env.globals.keys.toList().where((k) => k == 'check')}");
+    return env;
   }
 }

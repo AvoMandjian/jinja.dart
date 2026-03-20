@@ -1484,10 +1484,6 @@ final class Parser {
 
         var value = parseExpression(reader);
 
-        if (key == 'default') {
-          key = 'defaultValue';
-        }
-
         keywords.add((key: key, value: value));
       } else {
         ensure(keywords.isEmpty);

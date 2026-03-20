@@ -39,6 +39,7 @@ Map<String, dynamic> dataToPassToJinja = {
 Future<void> main() async {
   var env = Environment(
     globals: <String, Object?>{
+      'get': (Map map, String key) => map[key],
       'now': () {
         var dt = DateTime.now().toLocal();
         var hour = dt.hour.toString().padLeft(2, '0');
@@ -46,8 +47,9 @@ Future<void> main() async {
         return '$hour:$minute';
       },
     },
-    loader: MapLoader({
-      'first_script__1__00': '''
+    loader: MapLoader(
+      {
+        'first_script__1__00': '''
 {
   "page_id": "scripts_list",
   "rows": [
@@ -438,7 +440,9 @@ Future<void> main() async {
     }
   ]
 }''',
-    }, globalJinjaData: {}),
+      },
+      globalJinjaData: {},
+    ),
     leftStripBlocks: true,
     trimBlocks: true,
     filters: {
@@ -501,6 +505,7 @@ Future<void> main() async {
   debugController.onBreakpoint = (info) async {
     // print('Variables: ${info.variables}');
     print('Output: ${info.lineNumber}');
+    return DebugAction.continue_;
   };
 
   await templateOfJinja

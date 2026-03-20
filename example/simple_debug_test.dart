@@ -29,7 +29,7 @@ HELLO
     print('Output so far: "${info.outputSoFar}"');
     print('Current output: "${info.currentOutput}"');
 
-    // Execution continues automatically after this handler completes.
+    return DebugAction.continue_;
   };
 
   debugController.addBreakpoint(line: 0);

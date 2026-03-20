@@ -1,27 +1,25 @@
 # Build Plan
 
 ## Version History
+- v1.1.0: Debugger restoration and example verification (2026-03-20)
 - v1.0.0: Initial build plan (2026-02-11)
 
 ## Sync Log
 
-### 2026-02-11 17:50:52 - Workspace Sync
-- **Trigger**: Manual sync request (`/workspace-sync`)
+### 2026-03-20 - Workspace Sync
+- **Trigger**: Session wrap-up.
 - **Changes Detected**:
-  - MapLoader refactoring (commit 881a62e)
-  - File: `lib/src/loaders.dart`
-  - Stats: 4 insertions(+), 12 deletions(-)
-  - Changes:
-    - Removed `const` from MapLoader constructor
-    - Made `globalJinjaData` mutable (removed `final`)
-    - Simplified method signature formatting
+  - Missing `DebugAction` support causing test failures.
+  - Outdated example files using old debug API.
+  - Minor linter issues in core library.
 - **Actions Taken**:
-  - Created missing memory files (activeContext.md, progress.md, buildPlan.md, systemPatterns.md, techContext.md, productContext.md)
-  - Created AGENTS.md with project documentation
-  - Updated workspace documentation
-  - Stored refactoring pattern in Qdrant
+  - Restored `DebugAction` enum in `debug_controller.dart`.
+  - Refactored `AsyncDebugRenderer` to respect debugger actions.
+  - Updated `test_debug_actions.dart` and 10+ other examples.
+  - Fixed linter errors in `defaults.dart`, `runtime.dart`, etc.
+  - Updated memory bank (activeContext, progress, buildPlan).
 - **Status**: ✅ Completed
-- **Impact**: Improved flexibility for dynamic globalJinjaData updates
+- **Impact**: Full debugger control functionality restored; 100% example pass rate achieved.
 
 ## Last Updated
-2026-02-11
+2026-03-20

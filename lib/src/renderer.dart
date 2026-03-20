@@ -249,40 +249,109 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       }
       var derived = context.derived(sink: buffer);
 
+      // Normalize packed calling convention for MacroFunction.
+      // Some call paths provide:
+      //   positional = [positionalArgsList, namedKwargsMap]
+      // and `named` is empty.
+      // If `namedKwargsMap` is empty or uses Symbol keys, we unwrap it.
+      var positionalArgs = positional;
+      var namedArgs = named;
+      if (namedArgs.isEmpty && positionalArgs.length == 2 && positionalArgs[0] is List && positionalArgs[1] is Map) {
+        final second = positionalArgs[1] as Map;
+        final secondHasSymbolKeys = second.keys.any((k) => k is Symbol);
+        if (second.isEmpty || secondHasSymbolKeys) {
+          positionalArgs = (positionalArgs[0] as List).cast<Object?>();
+          namedArgs = Map<Object?, Object?>.from(second);
+        }
+      }
+
       var index = 0;
       var mandatoryLength = node.positional.length;
+      var remaining = namedArgs.keys.toSet();
+      const missing = Object();
+
+      Object? takeNamedValue(String key) {
+        // Keyword arg binding uses Symbol keys, but in some code paths we also
+        // support string keys. Additionally, the parser rewrites `default=...`
+        // keyword args to `defaultValue=...`, so map that back here.
+        if (remaining.remove(key)) return namedArgs[key];
+
+        final symKey = Symbol(key);
+        if (remaining.remove(symKey)) return namedArgs[symKey];
+
+        // Fall back: Symbols can differ by identity even when they represent
+        // the same textual key (edge cases across compilation paths).
+        // Use a stringified match to locate the actual Symbol in `remaining`.
+        for (final k in remaining.whereType<Symbol>()) {
+          if (k.toString().contains('Symbol("$key")')) {
+            remaining.remove(k);
+            return namedArgs[k];
+          }
+        }
+        if (key == 'default') {
+          // Avoid Symbol equality pitfalls by removing the exact Symbol instance
+          // already present in `remaining`.
+          final candidates = remaining.whereType<Symbol>().toList();
+          for (final sym in candidates) {
+            if (sym.toString().contains('defaultValue')) {
+              remaining.remove(sym);
+              return namedArgs[sym];
+            }
+          }
+        }
+        return missing;
+      }
 
       try {
         // 1. Mandatory positional arguments
         for (; index < mandatoryLength; index += 1) {
           var key = node.positional[index].accept(this, context) as String;
-          derived.set(key, positional[index]);
+          if (index < positionalArgs.length) {
+            derived.set(key, positionalArgs[index]);
+            continue;
+          }
+
+          // Support keyword arguments for parameters declared positionally.
+          final taken = takeNamedValue(key);
+          if (taken != missing) {
+            derived.set(key, taken);
+          } else {
+            // Jinja templates often omit `default` for helper macros like
+            // `_populate(..., optional=true)` and expect it to behave as
+            // `None`/falsey.
+            if (key == 'default') {
+              derived.set(key, null);
+            } else {
+              throw TemplateRuntimeError(
+                'Missing required macro argument "$key" for macro ${node.name}.',
+                operationValue: 'Calling macro ${node.name}',
+                templatePathValue: context.template,
+              );
+            }
+          }
         }
 
         // 2. Optional arguments (node.named) - fill from positional if available, else named/default
-        var remaining = named.keys.toSet();
-
         for (var (argument, defaultValue) in node.named) {
           var key = argument.accept(this, context) as String;
 
-          if (index < positional.length) {
+          if (index < positionalArgs.length) {
             // Use positional argument
-            derived.set(key, positional[index]);
+            derived.set(key, positionalArgs[index]);
             index++;
           } else {
             // Check named arguments
-            if (remaining.remove(key)) {
-              derived.set(key, named[key]);
-            } else if (remaining.remove(Symbol(key))) {
-              derived.set(key, named[Symbol(key)]);
+            final taken = takeNamedValue(key);
+            if (taken != missing) {
+              derived.set(key, taken);
             } else {
               // Evaluate default value
               if (defaultValue is Name) {
                 // For Name defaults like b=x, look in named arguments only
                 // This allows defaults to reference other macro parameters
                 // Check both String and Symbol keys
-                var defaultValueValue = named[defaultValue.name];
-                defaultValueValue ??= named[Symbol(defaultValue.name)];
+                var defaultValueValue = namedArgs[defaultValue.name];
+                defaultValueValue ??= namedArgs[Symbol(defaultValue.name)];
                 derived.set(key, defaultValueValue);
               } else {
                 // For other defaults, evaluate in outer context
@@ -295,12 +364,12 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
 
         // 3. Varargs
         if (node.varargs) {
-          derived.set('varargs', positional.sublist(index));
-        } else if (index < positional.length) {
+          derived.set('varargs', positionalArgs.sublist(index));
+        } else if (index < positionalArgs.length) {
           throw TemplateRuntimeError('''Error at macro ${node.name},
             expected arguments count: $index
-            given arguments count: ${positional.length}
-            given arguments: ${positional.toString()},
+            given arguments count: ${positionalArgs.length}
+            given arguments: ${positionalArgs.toString()},
             ''');
         }
 
@@ -309,13 +378,13 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
           var kwargs = <Object?, Object?>{};
           for (var key in remaining) {
             if (key is String) {
-              kwargs[key] = named[key];
+              kwargs[key] = namedArgs[key];
             } else if (key is Symbol) {
               // Convert Symbol to String for kwargs
               var keyStr = key.toString().replaceAll('Symbol("', '').replaceAll('")', '');
-              kwargs[keyStr] = named[key];
+              kwargs[keyStr] = namedArgs[key];
             } else {
-              kwargs[key] = named[key];
+              kwargs[key] = namedArgs[key];
             }
           }
           derived.set('kwargs', kwargs);
@@ -327,8 +396,8 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       } catch (e) {
         throw TemplateRuntimeError('''Error at macro ${node.name},
             expected arguments count: ${mandatoryLength + node.named.length} (mandatory: $mandatoryLength)
-            given arguments count: ${positional.length}
-            given arguments: ${positional.toString()},
+            given arguments count: ${positionalArgs.length}
+            given arguments: ${positionalArgs.toString()},
             error: ${e.toString()}
             ''');
       }
@@ -1858,6 +1927,31 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
       var value = node.value.accept(this, context);
       var start = node.start?.accept(this, context) ?? 0;
       var stop = node.stop?.accept(this, context);
+
+      if (value is String && start is int && (stop == null || stop is int)) {
+        final chars = value.split('');
+
+        // Python/Jinja semantics:
+        // - omitted start => 0
+        // - omitted stop => len
+        // - negative indices wrap from the end
+        // - out-of-range indices clamp (no RangeError)
+        final len = chars.length;
+
+        int normalizeIndex(int i) {
+          var idx = i;
+          if (idx < 0) idx = len + idx;
+          if (idx < 0) idx = 0;
+          if (idx > len) idx = len;
+          return idx;
+        }
+
+        final startIdx = normalizeIndex(start);
+        final stopIdx = stop == null ? len : normalizeIndex(stop as int);
+
+        final effectiveStop = stopIdx < startIdx ? startIdx : stopIdx;
+        return chars.sublist(startIdx, effectiveStop).join();
+      }
 
       if (value is List && start is int && stop is int?) {
         if (start < 0 || (stop != null && stop < start)) {
