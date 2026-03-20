@@ -1,4 +1,0 @@
-{
-  "summary": "Added breakpoint logging to the example script to print info object data.",
-  "current_status": "Breakpoint logging fully functional and printing to console for debugging."
-}
