@@ -570,6 +570,12 @@ class GetJinja {
 
     return Environment(
       globals: <String, Object?>{
+        'datetime': {
+          'fromisoformat': (String s) => s,
+        },
+        'UUID': (String s) => s,
+        'uuid': () => '00000000-0000-0000-0000-000000000000',
+
         /// Executes an action based on the target type (widget, db, or app).
         ///
         /// **Usage:**
@@ -586,6 +592,12 @@ class GetJinja {
         ///
         /// **Returns:**
         /// The result of the action (if any), or void/null.
+        ///
+        'assert': (bool condition, String message) {
+          if (!condition) {
+            throw TemplateAssertionError(message);
+          }
+        },
         'jinja_action': ([
           String? widgetId,
           String? target,
@@ -1075,10 +1087,71 @@ class GetJinja {
       },
       loader: loader,
       filters: {
+        /// Decode a base64 encoded string.
+        'frombase64': (String? s) {
+          if (s == null) return null;
+          try {
+            return utf8.decode(base64.decode(s));
+          } catch (_) {
+            return s;
+          }
+        },
+
+        /// Encode a string to base64.
+        'tobase64': (String? s) {
+          if (s == null) return null;
+          return base64.encode(utf8.encode(s));
+        },
+
         /// Fetches data asynchronously (filter version).
         'fetchDataFilter': (dynamic value) async {
           final result = await fetchData();
           return result;
+        },
+        'match': (String value, String pattern) {
+          try {
+            return RegExp(pattern).hasMatch(value);
+          } catch (e) {
+            valueListenableJinjaError(e.toString());
+            return false;
+          }
+        },
+
+        /// Removes a key from a map and returns the modified map.
+        'remove_key': (Map map, String key) {
+          try {
+            try {
+              map.remove(key);
+              return map;
+            } catch (_) {
+              final Map newMap = Map.from(map);
+              newMap.remove(key);
+              return newMap;
+            }
+          } catch (e) {
+            valueListenableJinjaError(e.toString());
+            return map;
+          }
+        },
+
+        /// Removes the last item of a list and returns the modified list.
+        'remove_last': (List list) {
+          try {
+            if (list.isNotEmpty) {
+              try {
+                list.removeLast();
+                return list;
+              } catch (_) {
+                final List newList = List.from(list);
+                newList.removeLast();
+                return newList;
+              }
+            }
+            return list;
+          } catch (e) {
+            valueListenableJinjaError(e.toString());
+            return list;
+          }
         },
 
         /// Appends a value to a list, optionally parsing as JSON map.
@@ -1087,7 +1160,11 @@ class GetJinja {
             if (value != null) {
               if (type == 'MAP') {
                 if (value is String) {
-                  list.add(jsonDecode(value));
+                  try {
+                    list.add(jsonDecode(value));
+                  } catch (_) {
+                    list.add(value);
+                  }
                 } else {
                   list.add(value);
                 }
@@ -1114,9 +1191,9 @@ class GetJinja {
         },
 
         /// Parses a JSON string into an object.
-        'fromjson': (String? value) {
+        'fromjson': (dynamic value) {
           try {
-            return jsonDecode(value ?? '{}');
+            return jsonDecode(value?.toString() ?? '{}');
           } catch (e) {
             return {};
           }
