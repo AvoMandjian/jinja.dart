@@ -549,7 +549,13 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
       forContext.set('loop', loop);
 
       var outputBeforeIteration = context.outputSoFar;
-      await node.body.accept(this, forContext);
+      try {
+        await node.body.accept(this, forContext);
+      } on BreakException {
+        break;
+      } on ContinueException {
+        continue;
+      }
       var outputAfterIteration = context.outputSoFar;
 
       if (outputAfterIteration.length > outputBeforeIteration.length) {
