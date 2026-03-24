@@ -25,7 +25,8 @@ class ThrowingSink implements StringSink {
   @override
   void write(Object? obj) => throw Exception('Sink failure');
   @override
-  void writeAll(Iterable objects, [String separator = '']) => throw Exception('Sink failure');
+  void writeAll(Iterable objects, [String separator = '']) =>
+      throw Exception('Sink failure');
   @override
   void writeCharCode(int charCode) => throw Exception('Sink failure');
   @override
@@ -62,7 +63,11 @@ void main() {
     test('visitTemplateNode required block found', () {
       final sink = StringBuffer();
       final context = StringSinkRenderContext(env, sink);
-      final block = Block(name: 'req_block', body: Data(data: 'block content'), scoped: false, required: false);
+      final block = Block(
+          name: 'req_block',
+          body: Data(data: 'block content'),
+          scoped: false,
+          required: false);
       final node = TemplateNode(body: Output(nodes: []), blocks: [block]);
 
       renderer.visitTemplateNode(node, context);
@@ -78,7 +83,11 @@ void main() {
       final sink = StringBuffer();
       final context = StringSinkRenderContext(env, sink);
       // Mark block as required
-      final block = Block(name: 'req_block', body: Output(nodes: []), scoped: false, required: true);
+      final block = Block(
+          name: 'req_block',
+          body: Output(nodes: []),
+          scoped: false,
+          required: true);
       final node = TemplateNode(body: Output(nodes: []), blocks: [block]);
 
       renderer.visitTemplateNode(node, context);
@@ -112,7 +121,8 @@ void main() {
 {{ m(async_val) }}
 ''');
 
-      final future = Future.delayed(Duration(milliseconds: 10), () => [1, 2, 3]);
+      final future =
+          Future.delayed(Duration(milliseconds: 10), () => [1, 2, 3]);
       final result = await template.renderAsync({'async_val': future});
       expect(result.trim(), equals('123'));
     });
@@ -120,7 +130,8 @@ void main() {
     test('visitFor with null iterable and Attribute extraction', () async {
       // This aims to cover lines 1142-1158 in renderer.dart
       final envAsync = Environment();
-      final template = envAsync.fromString('{% for i in obj.missing %}{{ i }}{% endfor %}');
+      final template =
+          envAsync.fromString('{% for i in obj.missing %}{{ i }}{% endfor %}');
 
       // obj is present, but obj.missing is null
       final result = await template.renderAsync({
@@ -134,7 +145,8 @@ void main() {
       final envAsync = Environment();
       // (range(0)).missing - range(0) is a Call, not a Name
       // We use a Map to avoid UndefinedError from getAttribute on List
-      final template = envAsync.fromString('{% for i in (dict()).missing %}{{ i }}{% endfor %}');
+      final template = envAsync
+          .fromString('{% for i in (dict()).missing %}{{ i }}{% endfor %}');
 
       final result = await template.renderAsync();
       expect(result, equals(''));
@@ -151,7 +163,8 @@ void main() {
 {{ m(async_val) }}
 ''');
 
-      final future = Future.delayed(Duration(milliseconds: 10), () => 'resolved');
+      final future =
+          Future.delayed(Duration(milliseconds: 10), () => 'resolved');
       final result = await template.renderAsync({'async_val': future});
       expect(result.trim(), equals('RESOLVED'));
     });
@@ -189,7 +202,8 @@ void main() {
         template: Constant(value: 42), // Not String or Template
         names: [],
       );
-      expect(() => renderer.visitFromImport(node, context), throwsArgumentError);
+      expect(
+          () => renderer.visitFromImport(node, context), throwsArgumentError);
     });
 
     test('visitImport with invalid template type', () {
@@ -223,7 +237,8 @@ void main() {
     test('visitTemplateNode catch generic exception', () {
       final sink = ThrowingSink();
       final context = StringSinkRenderContext(env, sink);
-      final node = TemplateNode(body: Output(nodes: [Data(data: 'd')]), blocks: []);
+      final node =
+          TemplateNode(body: Output(nodes: [Data(data: 'd')]), blocks: []);
 
       expect(
         () => renderer.visitTemplateNode(node, context),
@@ -244,15 +259,24 @@ void main() {
       final context = StringSinkRenderContext(env, sink);
 
       // Negative index (wraps)
-      var node = Slice(value: Constant(value: 'abcd'), start: Constant(value: -2), stop: Constant(value: -1));
+      var node = Slice(
+          value: Constant(value: 'abcd'),
+          start: Constant(value: -2),
+          stop: Constant(value: -1));
       expect(renderer.visitSlice(node, context), equals('c'));
 
       // Out of bounds (clamps)
-      node = Slice(value: Constant(value: 'abcd'), start: Constant(value: -10), stop: Constant(value: 10));
+      node = Slice(
+          value: Constant(value: 'abcd'),
+          start: Constant(value: -10),
+          stop: Constant(value: 10));
       expect(renderer.visitSlice(node, context), equals('abcd'));
 
       // stop < start
-      node = Slice(value: Constant(value: 'abcd'), start: Constant(value: 2), stop: Constant(value: 1));
+      node = Slice(
+          value: Constant(value: 'abcd'),
+          start: Constant(value: 2),
+          stop: Constant(value: 1));
       expect(renderer.visitSlice(node, context), equals(''));
     });
 
@@ -261,23 +285,31 @@ void main() {
       final context = StringSinkRenderContext(env, sink);
 
       // Negative start
-      var node = Slice(value: Constant(value: [1, 2]), start: Constant(value: -1));
-      expect(() => renderer.visitSlice(node, context), throwsA(isA<TemplateRuntimeError>()));
+      var node =
+          Slice(value: Constant(value: [1, 2]), start: Constant(value: -1));
+      expect(() => renderer.visitSlice(node, context),
+          throwsA(isA<TemplateRuntimeError>()));
 
       // stop < start
-      node = Slice(value: Constant(value: [1, 2]), start: Constant(value: 1), stop: Constant(value: 0));
-      expect(() => renderer.visitSlice(node, context), throwsA(isA<TemplateRuntimeError>()));
+      node = Slice(
+          value: Constant(value: [1, 2]),
+          start: Constant(value: 1),
+          stop: Constant(value: 0));
+      expect(() => renderer.visitSlice(node, context),
+          throwsA(isA<TemplateRuntimeError>()));
 
       // Out of bounds start
       node = Slice(value: Constant(value: [1, 2]), start: Constant(value: 5));
-      expect(() => renderer.visitSlice(node, context), throwsA(isA<TemplateRuntimeError>()));
+      expect(() => renderer.visitSlice(node, context),
+          throwsA(isA<TemplateRuntimeError>()));
     });
 
     test('visitSlice invalid object', () {
       final sink = StringBuffer();
       final context = StringSinkRenderContext(env, sink);
       final node = Slice(value: Constant(value: 42), start: Constant(value: 0));
-      expect(() => renderer.visitSlice(node, context), throwsA(isA<TemplateRuntimeError>()));
+      expect(() => renderer.visitSlice(node, context),
+          throwsA(isA<TemplateRuntimeError>()));
     });
 
     test('visitSlice catch generic exception', () {
@@ -286,7 +318,8 @@ void main() {
       // Expression that throws in accept
       final node = Slice(value: Name(name: 'fail_me'), start: null);
 
-      expect(() => renderer.visitSlice(node, context), throwsA(isA<TemplateErrorWrapper>()));
+      expect(() => renderer.visitSlice(node, context),
+          throwsA(isA<TemplateErrorWrapper>()));
     });
     test('visitFromImport with Template object', () {
       final sink = StringBuffer();

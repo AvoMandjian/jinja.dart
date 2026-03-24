@@ -39,7 +39,8 @@ void main() {
 
       final env2 = Environment();
       final t2 = env2.fromString('{% set x = async_val %}{{ x }}');
-      final res2 = await t2.renderAsync({'async_val': Future.value('resolved')});
+      final res2 =
+          await t2.renderAsync({'async_val': Future.value('resolved')});
       expect(res2, equals('resolved'));
     });
 
@@ -54,7 +55,8 @@ void main() {
 
     test('visitAssign with Namespace target', () {
       final ns = Namespace({'a': 1});
-      final context = StringSinkRenderContext(env, StringBuffer(), data: {'ns': ns});
+      final context =
+          StringSinkRenderContext(env, StringBuffer(), data: {'ns': ns});
       final node = Assign(
         target: NamespaceRef(name: 'ns', attribute: 'a'),
         value: Constant(value: 42),

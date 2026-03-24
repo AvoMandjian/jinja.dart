@@ -18,19 +18,24 @@ void main() {
 
     test('getAttribute unknown attribute on List/Cycler', () {
       expect(() => getAttribute('bad', []), throwsA(isA<UndefinedError>()));
-      expect(() => getAttribute('bad', Cycler([])), throwsA(isA<UndefinedError>()));
+      expect(() => getAttribute('bad', Cycler([])),
+          throwsA(isA<UndefinedError>()));
     });
 
     test('dict invalid arguments', () {
       // Not a Map or Iterable
-      expect(() => dict([42]), throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('must be a map or iterable'))));
+      expect(
+          () => dict([42]),
+          throwsA(isA<TemplateRuntimeError>().having((e) => e.message,
+              'message', contains('must be a map or iterable'))));
 
       // Iterable containing invalid item (not length 2 list or MapEntry)
       expect(
         () => dict([
           [1, 2, 3],
         ]),
-        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('must be a map or iterable of pairs'))),
+        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message',
+            contains('must be a map or iterable of pairs'))),
       );
     });
 

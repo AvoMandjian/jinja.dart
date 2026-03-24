@@ -59,7 +59,8 @@ void main() {
 
     test('DebugController history and reset', () async {
       final controller = DebugController();
-      final info = BreakpointInfo(nodeType: 'Data', variables: {}, outputSoFar: '', lineNumber: 1);
+      final info = BreakpointInfo(
+          nodeType: 'Data', variables: {}, outputSoFar: '', lineNumber: 1);
 
       await controller.handleBreakpoint(info);
       expect(controller.history, hasLength(1));
@@ -81,7 +82,8 @@ void main() {
 
     test('DebugController handleBreakpoint without callback', () async {
       final controller = DebugController();
-      final info = BreakpointInfo(nodeType: 'Data', variables: {}, outputSoFar: '', lineNumber: 1);
+      final info = BreakpointInfo(
+          nodeType: 'Data', variables: {}, outputSoFar: '', lineNumber: 1);
 
       final action = await controller.handleBreakpoint(info);
       expect(action, equals(DebugAction.continue_));

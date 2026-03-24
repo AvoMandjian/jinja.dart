@@ -19,56 +19,87 @@ void main() {
       final controller = DebugController()..enabled = true;
       controller.addBreakpoint(line: 1);
       final renderer = AsyncDebugRenderer();
-      final context = DebugRenderContext(env, StringBuffer(), debugController: controller);
+      final context =
+          DebugRenderContext(env, StringBuffer(), debugController: controller);
 
       try {
         await renderer.visitArray(Array(values: [Constant(value: 1)]), context);
       } catch (_) {}
       try {
-        await renderer.visitAttribute(Attribute(value: Name(name: 'x'), attribute: 'y'), context);
+        await renderer.visitAttribute(
+            Attribute(value: Name(name: 'x'), attribute: 'y'), context);
       } catch (_) {}
       try {
         await renderer.visitCall(Call(value: Name(name: 'f')), context);
       } catch (_) {}
       try {
-        await renderer.visitCalling(Calling(arguments: [Constant(value: 1)], keywords: [(key: 'k', value: Constant(value: 1))]), context);
+        await renderer.visitCalling(
+            Calling(
+                arguments: [Constant(value: 1)],
+                keywords: [(key: 'k', value: Constant(value: 1))]),
+            context);
       } catch (_) {}
       try {
-        await renderer.visitCompare(Compare(value: Constant(value: 1), operands: [(CompareOperator.equal, Constant(value: 1))]), context);
+        await renderer.visitCompare(
+            Compare(
+                value: Constant(value: 1),
+                operands: [(CompareOperator.equal, Constant(value: 1))]),
+            context);
       } catch (_) {}
       try {
-        await renderer.visitConcat(Concat(values: [Constant(value: 1)]), context);
+        await renderer.visitConcat(
+            Concat(values: [Constant(value: 1)]), context);
       } catch (_) {}
       try {
         await renderer.visitCondition(
-          Condition(test: Constant(value: false), trueValue: Constant(value: 1), falseValue: Constant(value: 0)),
+          Condition(
+              test: Constant(value: false),
+              trueValue: Constant(value: 1),
+              falseValue: Constant(value: 0)),
           context,
         );
       } catch (_) {}
       try {
-        await renderer.visitCondition(Condition(test: Constant(value: false), trueValue: Constant(value: 1)), context);
+        await renderer.visitCondition(
+            Condition(
+                test: Constant(value: false), trueValue: Constant(value: 1)),
+            context);
       } catch (_) {}
       try {
-        await renderer.visitDict(Dict(pairs: [(key: Constant(value: 1), value: Constant(value: 1))]), context);
+        await renderer.visitDict(
+            Dict(pairs: [(key: Constant(value: 1), value: Constant(value: 1))]),
+            context);
       } catch (_) {}
       try {
         await renderer.visitFilter(Filter(name: 'f'), context);
       } catch (_) {}
       try {
-        await renderer.visitItem(Item(value: Name(name: 'x'), key: Constant(value: 1)), context);
+        await renderer.visitItem(
+            Item(value: Name(name: 'x'), key: Constant(value: 1)), context);
       } catch (_) {}
       try {
-        await renderer.visitLogical(Logical(operator: LogicalOperator.and, left: Constant(value: true), right: Constant(value: true)), context);
+        await renderer.visitLogical(
+            Logical(
+                operator: LogicalOperator.and,
+                left: Constant(value: true),
+                right: Constant(value: true)),
+            context);
       } catch (_) {}
       try {
         await renderer.visitName(Name(name: 'x'), context);
       } catch (_) {}
       try {
-        await renderer.visitNamespaceRef(NamespaceRef(name: 'x', attribute: 'y'), context);
+        await renderer.visitNamespaceRef(
+            NamespaceRef(name: 'x', attribute: 'y'), context);
       } catch (_) {}
 
       try {
-        await renderer.visitScalar(Scalar(operator: ScalarOperator.plus, left: Constant(value: 1), right: Constant(value: 1)), context);
+        await renderer.visitScalar(
+            Scalar(
+                operator: ScalarOperator.plus,
+                left: Constant(value: 1),
+                right: Constant(value: 1)),
+            context);
       } catch (_) {}
       try {
         await renderer.visitTest(Test(name: 't'), context);
@@ -77,7 +108,9 @@ void main() {
         await renderer.visitTuple(Tuple(values: [Constant(value: 1)]), context);
       } catch (_) {}
       try {
-        await renderer.visitUnary(Unary(operator: UnaryOperator.not, value: Constant(value: true)), context);
+        await renderer.visitUnary(
+            Unary(operator: UnaryOperator.not, value: Constant(value: true)),
+            context);
       } catch (_) {}
     });
 
@@ -254,7 +287,8 @@ void main() {
       controller.addBreakpoint(line: 4);
 
       final renderer = AsyncDebugRenderer();
-      final context = DebugRenderContext(env, StringBuffer(), debugController: controller);
+      final context =
+          DebugRenderContext(env, StringBuffer(), debugController: controller);
 
       await renderer.visitData(Data(data: 'd', line: 1), context);
       await renderer.visitData(Data(data: 'd', line: 2), context);

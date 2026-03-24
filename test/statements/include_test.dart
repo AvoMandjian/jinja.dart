@@ -8,11 +8,14 @@ void main() {
   group('Include', () {
     var env = Environment(
       globals: {'bar': 23},
-      loader: MapLoader({
-        'module': '{% macro test() %}[{{ foo }}|{{ bar }}]{% endmacro %}',
-        'header': '[{{ foo }}|{{ 23 }}]',
-        'o_printer': '({{ o }})',
-      }, globalJinjaData: {},),
+      loader: MapLoader(
+        {
+          'module': '{% macro test() %}[{{ foo }}|{{ bar }}]{% endmacro %}',
+          'header': '[{{ foo }}|{{ 23 }}]',
+          'o_printer': '({{ o }})',
+        },
+        globalJinjaData: {},
+      ),
     );
 
     test('context include', () {
@@ -85,10 +88,14 @@ void main() {
 
     test('context include with overrides', () {
       var env = Environment(
-        loader: MapLoader({
-          'main': '{% for item in [1, 2, 3] %}{% include "item" %}{% endfor %}',
-          'item': '{{ item }}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'main':
+                '{% for item in [1, 2, 3] %}{% include "item" %}{% endfor %}',
+            'item': '{{ item }}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       var tmpl = env.getTemplate('main');
@@ -111,9 +118,12 @@ void main() {
 
     test('import from with context', () {
       var env = Environment(
-        loader: MapLoader({
-          'a': '{% macro x() %}{{ foobar }}{% endmacro %}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'a': '{% macro x() %}{{ foobar }}{% endmacro %}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       var tmpl = env.fromString(

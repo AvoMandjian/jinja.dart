@@ -51,13 +51,19 @@ void main() {
         );
 
         // Count 1
-        final node1 = Trans(body: Data(data: 'one'), plural: Data(data: 'many'), count: Constant(value: 1));
+        final node1 = Trans(
+            body: Data(data: 'one'),
+            plural: Data(data: 'many'),
+            count: Constant(value: 1));
         renderer.visitTrans(node1, context);
         expect(sink.toString(), equals('one'));
 
         // Count 2
         sink.clear();
-        final node2 = Trans(body: Data(data: 'one'), plural: Data(data: 'many'), count: Constant(value: 2));
+        final node2 = Trans(
+            body: Data(data: 'one'),
+            plural: Data(data: 'many'),
+            count: Constant(value: 2));
         renderer.visitTrans(node2, context);
         expect(sink.toString(), equals('many'));
       });
@@ -72,7 +78,11 @@ void main() {
           },
         );
 
-        final node = Trans(body: Data(data: 'one'), plural: Data(data: 'many'), count: Constant(value: 2), context: 'shop');
+        final node = Trans(
+            body: Data(data: 'one'),
+            plural: Data(data: 'many'),
+            count: Constant(value: 2),
+            context: 'shop');
         renderer.visitTrans(node, context);
         expect(sink.toString(), equals('(shop) many'));
       });
@@ -81,7 +91,8 @@ void main() {
         final sink = StringBuffer();
         final context = StringSinkRenderContext(env, sink);
 
-        final node = Trans(body: Data(data: '  Hello  \n  World  '), trimmed: true);
+        final node =
+            Trans(body: Data(data: '  Hello  \n  World  '), trimmed: true);
         renderer.visitTrans(node, context);
         expect(sink.toString(), equals('Hello World'));
       });
@@ -98,8 +109,10 @@ void main() {
         catchBody: Interpolation(value: Name(name: 'err')),
       );
 
-      final envFail = Environment(globals: {'fail': () => throw Exception('failed')});
-      final contextFail = StringSinkRenderContext(envFail, sink, parent: envFail.globals);
+      final envFail =
+          Environment(globals: {'fail': () => throw Exception('failed')});
+      final contextFail =
+          StringSinkRenderContext(envFail, sink, parent: envFail.globals);
 
       renderer.visitTryCatch(node, contextFail);
       expect(sink.toString(), contains('failed'));
@@ -109,16 +122,39 @@ void main() {
       final context = StringSinkRenderContext(env, StringBuffer());
 
       // Basic
-      expect(renderer.visitSlice(Slice(value: Constant(value: 'abcde'), start: Constant(value: 1), stop: Constant(value: 3)), context),
+      expect(
+          renderer.visitSlice(
+              Slice(
+                  value: Constant(value: 'abcde'),
+                  start: Constant(value: 1),
+                  stop: Constant(value: 3)),
+              context),
           equals('bc'));
       // Negative start
-      expect(renderer.visitSlice(Slice(value: Constant(value: 'abcde'), start: Constant(value: -2)), context), equals('de'));
+      expect(
+          renderer.visitSlice(
+              Slice(
+                  value: Constant(value: 'abcde'), start: Constant(value: -2)),
+              context),
+          equals('de'));
       // Out of bounds stop
-      expect(renderer.visitSlice(Slice(value: Constant(value: 'abcde'), start: Constant(value: 0), stop: Constant(value: 10)), context),
+      expect(
+          renderer.visitSlice(
+              Slice(
+                  value: Constant(value: 'abcde'),
+                  start: Constant(value: 0),
+                  stop: Constant(value: 10)),
+              context),
           equals('abcde'));
       // Stop before start
       expect(
-          renderer.visitSlice(Slice(value: Constant(value: 'abcde'), start: Constant(value: 3), stop: Constant(value: 1)), context), equals(''));
+          renderer.visitSlice(
+              Slice(
+                  value: Constant(value: 'abcde'),
+                  start: Constant(value: 3),
+                  stop: Constant(value: 1)),
+              context),
+          equals(''));
     });
 
     test('visitSlice List errors', () {
@@ -126,13 +162,25 @@ void main() {
       final list = [1, 2, 3];
 
       // Out of bounds start
-      expect(() => renderer.visitSlice(Slice(value: Constant(value: list), start: Constant(value: 5)), context),
+      expect(
+          () => renderer.visitSlice(
+              Slice(value: Constant(value: list), start: Constant(value: 5)),
+              context),
           throwsA(isA<TemplateRuntimeError>()));
       // Invalid index combination
-      expect(() => renderer.visitSlice(Slice(value: Constant(value: list), start: Constant(value: 2), stop: Constant(value: 1)), context),
+      expect(
+          () => renderer.visitSlice(
+              Slice(
+                  value: Constant(value: list),
+                  start: Constant(value: 2),
+                  stop: Constant(value: 1)),
+              context),
           throwsA(isA<TemplateRuntimeError>()));
       // Not a list or string
-      expect(() => renderer.visitSlice(Slice(value: Constant(value: 42), start: Constant(value: 0)), context),
+      expect(
+          () => renderer.visitSlice(
+              Slice(value: Constant(value: 42), start: Constant(value: 0)),
+              context),
           throwsA(isA<TemplateRuntimeError>()));
     });
 
@@ -141,9 +189,16 @@ void main() {
       final context = StringSinkRenderContext(env, sink);
 
       final node = With(
-        targets: [Name(name: 'a', context: AssignContext.store), Name(name: 'b', context: AssignContext.store)],
+        targets: [
+          Name(name: 'a', context: AssignContext.store),
+          Name(name: 'b', context: AssignContext.store)
+        ],
         values: [Constant(value: 1), Constant(value: 2)],
-        body: Interpolation(value: Scalar(operator: ScalarOperator.plus, left: Name(name: 'a'), right: Name(name: 'b'))),
+        body: Interpolation(
+            value: Scalar(
+                operator: ScalarOperator.plus,
+                left: Name(name: 'a'),
+                right: Name(name: 'b'))),
       );
 
       renderer.visitWith(node, context);

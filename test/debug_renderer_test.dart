@@ -36,11 +36,16 @@ void main() {
     });
 
     test('visitCall', () async {
-      final context = DebugRenderContext(env, StringBuffer(),
-          debugController: controller, data: {'f': (x) => x + 1},);
+      final context = DebugRenderContext(
+        env,
+        StringBuffer(),
+        debugController: controller,
+        data: {'f': (x) => x + 1},
+      );
       final node = Call(
-          value: const Name(name: 'f'),
-          calling: const Calling(arguments: [Constant(value: 1)]),);
+        value: const Name(name: 'f'),
+        calling: const Calling(arguments: [Constant(value: 1)]),
+      );
       final result = await renderer.visitCall(node, context);
       expect(result, equals(2));
     });
@@ -49,8 +54,9 @@ void main() {
       final context =
           DebugRenderContext(env, StringBuffer(), debugController: controller);
       const node = Compare(
-          value: Constant(value: 1),
-          operands: [(CompareOperator.equal, Constant(value: 1))],);
+        value: Constant(value: 1),
+        operands: [(CompareOperator.equal, Constant(value: 1))],
+      );
       final result = await renderer.visitCompare(node, context);
       expect(result, isTrue);
     });
@@ -59,9 +65,10 @@ void main() {
       final context =
           DebugRenderContext(env, StringBuffer(), debugController: controller);
       const node = Condition(
-          test: Constant(value: true),
-          trueValue: Constant(value: 1),
-          falseValue: Constant(value: 2),);
+        test: Constant(value: true),
+        trueValue: Constant(value: 1),
+        falseValue: Constant(value: 2),
+      );
       final result = await renderer.visitCondition(node, context);
       expect(result, equals(1));
     });
@@ -70,8 +77,9 @@ void main() {
       final context =
           DebugRenderContext(env, StringBuffer(), debugController: controller);
       final node = Filter(
-          name: 'upper',
-          calling: const Calling(arguments: [Constant(value: 'a')]),);
+        name: 'upper',
+        calling: const Calling(arguments: [Constant(value: 'a')]),
+      );
       final result = await renderer.visitFilter(node, context);
       expect(result, equals('A'));
     });
@@ -80,8 +88,9 @@ void main() {
       final context =
           DebugRenderContext(env, StringBuffer(), debugController: controller);
       final node = Test(
-          name: 'defined',
-          calling: const Calling(arguments: [Constant(value: 1)]),);
+        name: 'defined',
+        calling: const Calling(arguments: [Constant(value: 1)]),
+      );
       final result = await renderer.visitTest(node, context);
       expect(result, isTrue);
     });
@@ -135,9 +144,10 @@ void main() {
       final context =
           DebugRenderContext(env, StringBuffer(), debugController: controller);
       const node = With(
-          targets: [Name.store(name: 'x')],
-          values: [Constant(value: 1)],
-          body: Data(data: 'foo'),);
+        targets: [Name.store(name: 'x')],
+        values: [Constant(value: 1)],
+        body: Data(data: 'foo'),
+      );
       await renderer.visitWith(node, context);
       expect(context.sink.toString(), equals('foo'));
     });
@@ -154,7 +164,9 @@ void main() {
       final context =
           DebugRenderContext(env, StringBuffer(), debugController: controller);
       final node = TryCatch(
-          body: const Data(data: 'foo'), catchBody: const Data(data: 'bar'),);
+        body: const Data(data: 'foo'),
+        catchBody: const Data(data: 'bar'),
+      );
       await renderer.visitTryCatch(node, context);
       expect(context.sink.toString(), equals('foo'));
     });
@@ -163,9 +175,10 @@ void main() {
       final context =
           DebugRenderContext(env, StringBuffer(), debugController: controller);
       const node = Slice(
-          value: Constant(value: [1, 2, 3]),
-          start: Constant(value: 0),
-          stop: Constant(value: 2),);
+        value: Constant(value: [1, 2, 3]),
+        start: Constant(value: 0),
+        stop: Constant(value: 2),
+      );
       final result = await renderer.visitSlice(node, context);
       expect(result, equals([1, 2]));
     });

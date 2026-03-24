@@ -118,7 +118,8 @@ abstract class TemplateError implements Exception {
           } catch (e) {
             // If toString() throws (e.g., MyMap.keys throws UnimplementedError),
             // return a safe representation without calling methods that might fail
-            valueStr = '${value.runtimeType}(toString failed: ${e.runtimeType})';
+            valueStr =
+                '${value.runtimeType}(toString failed: ${e.runtimeType})';
           }
         }
         buffer.write('\n    - Variable \'${entry.key}\': $valueStr');
@@ -168,7 +169,10 @@ abstract class TemplateError implements Exception {
   String _getNodeType(Node node) {
     var typeName = node.runtimeType.toString();
     // Remove common suffixes and make readable
-    typeName = typeName.replaceAll('Node', '').replaceAll('Expression', '').replaceAll('Statement', '');
+    typeName = typeName
+        .replaceAll('Node', '')
+        .replaceAll('Expression', '')
+        .replaceAll('Statement', '');
     if (typeName.isEmpty) {
       typeName = node.runtimeType.toString();
     }
@@ -381,7 +385,8 @@ class TemplateSyntaxError extends TemplateError {
           } catch (e) {
             // If toString() throws (e.g., MyMap.keys throws UnimplementedError),
             // return a safe representation without calling methods that might fail
-            valueStr = '${value.runtimeType}(toString failed: ${e.runtimeType})';
+            valueStr =
+                '${value.runtimeType}(toString failed: ${e.runtimeType})';
           }
         }
         buffer.write('\n    - Variable \'${entry.key}\': $valueStr');
@@ -516,7 +521,8 @@ class UndefinedError extends TemplateRuntimeError {
     // Add similar names for typo detection
     final similarNamesValue = similarNames;
     if (similarNamesValue != null && similarNamesValue.isNotEmpty) {
-      buffer.write('\n  Similar variables found: ${similarNamesValue.join(', ')}');
+      buffer.write(
+          '\n  Similar variables found: ${similarNamesValue.join(', ')}');
     }
 
     // Use base class enhanced toString() for remaining context
@@ -550,16 +556,38 @@ class TemplateErrorWrapper extends TemplateRuntimeError {
     List<String>? callStack,
     String? contextSnippet,
   }) : super(
-          message ?? (originalError is TemplateError ? originalError.message : 'Non-template error occurred during template rendering'),
+          message ??
+              (originalError is TemplateError
+                  ? originalError.message
+                  : 'Non-template error occurred during template rendering'),
           stackTraceValue: stackTrace ??
-              (originalError is Error ? originalError.stackTrace : (originalError is TemplateError ? originalError.stackTrace : null)),
-          nodeValue: node ?? (originalError is TemplateError ? originalError.node : null),
-          contextSnapshotValue: contextSnapshot ?? (originalError is TemplateError ? originalError.contextSnapshot : null),
-          operationValue: operation ?? (originalError is TemplateError ? originalError.operation : null),
-          suggestionsValue: suggestions ?? (originalError is TemplateError ? originalError.suggestions : null),
-          templatePathValue: templatePath ?? (originalError is TemplateError ? originalError.templatePath : null),
-          callStackValue: callStack ?? (originalError is TemplateError ? originalError.callStack : null),
-          contextSnippetValue: contextSnippet ?? (originalError is TemplateError ? originalError.contextSnippet : null),
+              (originalError is Error
+                  ? originalError.stackTrace
+                  : (originalError is TemplateError
+                      ? originalError.stackTrace
+                      : null)),
+          nodeValue: node ??
+              (originalError is TemplateError ? originalError.node : null),
+          contextSnapshotValue: contextSnapshot ??
+              (originalError is TemplateError
+                  ? originalError.contextSnapshot
+                  : null),
+          operationValue: operation ??
+              (originalError is TemplateError ? originalError.operation : null),
+          suggestionsValue: suggestions ??
+              (originalError is TemplateError
+                  ? originalError.suggestions
+                  : null),
+          templatePathValue: templatePath ??
+              (originalError is TemplateError
+                  ? originalError.templatePath
+                  : null),
+          callStackValue: callStack ??
+              (originalError is TemplateError ? originalError.callStack : null),
+          contextSnippetValue: contextSnippet ??
+              (originalError is TemplateError
+                  ? originalError.contextSnippet
+                  : null),
         );
 
   /// The original non-template exception that was wrapped.
@@ -579,7 +607,8 @@ class TemplateErrorWrapper extends TemplateRuntimeError {
     // Use base class enhanced toString() for context
     var baseString = super.toString();
     if (baseString.startsWith('TemplateErrorWrapper:')) {
-      var remaining = baseString.substring('TemplateErrorWrapper:'.length).trim();
+      var remaining =
+          baseString.substring('TemplateErrorWrapper:'.length).trim();
       if (remaining.isNotEmpty && !remaining.contains('Original Error:')) {
         buffer.write('\n$remaining');
       }

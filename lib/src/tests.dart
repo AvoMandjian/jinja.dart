@@ -182,7 +182,8 @@ bool isCallable(dynamic object) {
 
 /// Check if value matches regex pattern (anchored to start).
 bool isMatch(String value, String pattern, {bool ignoreCase = false}) {
-  return RegExp(pattern, caseSensitive: !ignoreCase).matchAsPrefix(value) != null;
+  return RegExp(pattern, caseSensitive: !ignoreCase).matchAsPrefix(value) !=
+      null;
 }
 
 /// Check if value contains regex pattern.

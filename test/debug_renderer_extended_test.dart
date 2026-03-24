@@ -14,7 +14,8 @@ void main() {
 
     test('derived creates context with new output buffer', () {
       final controller = DebugController();
-      final ctx = DebugRenderContext(env, StringBuffer(), debugController: controller);
+      final ctx =
+          DebugRenderContext(env, StringBuffer(), debugController: controller);
       ctx.write('hello');
 
       final derived = ctx.derived();
@@ -89,7 +90,8 @@ void main() {
       controller.addBreakpoint(line: 2, condition: '{% invalid %syntax %}');
 
       final renderer = DebugRenderer();
-      final context = DebugRenderContext(env, StringBuffer(), debugController: controller);
+      final context =
+          DebugRenderContext(env, StringBuffer(), debugController: controller);
 
       final node = Interpolation(value: Constant(value: 1), line: 2);
       await renderer.visitInterpolation(node, context);
@@ -102,7 +104,8 @@ void main() {
       final controller = DebugController()..enabled = true;
       controller.addBreakpoint(line: 1);
       final renderer = DebugRenderer();
-      final context = DebugRenderContext(env, StringBuffer(), debugController: controller);
+      final context =
+          DebugRenderContext(env, StringBuffer(), debugController: controller);
       await renderer.visitData(Data(data: 'test', line: 1), context);
       expect(controller.history, isNotEmpty);
     });
@@ -111,7 +114,8 @@ void main() {
       final controller = DebugController()..enabled = true;
       controller.addBreakpoint(line: 1);
       final renderer = DebugRenderer();
-      final context = DebugRenderContext(env, StringBuffer(), debugController: controller);
+      final context =
+          DebugRenderContext(env, StringBuffer(), debugController: controller);
       final node = For(
         target: Name(name: 'x'),
         iterable: Array(values: []),
@@ -129,8 +133,10 @@ void main() {
       final controller = DebugController()..enabled = true;
       controller.addBreakpoint(line: 0);
       final renderer = DebugRenderer();
-      final context = DebugRenderContext(env, StringBuffer(), debugController: controller);
-      final node = If(test: Constant(value: true), body: TemplateNode(body: Data()));
+      final context =
+          DebugRenderContext(env, StringBuffer(), debugController: controller);
+      final node =
+          If(test: Constant(value: true), body: TemplateNode(body: Data()));
       try {
         await renderer.visitIf(node, context);
       } catch (_) {}
@@ -141,7 +147,8 @@ void main() {
       final controller = DebugController()..enabled = true;
       controller.addBreakpoint(line: 0);
       final renderer = DebugRenderer();
-      final context = DebugRenderContext(env, StringBuffer(), debugController: controller);
+      final context =
+          DebugRenderContext(env, StringBuffer(), debugController: controller);
       final node = AutoEscape(enable: true, body: TemplateNode(body: Data()));
       try {
         await renderer.visitAutoEscape(node, context);
@@ -153,7 +160,8 @@ void main() {
       final controller = DebugController()..enabled = true;
       controller.addBreakpoint(line: 0);
       final renderer = DebugRenderer();
-      final context = DebugRenderContext(env, StringBuffer(), debugController: controller);
+      final context =
+          DebugRenderContext(env, StringBuffer(), debugController: controller);
       final node = Assign(target: Name(name: 'x'), value: Constant(value: 1));
       try {
         await renderer.visitAssign(node, context);
@@ -165,8 +173,13 @@ void main() {
       final controller = DebugController()..enabled = true;
       controller.addBreakpoint(line: 0);
       final renderer = DebugRenderer();
-      final context = DebugRenderContext(env, StringBuffer(), debugController: controller);
-      final node = Block(name: 'b', scoped: false, required: false, body: TemplateNode(body: Data()));
+      final context =
+          DebugRenderContext(env, StringBuffer(), debugController: controller);
+      final node = Block(
+          name: 'b',
+          scoped: false,
+          required: false,
+          body: TemplateNode(body: Data()));
       try {
         await renderer.visitBlock(node, context);
       } catch (_) {}

@@ -12,7 +12,8 @@ void main() {
       final t = env.fromString('{% macro m() %}x{% endmacro %}{{ m(1) }}');
       expect(
         () => t.render(),
-        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('expected arguments count: 0'))),
+        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message',
+            contains('expected arguments count: 0'))),
       );
     });
 
@@ -20,7 +21,8 @@ void main() {
       final base = env.fromString('base: {% block content %}{% endblock %}');
       // For extends with a direct template, we need to pass it dynamically via context since syntax expects string.
       // But extends tag parses string or variable.
-      final t = env.fromString('{% extends base_tpl %}{% block content %}override{% endblock %}');
+      final t = env.fromString(
+          '{% extends base_tpl %}{% block content %}override{% endblock %}');
       expect(t.render({'base_tpl': base}), equals('base: override'));
     });
 
@@ -28,12 +30,14 @@ void main() {
       final t = env.fromString('{% extends 42 %}');
       expect(
         () => t.render(),
-        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('Invalid template value: int'))),
+        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message',
+            contains('Invalid template value: int'))),
       );
     });
 
     test('break and continue in for loop', () {
-      final t = env.fromString('{% for x in [1, 2, 3, 4] %}{% if x == 2 %}{% continue %}{% endif %}{% if x == 4 %}{% break %}{% endif %}{{ x }}{% endfor %}');
+      final t = env.fromString(
+          '{% for x in [1, 2, 3, 4] %}{% if x == 2 %}{% continue %}{% endif %}{% if x == 4 %}{% break %}{% endif %}{{ x }}{% endfor %}');
       expect(t.render(), equals('13'));
     });
 

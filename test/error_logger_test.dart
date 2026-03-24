@@ -79,22 +79,28 @@ void main() {
       test('includes error object in log', () {
         final logger = ErrorLogger();
         final error = Exception('Test exception');
-        expect(() => logger.logError('Error message', error: error),
-            returnsNormally,);
+        expect(
+          () => logger.logError('Error message', error: error),
+          returnsNormally,
+        );
       });
 
       test('includes context in log', () {
         final logger = ErrorLogger();
         final context = {'key': 'value', 'number': 42};
-        expect(() => logger.logError('Error message', context: context),
-            returnsNormally,);
+        expect(
+          () => logger.logError('Error message', context: context),
+          returnsNormally,
+        );
       });
 
       test('includes stack trace in log', () {
         final logger = ErrorLogger();
         final stackTrace = StackTrace.current;
-        expect(() => logger.logError('Error message', stackTrace: stackTrace),
-            returnsNormally,);
+        expect(
+          () => logger.logError('Error message', stackTrace: stackTrace),
+          returnsNormally,
+        );
       });
     });
 
@@ -113,8 +119,10 @@ void main() {
       test('includes context in log', () {
         final logger = ErrorLogger(level: LogLevel.warning);
         final context = {'key': 'value'};
-        expect(() => logger.logWarning('Warning message', context: context),
-            returnsNormally,);
+        expect(
+          () => logger.logWarning('Warning message', context: context),
+          returnsNormally,
+        );
       });
     });
 
@@ -133,8 +141,10 @@ void main() {
       test('includes context in log', () {
         final logger = ErrorLogger(level: LogLevel.info);
         final context = {'key': 'value'};
-        expect(() => logger.logInfo('Info message', context: context),
-            returnsNormally,);
+        expect(
+          () => logger.logInfo('Info message', context: context),
+          returnsNormally,
+        );
       });
     });
 
@@ -153,8 +163,10 @@ void main() {
       test('includes context in log', () {
         final logger = ErrorLogger(level: LogLevel.debug);
         final context = {'key': 'value'};
-        expect(() => logger.logDebug('Debug message', context: context),
-            returnsNormally,);
+        expect(
+          () => logger.logDebug('Debug message', context: context),
+          returnsNormally,
+        );
       });
     });
 

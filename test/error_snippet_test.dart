@@ -22,7 +22,8 @@ Goodbye!
 
       print('Error message: ${error.message}');
       print(
-          'Location: ${error.templatePath}, line ${error.node?.line}, column ${error.node?.column}',);
+        'Location: ${error.templatePath}, line ${error.node?.line}, column ${error.node?.column}',
+      );
       print('Context Snippet:\n${error.contextSnippet}');
 
       expect(error.contextSnippet, contains('Your age is {{ user.age() }}.'));

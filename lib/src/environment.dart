@@ -14,7 +14,15 @@ import 'parser.dart';
 import 'renderer.dart';
 import 'runtime.dart';
 import 'tests.dart' as tests_lib;
-import 'utils.dart' show captureCallStack, captureContext, getSimilarNames, ContextFilter, EnvFilter, withRenderFrame, withRenderFrameAsync;
+import 'utils.dart'
+    show
+        captureCallStack,
+        captureContext,
+        getSimilarNames,
+        ContextFilter,
+        EnvFilter,
+        withRenderFrame,
+        withRenderFrameAsync;
 
 export 'package:jinja/src/exceptions.dart' show TemplateError;
 export 'package:jinja/src/loaders.dart' show Loader;
@@ -410,7 +418,9 @@ base class Environment {
           macroNamed[entry.key] = entry.value;
         }
 
-        final isPackedMacroCall = positional.length == 2 && positional[0] is List && positional[1] is Map;
+        final isPackedMacroCall = positional.length == 2 &&
+            positional[0] is List &&
+            positional[1] is Map;
 
         if (isPackedMacroCall) {
           final positionalArgsList = (positional[0] as List).cast<Object?>();
@@ -462,7 +472,8 @@ base class Environment {
         e,
         message: 'Error calling function: ${e.toString()}',
         stackTrace: stackTrace,
-        operation: 'Calling function with ${positional.length} positional and ${named.length} named arguments',
+        operation:
+            'Calling function with ${positional.length} positional and ${named.length} named arguments',
         suggestions: suggestions,
         callStack: captureCallStack(),
       );
@@ -483,7 +494,8 @@ base class Environment {
       final similarFilters = getSimilarNames(name, availableFilters);
       final suggestions = <String>[
         'Check if the filter name is spelled correctly',
-        if (similarFilters.isNotEmpty) 'Did you mean one of these? ${similarFilters.join(', ')}',
+        if (similarFilters.isNotEmpty)
+          'Did you mean one of these? ${similarFilters.join(', ')}',
         if (availableFilters.isNotEmpty)
           'Available filters: ${availableFilters.take(10).join(', ')}${availableFilters.length > 10 ? '...' : ''}',
       ];
@@ -535,7 +547,8 @@ base class Environment {
     var finalNamed = Map<Symbol, Object?>.from(named);
     const symDefault = Symbol('default');
     const symDefaultValue = Symbol('defaultValue');
-    if (finalNamed.containsKey(symDefault) && !finalNamed.containsKey(symDefaultValue)) {
+    if (finalNamed.containsKey(symDefault) &&
+        !finalNamed.containsKey(symDefaultValue)) {
       finalNamed[symDefaultValue] = finalNamed.remove(symDefault);
     }
 
@@ -560,8 +573,10 @@ base class Environment {
         } on TemplateError {
           rethrow;
         } catch (e, stackTrace) {
-          final contextSnapshot = context != null ? captureContext(context) : null;
-          final argTypes = resolvedPositional.map((e) => e.runtimeType).toList();
+          final contextSnapshot =
+              context != null ? captureContext(context) : null;
+          final argTypes =
+              resolvedPositional.map((e) => e.runtimeType).toList();
           final suggestions = <String>[
             'Check if the filter arguments match the expected signature',
             'Positional args types: $argTypes',
@@ -573,7 +588,8 @@ base class Environment {
             message: 'Error calling filter "$name": ${e.toString()}',
             stackTrace: stackTrace,
             contextSnapshot: contextSnapshot,
-            operation: 'Calling filter \'$name\' with ${resolvedPositional.length} positional and ${finalNamed.length} named arguments',
+            operation:
+                'Calling filter \'$name\' with ${resolvedPositional.length} positional and ${finalNamed.length} named arguments',
             suggestions: suggestions,
             templatePath: context?.template,
             callStack: captureCallStack(),
@@ -589,7 +605,8 @@ base class Environment {
       } on TemplateError {
         rethrow;
       } catch (e, stackTrace) {
-        final contextSnapshot = context != null ? captureContext(context) : null;
+        final contextSnapshot =
+            context != null ? captureContext(context) : null;
         final argTypes = finalPositional.map((e) => e.runtimeType).toList();
         final suggestions = <String>[
           'Check if the filter arguments match the expected signature',
@@ -602,7 +619,8 @@ base class Environment {
           message: 'Error calling filter "$name": ${e.toString()}',
           stackTrace: stackTrace,
           contextSnapshot: contextSnapshot,
-          operation: 'Calling filter \'$name\' with ${finalPositional.length} positional and ${finalNamed.length} named arguments',
+          operation:
+              'Calling filter \'$name\' with ${finalPositional.length} positional and ${finalNamed.length} named arguments',
           suggestions: suggestions,
           templatePath: context?.template,
           callStack: captureCallStack(),
@@ -641,8 +659,10 @@ base class Environment {
           } on TemplateError {
             rethrow;
           } catch (e, stackTrace) {
-            final contextSnapshot = context != null ? captureContext(context) : null;
-            final argTypes = resolvedPositional.map((e) => e.runtimeType).toList();
+            final contextSnapshot =
+                context != null ? captureContext(context) : null;
+            final argTypes =
+                resolvedPositional.map((e) => e.runtimeType).toList();
             final suggestions = <String>[
               'Check if the test arguments match the expected signature',
               'Positional args types: $argTypes',
@@ -654,7 +674,8 @@ base class Environment {
               message: 'Error calling test "$name": ${e.toString()}',
               stackTrace: stackTrace,
               contextSnapshot: contextSnapshot,
-              operation: 'Calling test \'$name\' with ${resolvedPositional.length} positional and ${named.length} named arguments',
+              operation:
+                  'Calling test \'$name\' with ${resolvedPositional.length} positional and ${named.length} named arguments',
               suggestions: suggestions,
               templatePath: context?.template,
               callStack: captureCallStack(),
@@ -668,7 +689,8 @@ base class Environment {
       } on TemplateError {
         rethrow;
       } catch (e, stackTrace) {
-        final contextSnapshot = context != null ? captureContext(context) : null;
+        final contextSnapshot =
+            context != null ? captureContext(context) : null;
         final argTypes = positional.map((e) => e.runtimeType).toList();
         final suggestions = <String>[
           'Check if the test arguments match the expected signature',
@@ -681,7 +703,8 @@ base class Environment {
           message: 'Error calling test "$name": ${e.toString()}',
           stackTrace: stackTrace,
           contextSnapshot: contextSnapshot,
-          operation: 'Calling test \'$name\' with ${positional.length} positional and ${named.length} named arguments',
+          operation:
+              'Calling test \'$name\' with ${positional.length} positional and ${named.length} named arguments',
           suggestions: suggestions,
           templatePath: context?.template,
           callStack: captureCallStack(),
@@ -693,8 +716,10 @@ base class Environment {
     final similarTests = getSimilarNames(name, availableTests);
     final suggestions = <String>[
       'Check if the test name is spelled correctly',
-      if (similarTests.isNotEmpty) 'Did you mean one of these? ${similarTests.join(', ')}',
-      if (availableTests.isNotEmpty) 'Available tests: ${availableTests.take(10).join(', ')}${availableTests.length > 10 ? '...' : ''}',
+      if (similarTests.isNotEmpty)
+        'Did you mean one of these? ${similarTests.join(', ')}',
+      if (availableTests.isNotEmpty)
+        'Available tests: ${availableTests.take(10).join(', ')}${availableTests.length > 10 ? '...' : ''}',
     ];
     throw TemplateRuntimeError(
       "No test named '$name'.",
@@ -763,7 +788,8 @@ base class Environment {
     }
 
     if (optimize) {
-      body = body.accept(const Optimizer(), Context(this, template: path, source: source));
+      body = body.accept(
+          const Optimizer(), Context(this, template: path, source: source));
     }
 
     body = body.accept(RuntimeCompiler(), null);

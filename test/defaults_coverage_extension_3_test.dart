@@ -11,7 +11,8 @@ void main() {
       expect(getItem(1, entry), equals('value'));
       expect(
         () => getItem(2, entry),
-        throwsA(isA<UndefinedError>().having((e) => e.message, 'message', contains('MapEntry index must be 0 or 1'))),
+        throwsA(isA<UndefinedError>().having((e) => e.message, 'message',
+            contains('MapEntry index must be 0 or 1'))),
       );
     });
 
@@ -28,7 +29,8 @@ void main() {
     test('getItem unsupported type error', () {
       expect(
         () => getItem('key', 42),
-        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('Cannot access item on object of type `int`'))),
+        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message',
+            contains('Cannot access item on object of type `int`'))),
       );
     });
 
@@ -37,7 +39,8 @@ void main() {
       expect(cycler.current, equals('a'));
       expect(cycler(), equals('a')); // call() returns current and moves next
       expect(cycler.current, equals('b'));
-      expect(cycler.next(), equals('b')); // next() returns current and moves next
+      expect(
+          cycler.next(), equals('b')); // next() returns current and moves next
       expect(cycler.current, equals('a'));
 
       cycler.reset();

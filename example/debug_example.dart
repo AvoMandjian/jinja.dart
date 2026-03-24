@@ -146,10 +146,12 @@ void main() async {
 
     // Show debug history
     if (debugController.history.isNotEmpty) {
-      print('\nDebug History (${debugController.history.length} breakpoints hit):');
+      print(
+          '\nDebug History (${debugController.history.length} breakpoints hit):');
       for (var i = 0; i < debugController.history.length; i++) {
         var bp = debugController.history[i];
-        print('  ${i + 1}. Line ${bp.lineNumber}: ${bp.nodeType} ${bp.nodeName ?? ""}');
+        print(
+            '  ${i + 1}. Line ${bp.lineNumber}: ${bp.nodeType} ${bp.nodeName ?? ""}');
       }
     }
   } catch (e) {

@@ -121,8 +121,10 @@ void main() {
           'example</a> link</p>\n<p>to a webpage</p> '
           '<!-- <p>and some commented stuff</p> -->';
       var tmpl = env.fromString('{{ foo|striptags }}');
-      expect(tmpl.render({'foo': foo}),
-          equals('just a small example link to a webpage'),);
+      expect(
+        tmpl.render({'foo': foo}),
+        equals('just a small example link to a webpage'),
+      );
     });
 
     test('filesizeformat', () {
@@ -431,7 +433,8 @@ void main() {
 
     test('filtertag', () {
       var tmpl = env.fromString(
-          '{% filter upper|replace("FOO", "foo") %}foobar{% endfilter %}',);
+        '{% filter upper|replace("FOO", "foo") %}foobar{% endfilter %}',
+      );
       expect(tmpl.render(), equals('fooBAR'));
     });
 

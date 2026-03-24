@@ -13,8 +13,10 @@ void main() {
       // doReplaceEach treats 'from' as a single string when count is provided
       // which is different from when count is null (where it treats each char)
       // This is the current behavior in lib/src/filters.dart:121-128
-      expect(doReplaceEach('hello hello', 'lo', 'lp', 1), equals('hellp hello'));
-      expect(doReplaceEach('hello hello', 'lo', 'lp', 2), equals('hellp hellp'));
+      expect(
+          doReplaceEach('hello hello', 'lo', 'lp', 1), equals('hellp hello'));
+      expect(
+          doReplaceEach('hello hello', 'lo', 'lp', 2), equals('hellp hellp'));
     });
 
     test('doRegexReplace dead code access', () {
@@ -34,7 +36,8 @@ void main() {
 
     test('doSelect with test as ContextFilter', () {
       final myEnv = Environment();
-      myEnv.tests['is_context_filter'] = utils.ContextFilter((Context c, Object? val) => val == 42);
+      myEnv.tests['is_context_filter'] =
+          utils.ContextFilter((Context c, Object? val) => val == 42);
 
       final context = Context(myEnv);
       final result = doSelect(context, [41, 42, 43], 'is_context_filter');
@@ -43,7 +46,8 @@ void main() {
 
     test('doSelect with test as EnvFilter', () {
       final myEnv = Environment();
-      myEnv.tests['is_env_filter'] = utils.EnvFilter((Environment e, Object? val) => val == 42);
+      myEnv.tests['is_env_filter'] =
+          utils.EnvFilter((Environment e, Object? val) => val == 42);
 
       final context = Context(myEnv);
       final result = doSelect(context, [41, 42, 43], 'is_env_filter');
@@ -72,7 +76,8 @@ void main() {
 
     test('doReject with test as ContextFilter', () {
       final myEnv = Environment();
-      myEnv.tests['is_context_filter'] = utils.ContextFilter((Context c, Object? val) => val == 42);
+      myEnv.tests['is_context_filter'] =
+          utils.ContextFilter((Context c, Object? val) => val == 42);
 
       final context = Context(myEnv);
       final result = doReject(context, [41, 42, 43], 'is_context_filter');
@@ -81,7 +86,8 @@ void main() {
 
     test('doReject with test as EnvFilter', () {
       final myEnv = Environment();
-      myEnv.tests['is_env_filter'] = utils.EnvFilter((Environment e, Object? val) => val == 42);
+      myEnv.tests['is_env_filter'] =
+          utils.EnvFilter((Environment e, Object? val) => val == 42);
 
       final context = Context(myEnv);
       final result = doReject(context, [41, 42, 43], 'is_env_filter');
@@ -113,7 +119,8 @@ void main() {
         }
       ];
 
-      final result = doMap(context, data, [], {'attribute': 'user.name'}).toList();
+      final result =
+          doMap(context, data, [], {'attribute': 'user.name'}).toList();
       expect(result, equals(['a', 'b']));
     });
 
@@ -181,15 +188,21 @@ void main() {
     });
 
     test('doUrlize variations', () {
-      expect(doUrlize('http://example.com/very/long/url', trimUrlLimit: 20), contains('http://example.co...'));
-      expect(doUrlize('http://example.com', nofollow: true), contains('rel="nofollow"'));
-      expect(doUrlize('http://example.com', target: '_blank'), contains('target="_blank"'));
-      expect(doUrlize('http://example.com', nofollow: true, rel: 'external'), contains('rel="nofollow rel="external""'));
+      expect(doUrlize('http://example.com/very/long/url', trimUrlLimit: 20),
+          contains('http://example.co...'));
+      expect(doUrlize('http://example.com', nofollow: true),
+          contains('rel="nofollow"'));
+      expect(doUrlize('http://example.com', target: '_blank'),
+          contains('target="_blank"'));
+      expect(doUrlize('http://example.com', nofollow: true, rel: 'external'),
+          contains('rel="nofollow rel="external""'));
     });
 
     test('doIndent variations', () {
-      expect(doIndent('line1\n\nline3', 4, true), equals('    line1\n\n    line3'));
-      expect(doIndent('line1\n\nline3', 4, true, true), equals('    line1\n    \n    line3'));
+      expect(doIndent('line1\n\nline3', 4, true),
+          equals('    line1\n\n    line3'));
+      expect(doIndent('line1\n\nline3', 4, true, true),
+          equals('    line1\n    \n    line3'));
     });
 
     test('doBase64Encode with byte list', () {
@@ -216,22 +229,49 @@ void main() {
     test('doDictSort variations', () {
       final data = {'b': 2, 'a': 1, 'C': 3};
       // caseSensetive=true (note the typo in the library code)
-      expect(doDictSort(data, caseSensetive: true), equals([['C', 3], ['a', 1], ['b', 2]]));
+      expect(
+          doDictSort(data, caseSensetive: true),
+          equals([
+            ['C', 3],
+            ['a', 1],
+            ['b', 2]
+          ]));
       // reverse=true
-      expect(doDictSort(data, reverse: true), equals([['C', 3], ['b', 2], ['a', 1]]));
+      expect(
+          doDictSort(data, reverse: true),
+          equals([
+            ['C', 3],
+            ['b', 2],
+            ['a', 1]
+          ]));
       // by='value'
-      expect(doDictSort(data, by: 'value'), equals([['a', 1], ['b', 2], ['C', 3]]));
+      expect(
+          doDictSort(data, by: 'value'),
+          equals([
+            ['a', 1],
+            ['b', 2],
+            ['C', 3]
+          ]));
     });
 
     test('doBatch variations', () {
       final data = [1, 2, 3, 4, 5];
-      expect(doBatch(data, 3, 'fill'), equals([[1, 2, 3], [4, 5, 'fill']]));
+      expect(
+          doBatch(data, 3, 'fill'),
+          equals([
+            [1, 2, 3],
+            [4, 5, 'fill']
+          ]));
     });
 
     test('makeItemGetter and makeAttributeGetter with items', () {
       final getter = makeAttributeGetter(env, 'a.b');
-      expect(getter({'a': {'b': 1}}), equals(1));
-      
+      expect(
+          getter({
+            'a': {'b': 1}
+          }),
+          equals(1));
+
       final itemGetter = makeItemGetter(env, 0);
       expect(itemGetter([1, 2]), equals(1));
     });

@@ -193,8 +193,10 @@ void main() {
 
       expect(errorString, contains('UndefinedError'));
       expect(errorString, contains("Variable: 'userName'"));
-      expect(errorString,
-          contains('Similar variables found: username, user_name'),);
+      expect(
+        errorString,
+        contains('Similar variables found: username, user_name'),
+      );
     });
 
     test('works without variable name (backward compatibility)', () {
@@ -351,7 +353,8 @@ void main() {
         'Test error',
         contextSnapshotValue: contextSnapshot,
       );
-      expect(error.toString(), contains('(toString failed: UnimplementedError)'));
+      expect(
+          error.toString(), contains('(toString failed: UnimplementedError)'));
     });
 
     test('TemplateError toString generic node type', () {
@@ -377,11 +380,13 @@ void main() {
     });
 
     test('TemplatesNotFound toString', () {
-      var error = TemplatesNotFound(names: ['a.html', 'b.html'], message: 'Not here');
+      var error =
+          TemplatesNotFound(names: ['a.html', 'b.html'], message: 'Not here');
       expect(error.toString(), contains('TemplatesNotFound: Not here'));
 
       error = TemplatesNotFound(names: ['a.html', 'b.html']);
-      expect(error.toString(), contains('none of the templates given were found: a.html, b.html'));
+      expect(error.toString(),
+          contains('none of the templates given were found: a.html, b.html'));
 
       error = TemplatesNotFound();
       expect(error.toString(), contains('TemplatesNotFound'));
@@ -391,7 +396,7 @@ void main() {
       // Without anything
       var error = UndefinedError('Msg');
       expect(error.toString(), contains('UndefinedError: Msg'));
-      
+
       // With variable name but no similar names
       error = UndefinedError('Msg', variableNameValue: 'foo');
       expect(error.toString(), contains("Variable: 'foo'"));
@@ -400,7 +405,8 @@ void main() {
 
     test('TemplateSyntaxError toString variations', () {
       // Without contextSnippet
-      var error = TemplateSyntaxError('Syntax', path: 'a.html', line: 1, column: 2);
+      var error =
+          TemplateSyntaxError('Syntax', path: 'a.html', line: 1, column: 2);
       expect(error.toString(), isNot(contains('Snippet:')));
       expect(error.toString(), contains('Syntax'));
     });
@@ -417,7 +423,8 @@ void main() {
     });
 
     test('TemplateError toString operation but no node', () {
-      final error = TemplateRuntimeError('Error', operationValue: 'Running test');
+      final error =
+          TemplateRuntimeError('Error', operationValue: 'Running test');
       expect(error.toString(), contains('Operation: Running test'));
     });
   });

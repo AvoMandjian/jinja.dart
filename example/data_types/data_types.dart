@@ -61,7 +61,8 @@ void main() async {
     // Setup MapLoader with base templates for inheritance and inclusion
     final loader = MapLoader(
       {
-        'views.jinja': r'''{# Macros implementing different views (text representation for stored data). #}
+        'views.jinja':
+            r'''{# Macros implementing different views (text representation for stored data). #}
 
 {#
 -------------------------------------------------------------------------------
@@ -873,9 +874,11 @@ Option groups
     var template2 = env.fromString(jinjaScript);
     var result2 = await template2.renderAsync(jinjaData);
     print('Result length: ${result2.length}');
-    print('--------------------------------------------------------------------------------------------------------------------------------');
+    print(
+        '--------------------------------------------------------------------------------------------------------------------------------');
     print(result2.replaceAll('\n', ''));
-    print('--------------------------------------------------------------------------------------------------------------------------------');
+    print(
+        '--------------------------------------------------------------------------------------------------------------------------------');
   } catch (e, stack) {
     print('\n!!! UNHANDLED EXCEPTION !!!');
     print(e);

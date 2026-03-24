@@ -33,9 +33,12 @@ class UtilFunctions {
   static String getPlainTextFromHtml(String html) => html;
   static dynamic changeObjectToMap(dynamic obj) => obj as Map<String, dynamic>;
   static String jsonEncodeMethod(dynamic obj) => json.encode(obj);
-  static bool isBase64(String value) => RegExp(r'^[a-zA-Z0-9+/]*={0,2}$').hasMatch(value);
-  static String encodeToBase64(String? value) => base64.encode(utf8.encode(value ?? ''));
-  static String decodeFromBase64(String value) => utf8.decode(base64.decode(value));
+  static bool isBase64(String value) =>
+      RegExp(r'^[a-zA-Z0-9+/]*={0,2}$').hasMatch(value);
+  static String encodeToBase64(String? value) =>
+      base64.encode(utf8.encode(value ?? ''));
+  static String decodeFromBase64(String value) =>
+      utf8.decode(base64.decode(value));
 }
 
 // Mock JinjaGoogleTranslateService for standalone usage
@@ -53,7 +56,10 @@ class JinjaGoogleTranslateService {
 
 String convertPythonToDartDateFormat(String format) {
   // Simple conversion, can be expanded.
-  return format.replaceAll('%Y', 'yyyy').replaceAll('%m', 'MM').replaceAll('%d', 'dd');
+  return format
+      .replaceAll('%Y', 'yyyy')
+      .replaceAll('%m', 'MM')
+      .replaceAll('%d', 'dd');
 }
 
 class GetJinja {
@@ -83,7 +89,8 @@ class GetJinja {
     bool enableJinjaDebugLogging = false,
     JinjaLogger? logger,
   }) {
-    Future<String> fetchWidgetSource(String widgetId, [dynamic jinjaData]) async {
+    Future<String> fetchWidgetSource(String widgetId,
+        [dynamic jinjaData]) async {
       await Future<void>.delayed(const Duration(seconds: 2));
       if (widgetId == 'macro_header') {
         return '''{% macro macro_header(value) %}
@@ -661,7 +668,8 @@ class GetJinja {
             return (param as dynamic)(<Object?>[v], const <Object?, Object?>{});
           }
 
-          throw ArgumentError('materialize: expected param to be a Map or macro function.');
+          throw ArgumentError(
+              'materialize: expected param to be a Map or macro function.');
         },
         'jinja_action': ([
           String? widgetId,
@@ -722,11 +730,14 @@ class GetJinja {
           try {
             // Ensure globalJinjaData is a plain Map<String, dynamic> to avoid type errors
             // when adding data with different levels of specificity.
-            final Map<String, dynamic> globalData = Map<String, dynamic>.from(loader.globalJinjaData);
+            final Map<String, dynamic> globalData =
+                Map<String, dynamic>.from(loader.globalJinjaData);
 
             final dynamic currentData = globalData['data'];
 
-            final Map<String, dynamic> dataMap = currentData is Map ? Map<String, dynamic>.from(currentData) : <String, dynamic>{};
+            final Map<String, dynamic> dataMap = currentData is Map
+                ? Map<String, dynamic>.from(currentData)
+                : <String, dynamic>{};
 
             if (res is Map) {
               dataMap.addAll(res.cast<String, dynamic>());
@@ -968,8 +979,11 @@ class GetJinja {
                           'parent_widget_id': parentWidgetId,
                         };
                         // Check if the id matches and update the value
-                        if (widget['property_id'] == propertyId && property['value'] != null) {
-                          for (final element in (property['value'] as Map<String, dynamic>).keys) {
+                        if (widget['property_id'] == propertyId &&
+                            property['value'] != null) {
+                          for (final element
+                              in (property['value'] as Map<String, dynamic>)
+                                  .keys) {
                             final String key = element;
                             final dynamic value = property['value'][key];
                             if (subProperty['id'] == key) {
@@ -994,8 +1008,11 @@ class GetJinja {
                             };
                             // Check if the id matches and update the value
                             if (widget['css_style'] == key) {
-                              if (widget['property_id'] == propertyId && property['value'] != null) {
-                                for (final element in (property['value'] as Map<String, dynamic>).keys) {
+                              if (widget['property_id'] == propertyId &&
+                                  property['value'] != null) {
+                                for (final element in (property['value']
+                                        as Map<String, dynamic>)
+                                    .keys) {
                                   final String key = element;
                                   final dynamic value = property['value'][key];
 
@@ -1283,7 +1300,10 @@ class GetJinja {
           if (value is num) return value != 0;
           if (value is String) {
             final lower = value.toLowerCase();
-            return lower == 'true' || lower == '1' || lower == 'yes' || lower == 'y';
+            return lower == 'true' ||
+                lower == '1' ||
+                lower == 'yes' ||
+                lower == 'y';
           }
           return false;
         },
@@ -1307,7 +1327,10 @@ class GetJinja {
             if (value is bool) return value;
             if (value is num) return value != 0;
             if (value is String) {
-              return value.toLowerCase() == 'true' || value == '1' || value == 'yes' || value == 'y';
+              return value.toLowerCase() == 'true' ||
+                  value == '1' ||
+                  value == 'yes' ||
+                  value == 'y';
             }
             return false;
           } catch (e) {
@@ -1359,8 +1382,11 @@ class GetJinja {
         /// Formats a number of bytes into a human-readable string (e.g., '10.5 MB').
         'filesizeformat': (dynamic value, [dynamic binary = false]) {
           try {
-            final bool isBinary = binary == true || binary == 'true' || binary == '1';
-            final numBytes = value is String ? int.tryParse(value) ?? 0 : (value is num ? value.toInt() : 0);
+            final bool isBinary =
+                binary == true || binary == 'true' || binary == '1';
+            final numBytes = value is String
+                ? int.tryParse(value) ?? 0
+                : (value is num ? value.toInt() : 0);
             if (numBytes < 0) return '0 Bytes';
 
             final units = isBinary
@@ -1451,7 +1477,9 @@ class GetJinja {
                 groups.putIfAbsent(key, () => []).add(itemToAdd);
               }
             }
-            return groups.entries.map((e) => {'key': e.key, 'list': e.value}).toList();
+            return groups.entries
+                .map((e) => {'key': e.key, 'list': e.value})
+                .toList();
           } catch (e) {
             valueListenableJinjaError(e.toString());
             return [];
@@ -1475,7 +1503,8 @@ class GetJinja {
               final groups = <dynamic, List<dynamic>>{};
 
               for (final item in list) {
-                if (item is Map<String, dynamic> && item.containsKey(currentAttr)) {
+                if (item is Map<String, dynamic> &&
+                    item.containsKey(currentAttr)) {
                   final key = item[currentAttr];
                   groups.putIfAbsent(key, () => []).add(item);
                 }
@@ -1698,7 +1727,9 @@ class GetJinja {
           String valueName = 'value',
         }) {
           try {
-            return value.entries.map((e) => {keyName: e.key, valueName: e.value}).toList();
+            return value.entries
+                .map((e) => {keyName: e.key, valueName: e.value})
+                .toList();
           } catch (e) {
             valueListenableJinjaError(e.toString());
             return [];
@@ -1800,7 +1831,8 @@ class GetJinja {
         /// Returns r-length subsequences of elements from the input list.
         'combinations': (List items, int length) {
           try {
-            if (length <= 0 || items.isEmpty || length > items.length) return [];
+            if (length <= 0 || items.isEmpty || length > items.length)
+              return [];
             if (length == items.length) return [List<dynamic>.from(items)];
             if (length == 1) return items.map((e) => [e]).toList();
 
@@ -1825,7 +1857,8 @@ class GetJinja {
         'zip': (List list1, List list2) {
           try {
             var result = [];
-            var length = list1.length < list2.length ? list1.length : list2.length;
+            var length =
+                list1.length < list2.length ? list1.length : list2.length;
             for (var i = 0; i < length; i++) {
               result.add([list1[i], list2[i]]);
             }
@@ -1840,7 +1873,8 @@ class GetJinja {
         'zip_longest': (List list1, List list2, {dynamic fillvalue}) {
           try {
             var result = [];
-            var maxLength = list1.length > list2.length ? list1.length : list2.length;
+            var maxLength =
+                list1.length > list2.length ? list1.length : list2.length;
             for (var i = 0; i < maxLength; i++) {
               var item1 = i < list1.length ? list1[i] : fillvalue;
               var item2 = i < list2.length ? list2[i] : fillvalue;
@@ -2012,7 +2046,8 @@ class GetJinja {
           try {
             if (list == null || size == null) return [];
             return [
-              for (var i = 0; i < list.length; i += size) list.sublist(i, (i + size).clamp(0, list.length)),
+              for (var i = 0; i < list.length; i += size)
+                list.sublist(i, (i + size).clamp(0, list.length)),
             ];
           } catch (e) {
             valueListenableJinjaError(e.toString());
@@ -2044,7 +2079,9 @@ class GetJinja {
               pathValue = responseOfQuery.singleOrNull?.value;
             }
             if (pathValue != null) {
-              if (pathValue is Map<String, dynamic> && key != null && (pathValue.containsKey(key))) {
+              if (pathValue is Map<String, dynamic> &&
+                  key != null &&
+                  (pathValue.containsKey(key))) {
                 numValue = double.tryParse(
                   pathValue[key].toString().replaceAll(',', ''),
                 );
@@ -2053,7 +2090,9 @@ class GetJinja {
                   pathValue.toString().replaceAll(',', ''),
                 );
               }
-            } else if (key != null && item is Map<String, dynamic> && (item.containsKey(key))) {
+            } else if (key != null &&
+                item is Map<String, dynamic> &&
+                (item.containsKey(key))) {
               numValue = double.tryParse(
                 item[key].toString().replaceAll(',', ''),
               );
@@ -2067,7 +2106,8 @@ class GetJinja {
             }
           }
 
-          if (parsedValues.isEmpty) return {'max': null, 'min': null, 'sum': 0.0};
+          if (parsedValues.isEmpty)
+            return {'max': null, 'min': null, 'sum': 0.0};
 
           final double maxVal = parsedValues.reduce((a, b) => a > b ? a : b);
           final double minVal = parsedValues.reduce((a, b) => a < b ? a : b);
@@ -2089,12 +2129,17 @@ class GetJinja {
               return '0';
             }
             final NumberFormat numberFormat = NumberFormat(format, locale);
-            final double parsedValue = double.tryParse(value.toString().replaceAll(',', '')) ?? 0;
+            final double parsedValue =
+                double.tryParse(value.toString().replaceAll(',', '')) ?? 0;
 
-            final int decimalPlaces = (format?.split('.').length ?? 0) > 1 ? (format?.split('.').last.length ?? 0) : 0;
+            final int decimalPlaces = (format?.split('.').length ?? 0) > 1
+                ? (format?.split('.').last.length ?? 0)
+                : 0;
 
-            final String zeroValue = '0${decimalPlaces > 0 ? '.${'0' * decimalPlaces}' : ''}';
-            final String formattedNumber = parsedValue == 0 ? zeroValue : numberFormat.format(parsedValue);
+            final String zeroValue =
+                '0${decimalPlaces > 0 ? '.${'0' * decimalPlaces}' : ''}';
+            final String formattedNumber =
+                parsedValue == 0 ? zeroValue : numberFormat.format(parsedValue);
             return formattedNumber;
           } catch (e) {
             valueListenableJinjaError(e.toString());
@@ -2142,8 +2187,13 @@ class GetJinja {
           final result = <String, List<String>>{};
           data?.forEach((key, val) {
             // Check if the value is a valid map and contains the necessary structure
-            if (val is Map && val.containsKey('value') && val['value'] is Map && (val['value'] as Map).containsKey('dropdown_items')) {
-              final dropdownItems = (val['value']['dropdown_items'] as List).map((item) => item['id'] as String).toList();
+            if (val is Map &&
+                val.containsKey('value') &&
+                val['value'] is Map &&
+                (val['value'] as Map).containsKey('dropdown_items')) {
+              final dropdownItems = (val['value']['dropdown_items'] as List)
+                  .map((item) => item['id'] as String)
+                  .toList();
               result[key] = dropdownItems;
             }
           });
@@ -2172,7 +2222,9 @@ class GetJinja {
         /// Converts map entries to a list of key-value maps.
         'get_items_from_map': (Map<String, dynamic>? map) {
           try {
-            return (map?.entries ?? []).map((entry) => {'key': entry.key, 'value': entry.value}).toList();
+            return (map?.entries ?? [])
+                .map((entry) => {'key': entry.key, 'value': entry.value})
+                .toList();
           } catch (e) {
             valueListenableJinjaError(e.toString());
             return [];
@@ -2212,7 +2264,8 @@ class GetJinja {
         'selectattrmulti': (List list, List keys, List operators, List values) {
           try {
             // Ensure the input lists have the same length
-            if (keys.length != values.length || keys.length != operators.length) {
+            if (keys.length != values.length ||
+                keys.length != operators.length) {
               throw ArgumentError(
                 'keys, operators, and values must have the same length.',
               );
@@ -2276,7 +2329,8 @@ class GetJinja {
         },
 
         /// Returns the first item in a list that matches an operator/value condition.
-        'firstWhere': (dynamic list, dynamic key, dynamic operator, dynamic value) {
+        'firstWhere':
+            (dynamic list, dynamic key, dynamic operator, dynamic value) {
           try {
             // the function needs to loop through the list, check the key with the operator against the value
             List result = [];
@@ -2410,9 +2464,18 @@ class GetJinja {
         /// Flexible boolean conversion.
         'toBool': (dynamic value) {
           try {
-            if (value == '' || value == '0' || value == 0 || value == null || value == 'null' || value == 'false' || value == false) {
+            if (value == '' ||
+                value == '0' ||
+                value == 0 ||
+                value == null ||
+                value == 'null' ||
+                value == 'false' ||
+                value == false) {
               return false;
-            } else if (value == '1' || value == 1 || value == 'true' || value == true) {
+            } else if (value == '1' ||
+                value == 1 ||
+                value == 'true' ||
+                value == true) {
               return true;
             } else {
               return false;
@@ -2498,7 +2561,9 @@ class GetJinja {
             return DateTime.now().toString();
           }
           // Convert Python format to Dart format
-          final dartFormat = isPythonFormat == true ? convertPythonToDartDateFormat(pythonDateFormat) : pythonDateFormat;
+          final dartFormat = isPythonFormat == true
+              ? convertPythonToDartDateFormat(pythonDateFormat)
+              : pythonDateFormat;
           final inputFormat = DateFormat(
             dartFormat,
           ).format(DateTime.parse(value));
@@ -2520,7 +2585,9 @@ class GetJinja {
             final start = value?.indexOf(from ?? '');
             var n = 0;
 
-            while (n < count && (start ?? 0) != -1 && (start ?? 0) < (value?.length ?? 0)) {
+            while (n < count &&
+                (start ?? 0) != -1 &&
+                (start ?? 0) < (value?.length ?? 0)) {
               var start = value?.indexOf(from ?? '');
               value = value?.replaceRange(
                 start ?? 0,
@@ -2657,14 +2724,17 @@ class GetJinja {
           if (dateStr == null) return null;
           try {
             final date = DateTime.parse(dateStr);
-            return date.add(Duration(days: days, hours: hours, minutes: minutes)).toString();
+            return date
+                .add(Duration(days: days, hours: hours, minutes: minutes))
+                .toString();
           } catch (e) {
             return dateStr;
           }
         },
 
         /// Decode a base64-encoded string and return it as a UTF-8 string.
-        'decode_base64': (String? value) => UtilFunctions.decodeFromBase64(value ?? ''),
+        'decode_base64': (String? value) =>
+            UtilFunctions.decodeFromBase64(value ?? ''),
 
         /// Transforms lists into dictionaries.
         'dict': (dynamic value) {
@@ -2761,7 +2831,11 @@ class GetJinja {
           final indentStr = ' ' * width;
           final lines = s.split('\n');
           final res = lines.map((l) => '$indentStr$l').join('\n');
-          return first ? res : (lines.isNotEmpty ? '${lines.first}\n${lines.sublist(1).map((l) => '$indentStr$l').join('\n')}' : '');
+          return first
+              ? res
+              : (lines.isNotEmpty
+                  ? '${lines.first}\n${lines.sublist(1).map((l) => '$indentStr$l').join('\n')}'
+                  : '');
         },
 
         /// Determines whether or not a string can be converted to a JSON object.
@@ -2796,7 +2870,8 @@ class GetJinja {
         },
 
         /// Return an iterator over the (key, value) items of a mapping.
-        'items': (Map? m) => m?.entries.map((e) => [e.key, e.value]).toList() ?? [],
+        'items': (Map? m) =>
+            m?.entries.map((e) => [e.key, e.value]).toList() ?? [],
 
         /// Parse a JSON-serialized string.
         'json': (String? s) {
@@ -2878,7 +2953,8 @@ class GetJinja {
         },
 
         /// Pretty print a variable.
-        'pprint': (dynamic val) => const JsonEncoder.withIndent('  ').convert(val),
+        'pprint': (dynamic val) =>
+            const JsonEncoder.withIndent('  ').convert(val),
 
         /// Determine if a string matches a particular pattern.
         'regex_match': (String? value, String pattern) {
@@ -2894,7 +2970,8 @@ class GetJinja {
         },
 
         /// Replace occurrences of a substring with a new one.
-        'replace': (String? s, String from, String to) => s?.replaceAll(from, to) ?? '',
+        'replace': (String? s, String from, String to) =>
+            s?.replaceAll(from, to) ?? '',
 
         /// Reverse the object.
         'reverse': (dynamic val) {
@@ -2944,7 +3021,9 @@ class GetJinja {
           return s
               .split(' ')
               .map(
-                (word) => word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}' : '',
+                (word) => word.isNotEmpty
+                    ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
+                    : '',
               )
               .join(' ');
         },
@@ -3044,10 +3123,12 @@ class GetJinja {
         'version_equal': (String? v1, String? v2) => v1 == v2,
 
         /// Check if version is less than pattern.
-        'version_less_than': (String? v1, String? v2) => (v1 ?? '').compareTo(v2 ?? '') < 0,
+        'version_less_than': (String? v1, String? v2) =>
+            (v1 ?? '').compareTo(v2 ?? '') < 0,
 
         /// Check if version is greater than pattern.
-        'version_more_than': (String? v1, String? v2) => (v1 ?? '').compareTo(v2 ?? '') > 0,
+        'version_more_than': (String? v1, String? v2) =>
+            (v1 ?? '').compareTo(v2 ?? '') > 0,
 
         /// Remove patch version component.
         'version_strip_patch': (String? v) {
@@ -3058,7 +3139,8 @@ class GetJinja {
         },
 
         /// Count the words in the string.
-        'wordcount': (String? s) => s?.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length ?? 0,
+        'wordcount': (String? s) =>
+            s?.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length ?? 0,
 
         /// Wrap a string to the given width.
         'wordwrap': (String? s, int width) {
@@ -3067,7 +3149,8 @@ class GetJinja {
         },
 
         /// Wrap text to a specified width with newlines.
-        'wrap_text': (String? s, int width) => wrap(s ?? '', width: width).join('\n'),
+        'wrap_text': (String? s, int width) =>
+            wrap(s ?? '', width: width).join('\n'),
 
         /// Create an SGML/XML attribute string from a dict.
         'xmlattr': (Map? m) {
@@ -3084,7 +3167,8 @@ class GetJinja {
       enableJinjaDebugLogging: enableJinjaDebugLogging,
       logger: logger,
     );
-    print("GetJinja.environment globals keys: ${env.globals.keys.toList().where((k) => k == 'check')}");
+    print(
+        "GetJinja.environment globals keys: ${env.globals.keys.toList().where((k) => k == 'check')}");
     return env;
   }
 }

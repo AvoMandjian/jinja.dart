@@ -22,7 +22,8 @@ void main() {
         return Future.value(DebugAction.stop);
       };
 
-      var result = await template.renderDebug({'name': 'World'}, debugController: controller);
+      var result = await template
+          .renderDebug({'name': 'World'}, debugController: controller);
       expect(hit, isTrue);
       expect(result, isNot(contains('End')));
     });
@@ -37,12 +38,14 @@ void main() {
         return Future.value(DebugAction.stepOver);
       };
 
-      await template.renderDebug({'a': 1, 'b': 2, 'c': 3}, debugController: controller);
+      await template
+          .renderDebug({'a': 1, 'b': 2, 'c': 3}, debugController: controller);
       expect(steps, orderedEquals([1, 2, 3]));
     });
 
     test('step in and step out actions', () async {
-      var template = env.fromString('{% for i in [1] %}\n{{ i }}\n{% endfor %}');
+      var template =
+          env.fromString('{% for i in [1] %}\n{{ i }}\n{% endfor %}');
       controller.addBreakpoint(line: 1);
       var steps = <int>[];
 

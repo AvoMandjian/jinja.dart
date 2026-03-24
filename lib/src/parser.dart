@@ -35,7 +35,8 @@ final class Parser {
     // Common syntax error patterns
     if (message.toLowerCase().contains('unexpected end')) {
       suggestions.add('Check if all tags are properly closed');
-      suggestions.add('Verify {% endfor %}, {% endif %}, {% endblock %} tags match opening tags');
+      suggestions.add(
+          'Verify {% endfor %}, {% endif %}, {% endblock %} tags match opening tags');
     } else if (message.toLowerCase().contains('unknown tag')) {
       suggestions.add('Check if the tag name is spelled correctly');
       suggestions.add('Verify all tag names are valid Jinja tags');
@@ -46,7 +47,8 @@ final class Parser {
       suggestions.add('Check tag nesting order');
       suggestions.add('Ensure opening and closing tags match');
     } else {
-      suggestions.add('Check the template syntax at the indicated line and column');
+      suggestions
+          .add('Check the template syntax at the indicated line and column');
       suggestions.add('Verify all tags are properly closed');
       suggestions.add('Check for typos in tag names');
     }
@@ -56,7 +58,9 @@ final class Parser {
       line: line,
       column: column,
       path: path,
-      contextSnippet: (line != null && column != null) ? errorContextSnippet(templateSource, line, column) : null,
+      contextSnippet: (line != null && column != null)
+          ? errorContextSnippet(templateSource, line, column)
+          : null,
       suggestions: suggestions,
     );
   }
@@ -75,7 +79,9 @@ final class Parser {
     }
 
     if (endTokensStack.isNotEmpty) {
-      currentlyLooking = endTokensStack.last.map<String>((token) => "'${describeExpression(token)}'").join(' or ');
+      currentlyLooking = endTokensStack.last
+          .map<String>((token) => "'${describeExpression(token)}'")
+          .join(' or ');
     }
 
     var messages = <String>[];
@@ -125,7 +131,9 @@ final class Parser {
   ]) {
     return switch (reader.current.type) {
       'variable_end' || 'block_end' || 'rparen' => true,
-      _ => extraEndRules != null && extraEndRules.isNotEmpty ? reader.current.testAny(extraEndRules) : false,
+      _ => extraEndRules != null && extraEndRules.isNotEmpty
+          ? reader.current.testAny(extraEndRules)
+          : false,
     };
   }
 
@@ -263,7 +271,11 @@ final class Parser {
 
     if (reader.skipIf('assign')) {
       var expression = parseTuple(reader);
-      return Assign(target: target, value: expression, line: setToken.line, column: setToken.column);
+      return Assign(
+          target: target,
+          value: expression,
+          line: setToken.line,
+          column: setToken.column);
     }
 
     var filters = parseFilters(reader);
@@ -472,7 +484,8 @@ final class Parser {
 
     var withContext = defaultValue;
 
-    if (reader.current.testAny(keywords) && reader.look().test('name', 'context')) {
+    if (reader.current.testAny(keywords) &&
+        reader.look().test('name', 'context')) {
       withContext = reader.current.value == 'with';
       reader.skip(2);
     }
@@ -484,7 +497,8 @@ final class Parser {
     reader.expect('name', 'include');
 
     var template = parseExpression(reader);
-    var ignoreMissing = reader.current.test('name', 'ignore') && reader.look().test('name', 'missing');
+    var ignoreMissing = reader.current.test('name', 'ignore') &&
+        reader.look().test('name', 'missing');
 
     if (ignoreMissing) {
       reader.skip(2);
@@ -525,7 +539,8 @@ final class Parser {
     var withContext = false;
 
     bool parseContext() {
-      if (reader.current.value case 'with' || 'without' when reader.look().test('name', 'context')) {
+      if (reader.current.value case 'with' || 'without'
+          when reader.look().test('name', 'context')) {
         withContext = reader.current.value == 'with';
         reader.skip(2);
         return true;
@@ -784,7 +799,8 @@ final class Parser {
     if (target is Tuple && target.values.any((value) => value is Name)) {
       return target.copyWith(
         values: <Expression>[
-          for (var value in target.values.cast<Name>()) value.copyWith(context: context),
+          for (var value in target.values.cast<Name>())
+            value.copyWith(context: context),
         ],
       );
     }
@@ -900,7 +916,8 @@ final class Parser {
       if (!reader.current.test('block_end')) {
         pluralCount = parseExpression(reader);
       }
-      pluralBody = parseStatements(reader, <(String, String?)>[('name', 'endtrans')]);
+      pluralBody =
+          parseStatements(reader, <(String, String?)>[('name', 'endtrans')]);
     }
 
     reader.expect('name', 'endtrans');
@@ -908,7 +925,10 @@ final class Parser {
     return Trans(
       body: body,
       plural: pluralBody,
-      count: pluralCount ?? (count is! Constant ? count : null), // Only use count if it's an expression/variable
+      count: pluralCount ??
+          (count is! Constant
+              ? count
+              : null), // Only use count if it's an expression/variable
       context: context,
       trimmed: trimmed,
     );
@@ -1001,7 +1021,8 @@ final class Parser {
         operator = CompareOperator.parse(token.type);
       } else if (reader.skipIf('name', 'in')) {
         operator = CompareOperator.contains;
-      } else if (reader.current.test('name', 'not') && reader.look().test('name', 'in')) {
+      } else if (reader.current.test('name', 'not') &&
+          reader.look().test('name', 'in')) {
         reader.skip(2);
 
         operator = CompareOperator.notContains;
@@ -1632,7 +1653,8 @@ final class Parser {
 
         switch (token.type) {
           case 'data':
-            nodes.add(Data(data: token.value, line: token.line, column: token.column));
+            nodes.add(Data(
+                data: token.value, line: token.line, column: token.column));
 
             reader.next();
             break;
@@ -1641,7 +1663,10 @@ final class Parser {
             var startToken = token;
             reader.next();
 
-            nodes.add(Interpolation(value: parseTuple(reader), line: startToken.line, column: startToken.column));
+            nodes.add(Interpolation(
+                value: parseTuple(reader),
+                line: startToken.line,
+                column: startToken.column));
 
             reader.expect('variable_end');
             break;

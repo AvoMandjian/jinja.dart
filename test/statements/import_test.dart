@@ -25,7 +25,8 @@ void main() {
         '{% import "module" as m without context %}{{ m.test() }}',
       );
       expect(tmpl.render({'foo': 42}), equals('[|23]'));
-      tmpl = env.fromString('{% import "module" as m with context %}{{ m.test() }}');
+      tmpl = env
+          .fromString('{% import "module" as m with context %}{{ m.test() }}');
       expect(tmpl.render({'foo': 42}), equals('[42|23]'));
       tmpl = env.fromString('{% from "module" import test %}{{ test() }}');
       expect(tmpl.render({'foo': 42}), equals('[|23]'));
@@ -103,12 +104,14 @@ void main() {
     test('exports', () {}, skip: 'Not supported.');
 
     test('not exported', () {
-      var tmpl = env.fromString('{% from "module" import nothing %}{{ nothing() }}');
+      var tmpl =
+          env.fromString('{% from "module" import nothing %}{{ nothing() }}');
       expect(
         () => tmpl.render(),
         throwsA(
           predicate<TemplateRuntimeError>(
-            (error) => error.message!.contains('does not export the requested name:'),
+            (error) =>
+                error.message!.contains('does not export the requested name:'),
           ),
         ),
       );

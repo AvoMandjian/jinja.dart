@@ -17,26 +17,36 @@ void main() {
 
     test('getTemplate and listTemplates without loader', () {
       final env = Environment();
-      expect(() => env.getTemplate('foo'),
-          throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('No loader for this environment specified'))));
+      expect(
+          () => env.getTemplate('foo'),
+          throwsA(isA<TemplateRuntimeError>().having(
+              (e) => e.message,
+              'message',
+              contains('No loader for this environment specified'))));
       expect(() => env.listTemplates(), throwsStateError);
     });
 
     test('selectTemplate', () {
-      final env = Environment(loader: MapLoader({'a.html': 'A'}, globalJinjaData: {}));
+      final env =
+          Environment(loader: MapLoader({'a.html': 'A'}, globalJinjaData: {}));
 
       // Empty list
-      expect(() => env.selectTemplate([]), throwsA(isA<TemplatesNotFound>().having((e) => e.message, 'message', contains('empty list'))));
+      expect(
+          () => env.selectTemplate([]),
+          throwsA(isA<TemplatesNotFound>()
+              .having((e) => e.message, 'message', contains('empty list'))));
 
       // Selection by String
-      expect(env.selectTemplate(['missing.html', 'a.html']).path, equals('a.html'));
+      expect(env.selectTemplate(['missing.html', 'a.html']).path,
+          equals('a.html'));
 
       // Selection by Template object
       final tmpl = env.fromString('B');
       expect(env.selectTemplate(['missing.html', tmpl]), equals(tmpl));
 
       // All missing
-      expect(() => env.selectTemplate(['missing1.html', 'missing2.html']), throwsA(isA<TemplatesNotFound>()));
+      expect(() => env.selectTemplate(['missing1.html', 'missing2.html']),
+          throwsA(isA<TemplatesNotFound>()));
     });
 
     test('DefaultJinjaLogger', () {
@@ -45,7 +55,8 @@ void main() {
       expect(() => logger.debug('test'), returnsNormally);
       expect(() => logger.info('test'), returnsNormally);
       expect(() => logger.warn('test'), returnsNormally);
-      expect(() => logger.error('test', 'err', StackTrace.current), returnsNormally);
+      expect(() => logger.error('test', 'err', StackTrace.current),
+          returnsNormally);
     });
 
     test('wrapFinalizer with different types', () {

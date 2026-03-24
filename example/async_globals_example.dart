@@ -82,9 +82,12 @@ final jinjaData = {
           'property_label': 'image',
           'property_id': 'image',
           'data': {
-            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
           },
         },
         'app_version': {
@@ -127,9 +130,12 @@ final jinjaData = {
           'property_label': 'image',
           'property_id': 'image',
           'data': {
-            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
           },
         },
         'app_version': {
@@ -172,9 +178,12 @@ final jinjaData = {
           'property_label': 'image',
           'property_id': 'image',
           'data': {
-            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
           },
         },
         'app_version': {
@@ -217,9 +226,12 @@ final jinjaData = {
           'property_label': 'image',
           'property_id': 'image',
           'data': {
-            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
           },
         },
         'app_version': {
@@ -262,9 +274,12 @@ final jinjaData = {
           'property_label': 'image',
           'property_id': 'image',
           'data': {
-            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
           },
         },
         'app_version': {
@@ -307,9 +322,12 @@ final jinjaData = {
           'property_label': 'image',
           'property_id': 'image',
           'data': {
-            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
           },
         },
         'app_version': {
@@ -352,9 +370,12 @@ final jinjaData = {
           'property_label': 'image',
           'property_id': 'image',
           'data': {
-            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
           },
         },
         'app_version': {
@@ -397,9 +418,12 @@ final jinjaData = {
           'property_label': 'image',
           'property_id': 'image',
           'data': {
-            'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-            'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+            'value_text_b64':
+                'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
           },
         },
         'app_version': {
@@ -563,9 +587,12 @@ void main() async {
               'property_label': 'image',
               'property_id': 'image',
               'data': {
-                'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-                'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-                'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+                'value':
+                    'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+                'value_text':
+                    'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+                'value_text_b64':
+                    'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
               },
             },
             'app_version': {
@@ -608,9 +635,12 @@ void main() async {
               'property_label': 'image',
               'property_id': 'image',
               'data': {
-                'value': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-                'value_text': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
-                'value_text_b64': 'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+                'value':
+                    'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+                'value_text':
+                    'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
+                'value_text_b64':
+                    'https://cdn.logojoy.com/wp-content/uploads/20220329171728/socail-messenger-app-logo.jpg',
               },
             },
             'app_version': {
@@ -678,7 +708,8 @@ void main() async {
 
     // Example 7: Nested async data structure
     print('\n=== Example 7: Nested async data structure ===');
-    var template7 = env.fromString('User: {{ user.name }}, Age: {{ user.age }}');
+    var template7 =
+        env.fromString('User: {{ user.name }}, Age: {{ user.age }}');
 
     Future<Map<String, dynamic>> getUser() async {
       await Future<void>.delayed(const Duration(milliseconds: 60));
@@ -702,7 +733,10 @@ void main() async {
     // Example 9: Synchronous filter with renderAsync
     print('\n=== Example 9: Synchronous filter with renderAsync ===');
     var envWithFilter = Environment(
-      filters: {...env.filters, 'reverse': (value) => value.toString().split('').reversed.join()},
+      filters: {
+        ...env.filters,
+        'reverse': (value) => value.toString().split('').reversed.join()
+      },
       globals: env.globals,
       loader: env.loader,
     );
@@ -712,7 +746,8 @@ void main() async {
 
     // Example 10: Synchronous complex object with renderAsync
     print('\n=== Example 10: Synchronous complex object with renderAsync ===');
-    var template10 = env.fromString('Product: {{ product.name }} - \${{ product.price }}');
+    var template10 =
+        env.fromString('Product: {{ product.name }} - \${{ product.price }}');
     var product = {
       'name': 'Laptop',
       'price': 1200,
@@ -729,7 +764,8 @@ void main() async {
 
     // Example 11: Async global in a loop
     print('\n=== Example 11: Async global in a loop ===');
-    var template11 = env.fromString('{% for item in items %}{{ item }}{% endfor %}');
+    var template11 =
+        env.fromString('{% for item in items %}{{ item }}{% endfor %}');
     var result11 = await template11.renderAsync({
       'items': [fetchItem(1), fetchItem(2), fetchItem(3)],
     });
@@ -767,19 +803,22 @@ void main() async {
 
     // Example 16: Cycler global
     print('\n=== Example 16: Cycler global ===');
-    var template16 = env.fromString('{% for i in range(5) %}{{ cycler("red", "blue", "green") }}{% endfor %}');
+    var template16 = env.fromString(
+        '{% for i in range(5) %}{{ cycler("red", "blue", "green") }}{% endfor %}');
     var result16 = await template16.renderAsync();
     print(result16.trim());
 
     // Example 17: Joiner global
     print('\n=== Example 17: Joiner global ===');
-    var template17 = env.fromString('{% set j = joiner(", ") %}{% for item in ["a", "b", "c"] %}{{ j() }}{{ item }}{% endfor %}');
+    var template17 = env.fromString(
+        '{% set j = joiner(", ") %}{% for item in ["a", "b", "c"] %}{{ j() }}{{ item }}{% endfor %}');
     var result17 = await template17.renderAsync();
     print(result17.trim());
 
     // Example 18: Range global
     print('\n=== Example 18: Range global ===');
-    var template18 = env.fromString('{% for i in range(1, 6) %}{{ i }}{% endfor %}');
+    var template18 =
+        env.fromString('{% for i in range(1, 6) %}{{ i }}{% endfor %}');
     var result18 = await template18.renderAsync();
     print(result18.trim());
 
@@ -797,7 +836,8 @@ void main() async {
 
     // Example 21: Zip global
     print('\n=== Example 21: Zip global ===');
-    var template21 = env.fromString('{% for pair in zip([1, 2, 3], ["a", "b", "c"]) %}{{ pair }}{% endfor %}');
+    var template21 = env.fromString(
+        '{% for pair in zip([1, 2, 3], ["a", "b", "c"]) %}{{ pair }}{% endfor %}');
     var result21 = await template21.renderAsync();
     print(result21.trim());
 
@@ -847,8 +887,8 @@ void main() async {
 
     // Example 26: Groupby filter
     print('\n=== Example 26: Groupby filter ===');
-    var template26 =
-        env.fromString('{% for group in users|groupby("age") %}{{ group.key }}: {{ group.list|map(attribute="name")|list }}{% endfor %}');
+    var template26 = env.fromString(
+        '{% for group in users|groupby("age") %}{{ group.key }}: {{ group.list|map(attribute="name")|list }}{% endfor %}');
     var result26 = await template26.renderAsync({
       'users': [
         {'name': 'Alice', 'age': 25},
@@ -884,7 +924,8 @@ void main() async {
 
     // Example 30: Batch filter
     print('\n=== Example 30: Batch filter ===');
-    var template30 = env.fromString('{% for batch in numbers|batch(3) %}{{ batch|list }}{% endfor %}');
+    var template30 = env.fromString(
+        '{% for batch in numbers|batch(3) %}{{ batch|list }}{% endfor %}');
     var result30 = await template30.renderAsync({
       'numbers': [1, 2, 3, 4, 5, 6, 7],
     });
@@ -931,7 +972,8 @@ void main() async {
       return true;
     }
 
-    var template34 = env.fromString('{% if condition %}Condition is true{% else %}Condition is false{% endif %}');
+    var template34 = env.fromString(
+        '{% if condition %}Condition is true{% else %}Condition is false{% endif %}');
     var result34 = await template34.renderAsync({
       'condition': checkCondition(),
     });
@@ -944,7 +986,8 @@ void main() async {
       return ['item1', 'item2', 'item3'];
     }
 
-    var template35 = env.fromString('{% for item in items %}{{ item }}{% else %}No items{% endfor %}');
+    var template35 = env.fromString(
+        '{% for item in items %}{{ item }}{% else %}No items{% endfor %}');
     var result35 = await template35.renderAsync({
       'items': getItems(),
     });
@@ -952,7 +995,8 @@ void main() async {
 
     // Example 36: With statement
     print('\n=== Example 36: With statement ===');
-    var template36 = env.fromString('{% with user = {"name": "Alice", "age": 25} %}{{ user.name }} is {{ user.age }} years old{% endwith %}');
+    var template36 = env.fromString(
+        '{% with user = {"name": "Alice", "age": 25} %}{{ user.name }} is {{ user.age }} years old{% endwith %}');
     var result36 = await template36.renderAsync();
     print(result36.trim());
 
@@ -964,13 +1008,15 @@ void main() async {
 
     // Example 38: Set block
     print('\n=== Example 38: Set block ===');
-    var template38 = env.fromString('{% set content %}<div>Hello World</div>{% endset %}{{ content }}');
+    var template38 = env.fromString(
+        '{% set content %}<div>Hello World</div>{% endset %}{{ content }}');
     var result38 = await template38.renderAsync();
     print(result38.trim());
 
     // Example 39: For loop with loop variables
     print('\n=== Example 39: For loop with loop variables ===');
-    var template39 = env.fromString('{% for item in items %}{{ loop.index }}: {{ item }}{% endfor %}');
+    var template39 = env.fromString(
+        '{% for item in items %}{{ loop.index }}: {{ item }}{% endfor %}');
     var result39 = await template39.renderAsync({
       'items': ['a', 'b', 'c'],
     });
@@ -1138,7 +1184,8 @@ Items: {{ items|list }}
 
     // Example 53: callback
     print('\n=== Example 53: callback ===');
-    var template53 = env.fromString('{{ callback("callback_id", {"key": "value"}) }}');
+    var template53 =
+        env.fromString('{{ callback("callback_id", {"key": "value"}) }}');
     var result53 = await template53.renderAsync();
     print(result53.trim());
 
@@ -1155,7 +1202,8 @@ Items: {{ items|list }}
       return 42;
     }
 
-    var template55 = env.fromString('{% if is_equal(value, 42) %}Equal{% else %}Not equal{% endif %}');
+    var template55 = env.fromString(
+        '{% if is_equal(value, 42) %}Equal{% else %}Not equal{% endif %}');
     var result55 = await template55.renderAsync({
       'value': getValue(),
     });
@@ -1181,7 +1229,8 @@ Items: {{ items|list }}
 
     // Example 59: Complex filter combinations
     print('\n=== Example 59: Complex filter combinations ===');
-    var template59 = env.fromString('{{ users|selectattr("active")|map(attribute="name")|list|sort|list }}');
+    var template59 = env.fromString(
+        '{{ users|selectattr("active")|map(attribute="name")|list|sort|list }}');
     var result59 = await template59.renderAsync({
       'users': [
         {'name': 'Charlie', 'active': true},
@@ -1355,7 +1404,8 @@ Count: {{ ns.count }}
 
     // Example 70: Operators (Power and Concat)
     print('\n=== Example 70: Operators ===');
-    var template70 = env.fromString('{{ 2 ** 3 }} ~ {{ "hello" ~ " " ~ "world" }}');
+    var template70 =
+        env.fromString('{{ 2 ** 3 }} ~ {{ "hello" ~ " " ~ "world" }}');
     var result70 = await template70.renderAsync();
     print(result70.trim());
 
@@ -1372,13 +1422,15 @@ Count: {{ ns.count }}
 
     // Example 72: Inline If (Ternary Operator)
     print('\n=== Example 72: Inline If (Ternary) ===');
-    var template72 = env.fromString('{{ "Yes" if true else "No" }} | {{ "Yes" if false else "No" }}');
+    var template72 = env.fromString(
+        '{{ "Yes" if true else "No" }} | {{ "Yes" if false else "No" }}');
     var result72 = await template72.renderAsync();
     print(result72.trim());
 
     // Example 73: Membership Operators
     print('\n=== Example 73: Membership Operators ===');
-    var template73 = env.fromString('{{ 1 in [1, 2, 3] }} | {{ 4 not in [1, 2, 3] }}');
+    var template73 =
+        env.fromString('{{ 1 in [1, 2, 3] }} | {{ 4 not in [1, 2, 3] }}');
     var result73 = await template73.renderAsync();
     print(result73.trim());
 
@@ -1421,7 +1473,8 @@ a: {{ a }}, b: {{ b }}
 
     // Example 77: Complex Logic
     print('\n=== Example 77: Complex Logic ===');
-    var template77 = env.fromString('{{ (true and false) or (true and true) }}');
+    var template77 =
+        env.fromString('{{ (true and false) or (true and true) }}');
     var result77 = await template77.renderAsync();
     print(result77.trim());
 
@@ -1530,7 +1583,8 @@ Force Escaped: {{ "<b>Bold</b>"|forceescape }}
 
     // Example 85: Format Filter
     print('\n=== Example 85: Format Filter ===');
-    var template85 = env.fromString('{{ "Hello %s! You have %d new messages."|format("User", 5) }}');
+    var template85 = env.fromString(
+        '{{ "Hello %s! You have %d new messages."|format("User", 5) }}');
     var result85 = await template85.renderAsync();
     print(result85.trim());
 
@@ -1621,7 +1675,8 @@ End
       return {'name': 'Bob', 'age': 30};
     }
 
-    var template92 = env.fromString('User: {{ user.name }}, Age: {{ user.age }}');
+    var template92 =
+        env.fromString('User: {{ user.name }}, Age: {{ user.age }}');
     var result92 = await template92.renderAsync({'user': getUserFromReadme()});
     print(result92); // Output: User: Bob, Age: 30
 
@@ -1639,6 +1694,149 @@ End
     var template93 = envWithAsyncFilter.fromString('{{ "trigger"|fetch }}');
     var result93 = await template93.renderAsync();
     print(result93); // Output: fetched data
+
+    // Example 94: Async values in loop items
+    print('\n=== Example 94: Async values in loop items ===');
+    Future<String> asyncLabel(int i) async {
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      return 'Item-$i';
+    }
+
+    var template94 = env.fromString('''
+{% for item in items %}
+{{ item.label }}={{ item.value }}{% if not loop.last %}, {% endif %}
+{% endfor %}
+''');
+    var result94 = await template94.renderAsync({
+      'items': [
+        {'label': asyncLabel(1), 'value': 10},
+        {'label': asyncLabel(2), 'value': 20},
+        {'label': asyncLabel(3), 'value': 30},
+      ],
+    });
+    print(result94.trim());
+
+    // Example 95: Async value passed into a macro
+    print('\n=== Example 95: Async value in macro ===');
+    var template95 = env.fromString('''
+{% macro user_card(name, status) -%}
+User {{ name }} is {{ status }}
+{%- endmacro %}
+{{ user_card(name, status) }}
+''');
+    var result95 = await template95.renderAsync({
+      'name': 'Charlie',
+      'status': Future<String>.delayed(
+        const Duration(milliseconds: 25),
+        () => 'online',
+      ),
+    });
+    print(result95.trim());
+
+    // Example 96: Async map used by jsonencode filter
+    print('\n=== Example 96: Async object with jsonencode ===');
+    Future<Map<String, Object>> getPayload() async {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      return {
+        'ok': true,
+        'count': 3,
+        'source': 'async',
+      };
+    }
+
+    var template96 = env.fromString('{{ payload|jsonEncode }}');
+    var result96 = await template96.renderAsync({'payload': getPayload()});
+    print(result96.trim());
+
+    // Example 97: Macro default argument as async value
+    print('\n=== Example 97: Macro default async argument ===');
+    var template97 = env.fromString('''
+{% macro badge(text="guest", status=default_status) -%}
+[{{ text }}:{{ status }}]
+{%- endmacro %}
+{{ badge("alice") }} {{ badge("bob", "busy") }}
+''');
+    var result97 = await template97.renderAsync({
+      'default_status': Future<String>.delayed(
+        const Duration(milliseconds: 30),
+        () => 'online',
+      ),
+    });
+    print(result97.trim());
+
+    // Example 98: Nested macros with async arguments
+    print('\n=== Example 98: Nested macros with async args ===');
+    var template98 = env.fromString('''
+{% macro item_row(name, score) -%}
+{{ name }}={{ score }}
+{%- endmacro %}
+{% macro render_user(user_name, user_score) -%}
+<li>{{ item_row(user_name, user_score) }}</li>
+{%- endmacro %}
+<ul>{{ render_user(name, score) }}</ul>
+''');
+    var result98 = await template98.renderAsync({
+      'name': Future<String>.delayed(
+        const Duration(milliseconds: 20),
+        () => 'dora',
+      ),
+      'score': Future<int>.delayed(
+        const Duration(milliseconds: 25),
+        () => 99,
+      ),
+    });
+    print(result98.trim());
+
+    // Example 99: Macro iterating async list items
+    print('\n=== Example 99: Macro loop over async list items ===');
+    Future<List<Map<String, Object>>> getProductsAsync() async {
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      return [
+        {'name': 'Phone', 'price': 800},
+        {'name': 'Tablet', 'price': 600},
+      ];
+    }
+
+    var template99 = env.fromString('''
+{% macro product_list(products) -%}
+{%- for p in products -%}
+{{ p.name }}:\${{ p.price }}{% if not loop.last %}, {% endif %}
+{%- endfor -%}
+{%- endmacro %}
+{{ product_list(products) }}
+''');
+    var result99 =
+        await template99.renderAsync({'products': getProductsAsync()});
+    print(result99.trim());
+
+    // Example 100: Imported macro with async values
+    print('\n=== Example 100: Imported macro with async values ===');
+    var loader100 = MapLoader(
+      {
+        'async_macros.html': '''
+{% macro user_line(name, role) -%}
+{{ name }}({{ role }})
+{%- endmacro %}
+''',
+      },
+      globalJinjaData: jinjaData,
+    );
+    var env100 = Environment(loader: loader100);
+    var template100 = env100.fromString('''
+{% from "async_macros.html" import user_line %}
+{{ user_line(name, role) }}
+''');
+    var result100 = await template100.renderAsync({
+      'name': Future<String>.delayed(
+        const Duration(milliseconds: 15),
+        () => 'eva',
+      ),
+      'role': Future<String>.delayed(
+        const Duration(milliseconds: 15),
+        () => 'admin',
+      ),
+    });
+    print(result100.trim());
 
     if (errors.isNotEmpty) {
       print('\nErrors encountered:');

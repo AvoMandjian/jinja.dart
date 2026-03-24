@@ -30,7 +30,8 @@ void main() {
 
     test('Environment.wrapFinalizer with invalid function', () {
       // Pass a function with 3 arguments - wrapFinalizer doesn't handle this
-      expect(() => Environment.wrapFinalizer((a, b, c) => null), throwsA(isA<TypeError>()));
+      expect(() => Environment.wrapFinalizer((a, b, c) => null),
+          throwsA(isA<TypeError>()));
     });
 
     test('AsyncRenderContext.write', () {
@@ -46,15 +47,18 @@ void main() {
       final context = StringSinkRenderContext(env, StringBuffer());
 
       // ContextFinalizer returning Future
-      final wrapped = Environment.wrapFinalizer((Context c, Object? v) => Future.value(v));
+      final wrapped =
+          Environment.wrapFinalizer((Context c, Object? v) => Future.value(v));
       expect(wrapped(context, 'x'), isA<Future>());
 
       // EnvironmentFinalizer returning Future
-      final wrapped2 = Environment.wrapFinalizer((Environment e, Object? v) => Future.value(v));
+      final wrapped2 = Environment.wrapFinalizer(
+          (Environment e, Object? v) => Future.value(v));
       expect(wrapped2(context, 'y'), isA<Future>());
 
       // Finalizer returning Future
-      final wrapped3 = Environment.wrapFinalizer((Object? v) => Future.value(v));
+      final wrapped3 =
+          Environment.wrapFinalizer((Object? v) => Future.value(v));
       expect(wrapped3(context, 'z'), isA<Future>());
     });
 

@@ -63,6 +63,9 @@ Project memory files are stored in `.serena/memories/`:
 
 ## Learned User Preferences
 - Use `dart run example/<file>.dart` to verify specific example functionality.
+- Add and expand async example coverage, especially macro-focused async scenarios.
+- When a behavior is added, ensure example output visibly demonstrates it (not just data setup).
+- Include practical repo scripts for example validation with a clear pass/fail summary.
 - Prioritize fixing lints in core library files (`lib/src/`).
 - Debugging features should be robust and match Jinja2 capabilities.
 - When implementing `visitSlice`, handle `String` values by splitting, slicing, and re-joining.
@@ -77,4 +80,4 @@ Project memory files are stored in `.serena/memories/`:
 - Test coverage significantly improved: `lib/src/filters.dart` (91.6%), `lib/src/environment.dart` (91.9%), `lib/src/exceptions.dart` (>95%), `lib/src/renderer.dart` (82.9%).
 
 ## Last Updated
-2026-03-20
+2026-03-24

@@ -3,7 +3,7 @@ import 'package:jinja/src/nodes.dart';
 
 void main() {
   var env = Environment();
-  
+
   var templateSource = '''Hello 1
 {% for VARIABLE_1 in [1,2,3,4,5] %}
   {{dealership.inventory |tojson}}
@@ -11,7 +11,7 @@ void main() {
 Hello 2''';
 
   var ast = env.parse(templateSource);
-  
+
   void printNode(Node node, int depth) {
     var indent = '  ' * depth;
     print('$indent${node.runtimeType} - Line: ${node.line}');
@@ -34,7 +34,7 @@ Hello 2''';
       printNode(node.body, depth + 1);
     }
   }
-  
+
   print('AST Structure:');
   printNode(ast, 0);
 }

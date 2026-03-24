@@ -5,7 +5,8 @@ import 'package:test/test.dart';
 
 final class MockNode extends Node {
   @override
-  R accept<C, R>(Visitor<C, R> visitor, C context) => throw UnimplementedError();
+  R accept<C, R>(Visitor<C, R> visitor, C context) =>
+      throw UnimplementedError();
 
   @override
   Node copyWith() => throw UnimplementedError();
@@ -42,14 +43,16 @@ void main() {
 
     test('toString with long variable value', () {
       final longValue = 'a' * 100;
-      final error = TemplateRuntimeError('msg', contextSnapshotValue: {'long': longValue});
+      final error = TemplateRuntimeError('msg',
+          contextSnapshotValue: {'long': longValue});
       final str = error.toString();
 
       expect(str, contains('a' * 50 + '...'));
     });
 
     test('toString with variable that throws in toString', () {
-      final error = TemplateRuntimeError('msg', contextSnapshotValue: {'bad': ThrowingToString()});
+      final error = TemplateRuntimeError('msg',
+          contextSnapshotValue: {'bad': ThrowingToString()});
       final str = error.toString();
 
       expect(str, contains('ThrowingToString(toString failed:'));
@@ -57,10 +60,12 @@ void main() {
 
     test('toString with location info (template path + node)', () {
       final node = Name(name: 'x', line: 10, column: 5);
-      final error = TemplateRuntimeError('msg', nodeValue: node, templatePathValue: 'tmpl.html');
+      final error = TemplateRuntimeError('msg',
+          nodeValue: node, templatePathValue: 'tmpl.html');
       final str = error.toString();
 
-      expect(str, contains('Location: template \'tmpl.html\', line 10, column 5'));
+      expect(
+          str, contains('Location: template \'tmpl.html\', line 10, column 5'));
       expect(str, contains('Node: Name'));
     });
 

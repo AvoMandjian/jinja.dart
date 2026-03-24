@@ -65,7 +65,8 @@ void main() {
         ),
       );
       final context = StringSinkRenderContext(envImport, StringBuffer());
-      final node = FromImport(template: Constant(value: 'lib.html'), names: [('missing', null)]);
+      final node = FromImport(
+          template: Constant(value: 'lib.html'), names: [('missing', null)]);
 
       renderer.visitFromImport(node, context);
       final macro = context.resolve('missing') as Function;
@@ -105,7 +106,8 @@ void main() {
         ),
       );
       final sink = StringBuffer();
-      final context = StringSinkRenderContext(envImport, sink, data: {'x': 'val'});
+      final context =
+          StringSinkRenderContext(envImport, sink, data: {'x': 'val'});
 
       final node = Import(
         template: Constant(value: 'lib.html'),
@@ -162,7 +164,8 @@ void main() {
         ),
       );
       final sink = StringBuffer();
-      final context = StringSinkRenderContext(envInclude, sink, data: {'x': 'secret'});
+      final context =
+          StringSinkRenderContext(envInclude, sink, data: {'x': 'secret'});
 
       final node = Include(
         template: Constant(value: 'inc.html'),
@@ -205,7 +208,10 @@ void main() {
       final node = CallBlock(
         name: 'caller',
         // Pass positional argument as [List, Map] to satisfy StringSinkRenderer.visitCallBlock line 856
-        call: Call(value: Name(name: 'caller_user'), calling: Calling(arguments: [Constant(value: []), Constant(value: {})])),
+        call: Call(
+            value: Name(name: 'caller_user'),
+            calling:
+                Calling(arguments: [Constant(value: []), Constant(value: {})])),
         body: Data(data: 'inside'),
       );
 

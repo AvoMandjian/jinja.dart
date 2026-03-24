@@ -61,7 +61,8 @@ class ErrorLogger {
       return;
     }
 
-    _log('ERROR', message, error: error, context: context, stackTrace: stackTrace);
+    _log('ERROR', message,
+        error: error, context: context, stackTrace: stackTrace);
   }
 
   /// Logs a warning-level message.

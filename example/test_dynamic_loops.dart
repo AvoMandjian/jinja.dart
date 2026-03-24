@@ -11,8 +11,10 @@ void main() async {
 {% endfor %}
 End''',
     {
-      'range': (int start, [int? stop, int step = 1]) =>
-          stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step),
+      'range': (int start, [int? stop, int step = 1]) => stop == null
+          ? Iterable<int>.generate(start)
+          : Iterable<int>.generate(
+              (stop - start) ~/ step, (i) => start + i * step),
     },
   );
 
@@ -28,8 +30,10 @@ End''',
 {% endfor %}
 End''',
     {
-      'range': (int start, [int? stop, int step = 1]) =>
-          stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step),
+      'range': (int start, [int? stop, int step = 1]) => stop == null
+          ? Iterable<int>.generate(start)
+          : Iterable<int>.generate(
+              (stop - start) ~/ step, (i) => start + i * step),
     },
   );
 
@@ -49,7 +53,8 @@ Final: {{ total }}''',
   );
 }
 
-Future<void> testLoop(String testName, String templateSource, Map<String, Object?> data) async {
+Future<void> testLoop(
+    String testName, String templateSource, Map<String, Object?> data) async {
   print('\n${'=' * 60}');
   print(testName);
   print('=' * 60);
@@ -75,7 +80,10 @@ Future<void> testLoop(String testName, String templateSource, Map<String, Object
     // Show current variable values for loop variables
     var loopVars = <String, Object?>{};
     for (var entry in info.variables.entries) {
-      if (entry.key == 'i' || entry.key == 'j' || entry.key == 'item' || entry.key == 'total') {
+      if (entry.key == 'i' ||
+          entry.key == 'j' ||
+          entry.key == 'item' ||
+          entry.key == 'total') {
         loopVars[entry.key] = entry.value;
       }
     }

@@ -55,15 +55,18 @@ void main() {
   group('Inheritance', () {
     var env = Environment(
       trimBlocks: true,
-      loader: MapLoader({
-        'layout': layout,
-        'level1': level1,
-        'level2': level2,
-        'level3': level3,
-        'level4': level4,
-        'working': working,
-        'doublee': doublee,
-      }, globalJinjaData: {},),
+      loader: MapLoader(
+        {
+          'layout': layout,
+          'level1': level1,
+          'level2': level2,
+          'level3': level3,
+          'level4': level4,
+          'working': working,
+          'doublee': doublee,
+        },
+        globalJinjaData: {},
+      ),
     );
 
     test('layout', () {
@@ -93,15 +96,18 @@ void main() {
 
     test('super', () {
       var env = Environment(
-        loader: MapLoader({
-          'a': '{% block intro %}INTRO{% endblock %}|'
-              'BEFORE|{% block data %}INNER{% endblock %}|AFTER',
-          'b': '{% extends "a" %}{% block data %}({{ '
-              'super() }}){% endblock %}',
-          'c': '{% extends "b" %}{% block intro %}--{{ '
-              'super() }}--{% endblock %}\n{% block data '
-              '%}[{{ super() }}]{% endblock %}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'a': '{% block intro %}INTRO{% endblock %}|'
+                'BEFORE|{% block data %}INNER{% endblock %}|AFTER',
+            'b': '{% extends "a" %}{% block data %}({{ '
+                'super() }}){% endblock %}',
+            'c': '{% extends "b" %}{% block intro %}--{{ '
+                'super() }}--{% endblock %}\n{% block data '
+                '%}[{{ super() }}]{% endblock %}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       var tmpl = env.getTemplate('c');
@@ -121,11 +127,14 @@ void main() {
 
     test('preserve blocks', () {
       var env = Environment(
-        loader: MapLoader({
-          'a': '{% if false %}{% block x %}A{% endblock %}'
-              '{% endif %}{{ self.x() }}',
-          'b': '{% extends "a" %}{% block x %}B{{ super() }}{% endblock %}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'a': '{% if false %}{% block x %}A{% endblock %}'
+                '{% endif %}{{ self.x() }}',
+            'b': '{% extends "a" %}{% block x %}B{{ super() }}{% endblock %}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       var tmpl = env.getTemplate('b');
@@ -134,11 +143,14 @@ void main() {
 
     test('dynamic inheritance', () {
       var env = Environment(
-        loader: MapLoader({
-          'default1': 'DEFAULT1{% block x %}{% endblock %}',
-          'default2': 'DEFAULT2{% block x %}{% endblock %}',
-          'child': '{% extends default %}{% block x %}CHILD{% endblock %}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'default1': 'DEFAULT1{% block x %}{% endblock %}',
+            'default2': 'DEFAULT2{% block x %}{% endblock %}',
+            'child': '{% extends default %}{% block x %}CHILD{% endblock %}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       var tmpl = env.getTemplate('child');
@@ -150,13 +162,16 @@ void main() {
       'multi inheritance',
       () {
         var env = Environment(
-          loader: MapLoader({
-            'default1': 'DEFAULT1{% block x %}{% endblock %}',
-            'default2': 'DEFAULT2{% block x %}{% endblock %}',
-            'child': '{% if default %}{% extends default %}{% else %}'
-                '{% extends "default1" %}{% endif %}'
-                '{% block x %}CHILD{% endblock %}',
-          }, globalJinjaData: {},),
+          loader: MapLoader(
+            {
+              'default1': 'DEFAULT1{% block x %}{% endblock %}',
+              'default2': 'DEFAULT2{% block x %}{% endblock %}',
+              'child': '{% if default %}{% extends default %}{% else %}'
+                  '{% extends "default1" %}{% endif %}'
+                  '{% block x %}CHILD{% endblock %}',
+            },
+            globalJinjaData: {},
+          ),
         );
 
         var tmpl = env.getTemplate('child');
@@ -169,10 +184,13 @@ void main() {
 
     test('scoped block', () {
       var env = Environment(
-        loader: MapLoader({
-          'default.html': '{% for item in seq %}[{% block item scoped %}'
-              '{% endblock %}]{% endfor %}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'default.html': '{% for item in seq %}[{% block item scoped %}'
+                '{% endblock %}]{% endfor %}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       var tmpl = env.fromString(
@@ -183,10 +201,13 @@ void main() {
 
     test('super in scoped block', () {
       var env = Environment(
-        loader: MapLoader({
-          'default.html': '{% for item in seq %}[{% block item scoped %}'
-              '{{ item }}{% endblock %}]{% endfor %}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'default.html': '{% for item in seq %}[{% block item scoped %}'
+                '{{ item }}{% endblock %}]{% endfor %}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       var tmpl = env.fromString('{% extends "default.html" %}{% block item %}'
@@ -228,10 +249,13 @@ void main() {
 
     test('level1 required', () {
       var env = Environment(
-        loader: MapLoader({
-          'default': '{% block x required %}{# comment #}\n {% endblock %}',
-          'level1': '{% extends "default" %}{% block x %}[1]{% endblock %}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'default': '{% block x required %}{# comment #}\n {% endblock %}',
+            'level1': '{% extends "default" %}{% block x %}[1]{% endblock %}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       expect(env.getTemplate('level1').render(), equals('[1]'));
@@ -239,11 +263,14 @@ void main() {
 
     test('level2 required', () {
       var env = Environment(
-        loader: MapLoader({
-          'default': '{% block x required %}{% endblock %}',
-          'level1': '{% extends "default" %}{% block x %}[1]{% endblock %}',
-          'level2': '{% extends "default" %}{% block x %}[2]{% endblock %}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'default': '{% block x required %}{% endblock %}',
+            'level1': '{% extends "default" %}{% block x %}[1]{% endblock %}',
+            'level2': '{% extends "default" %}{% block x %}[2]{% endblock %}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       expect(env.getTemplate('level1').render(), equals('[1]'));
@@ -252,12 +279,15 @@ void main() {
 
     test('level3 required', () {
       var env = Environment(
-        loader: MapLoader({
-          'default': '{% block x required %}{% endblock %}',
-          'level1': '{% extends "default" %}',
-          'level2': '{% extends "level1" %}{% block x %}[2]{% endblock %}',
-          'level3': '{% extends "level2" %}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'default': '{% block x required %}{% endblock %}',
+            'level1': '{% extends "default" %}',
+            'level2': '{% extends "level1" %}{% block x %}[2]{% endblock %}',
+            'level3': '{% extends "level2" %}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       expect(
@@ -275,19 +305,22 @@ void main() {
 
     test('invalid required', () {
       var env = Environment(
-        loader: MapLoader({
-          'default': '{% block x required %}data {# #}{% endblock %}',
-          'default2': '{% block x required %}{% block y %}'
-              '{% endblock %}  {% endblock %}',
-          'default3': '{% block x required %}{% if true %}{% endif %}  '
-              '{% endblock %}',
-          'level1default1':
-              '{% extends "default" %}{%- block x %}CHILD{% endblock %}',
-          'level1default2':
-              '{% extends "default2" %}{%- block x %}CHILD{% endblock %}',
-          'level1default3':
-              '{% extends "default3" %}{%- block x %}CHILD{% endblock %}',
-        }, globalJinjaData: {},),
+        loader: MapLoader(
+          {
+            'default': '{% block x required %}data {# #}{% endblock %}',
+            'default2': '{% block x required %}{% block y %}'
+                '{% endblock %}  {% endblock %}',
+            'default3': '{% block x required %}{% if true %}{% endif %}  '
+                '{% endblock %}',
+            'level1default1':
+                '{% extends "default" %}{%- block x %}CHILD{% endblock %}',
+            'level1default2':
+                '{% extends "default2" %}{%- block x %}CHILD{% endblock %}',
+            'level1default3':
+                '{% extends "default3" %}{%- block x %}CHILD{% endblock %}',
+          },
+          globalJinjaData: {},
+        ),
       );
 
       var matcher = throwsA(

@@ -9,12 +9,15 @@ void main() {
 
   group('Lexer Coverage Extensions 2', () {
     test('Unexpected closing parenthesis', () {
-      expect(() => lexer.tokenize('{{ ( ) ) }}'), throwsA(isA<TemplateSyntaxError>()));
+      expect(() => lexer.tokenize('{{ ( ) ) }}'),
+          throwsA(isA<TemplateSyntaxError>()));
     });
 
     test('Mismatched closing brackets', () {
-      expect(() => lexer.tokenize('{{ ( ] }}'), throwsA(isA<TemplateSyntaxError>()));
-      expect(() => lexer.tokenize('{{ [ } }}'), throwsA(isA<TemplateSyntaxError>()));
+      expect(() => lexer.tokenize('{{ ( ] }}'),
+          throwsA(isA<TemplateSyntaxError>()));
+      expect(() => lexer.tokenize('{{ [ } }}'),
+          throwsA(isA<TemplateSyntaxError>()));
     });
 
     test('Lex with initial state', () {
@@ -29,7 +32,8 @@ void main() {
       // This covers line 400
       // {{ ( }}
       // The 'variable_end' ( }}) is encountered while balancingStack is not empty
-      expect(() => lexer.tokenize('{{ ( }}').toList(), throwsA(isA<TemplateSyntaxError>()));
+      expect(() => lexer.tokenize('{{ ( }}').toList(),
+          throwsA(isA<TemplateSyntaxError>()));
     });
   });
 }

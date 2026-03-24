@@ -20,7 +20,8 @@ void main() {
 
     test('waitForAllFutures', () async {
       final t = env.fromString('{% set x = async_val %}{{ x }}');
-      final result = await t.renderAsync({'async_val': Future.value('resolved')});
+      final result =
+          await t.renderAsync({'async_val': Future.value('resolved')});
       expect(result, equals('resolved'));
     });
   });
@@ -35,7 +36,8 @@ void main() {
     test('EnvironmentFinalizer in wrapFinalizer', () {
       final env2 = Environment();
       final context = StringSinkRenderContext(env2, StringBuffer());
-      final wrapped = Environment.wrapFinalizer((Environment e, Object? v) => '[$v]');
+      final wrapped =
+          Environment.wrapFinalizer((Environment e, Object? v) => '[$v]');
       expect(wrapped(context, 'x'), equals('[x]'));
     });
   });

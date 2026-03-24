@@ -12,7 +12,8 @@ void main() {
   group('DebugRenderer & Evaluator', () {
     test('Evaluator correctness on conditional breakpoint node', () {
       final env = Environment();
-      final context = StringSinkRenderContext(env, StringBuffer(), data: {'isAdmin': true});
+      final context =
+          StringSinkRenderContext(env, StringBuffer(), data: {'isAdmin': true});
       const evaluator = ExpressionEvaluator();
 
       final node = Compare(

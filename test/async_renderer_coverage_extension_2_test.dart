@@ -14,7 +14,8 @@ void main() {
     });
 
     test('visitFor with Map', () async {
-      final t = env.fromString('{% for k, v in map %}{{ k }}:{{ v }}{% endfor %}');
+      final t =
+          env.fromString('{% for k, v in map %}{{ k }}:{{ v }}{% endfor %}');
       final result = await t.renderAsync({
         'map': {'a': 1, 'b': 2},
       });
@@ -22,13 +23,15 @@ void main() {
     });
 
     test('visitFor with test condition (async)', () async {
-      final t = env.fromString('{% for x in [1, 2, 3] if x > 1 %}{{ x }}{% endfor %}');
+      final t = env
+          .fromString('{% for x in [1, 2, 3] if x > 1 %}{{ x }}{% endfor %}');
       final result = await t.renderAsync();
       expect(result, equals('23'));
     });
 
     test('visitFor with empty iterable and orElse (async)', () async {
-      final t = env.fromString('{% for x in [] %}body{% else %}empty{% endfor %}');
+      final t =
+          env.fromString('{% for x in [] %}body{% else %}empty{% endfor %}');
       final result = await t.renderAsync();
       expect(result, equals('empty'));
     });
@@ -42,13 +45,15 @@ void main() {
           globalJinjaData: {},
         ),
       );
-      final t = envImport.fromString('{% import "lib.html" as lib %}{{ lib.m() }}');
+      final t =
+          envImport.fromString('{% import "lib.html" as lib %}{{ lib.m() }}');
       final result = await t.renderAsync();
       expect(result, equals('from lib'));
     });
 
     test('visitMacro (async)', () async {
-      final t = env.fromString('{% macro m(x) %}{{ x }}{% endmacro %}{{ m("hi") }}');
+      final t =
+          env.fromString('{% macro m(x) %}{{ x }}{% endmacro %}{{ m("hi") }}');
       final result = await t.renderAsync();
       expect(result, equals('hi'));
     });
@@ -59,7 +64,8 @@ void main() {
           'fail': () => throw Exception('error'),
         },
       );
-      final t = envTry.fromString('{% try %}{{ fail() }}{% catch e %}{{ e }}{% endtry %}');
+      final t = envTry
+          .fromString('{% try %}{{ fail() }}{% catch e %}{{ e }}{% endtry %}');
       final result = await t.renderAsync();
       expect(result, contains('Exception: error'));
     });

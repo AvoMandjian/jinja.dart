@@ -33,7 +33,8 @@ void main() {
     });
 
     test('extends multiple blocks', () {
-      final t = env.fromString('{% extends "base.html" %}{% block a %}A{% endblock %}');
+      final t = env
+          .fromString('{% extends "base.html" %}{% block a %}A{% endblock %}');
       expect(t.render(), equals('BASE:A'));
     });
 
@@ -56,33 +57,41 @@ void main() {
     });
 
     test('import contextual', () {
-      final t = env.fromString('{% import "macro.html" as m with context %}{{ m.m(1) }}');
+      final t = env.fromString(
+          '{% import "macro.html" as m with context %}{{ m.m(1) }}');
       expect(t.render(), equals('1'));
     });
 
     test('include with context', () {
-      final t = env.fromString('{% set x = 1 %}{% include "base.html" with context %}');
+      final t = env
+          .fromString('{% set x = 1 %}{% include "base.html" with context %}');
       expect(t.render(), equals('BASE:'));
     });
 
     test('macro arguments with kwargs', () {
-      final t = env.fromString('{% macro m(a, b=2) %}{{ a }}{{ b }}{% endmacro %}{{ m(1, b=3) }}');
+      final t = env.fromString(
+          '{% macro m(a, b=2) %}{{ a }}{{ b }}{% endmacro %}{{ m(1, b=3) }}');
       expect(t.render(), equals('13'));
     });
 
     test('autoescape enable/disable', () {
-      final t = env.fromString('{% autoescape true %}{{ "<" }}{% endautoescape %}{% autoescape false %}{{ "<" }}{% endautoescape %}');
+      final t = env.fromString(
+          '{% autoescape true %}{{ "<" }}{% endautoescape %}{% autoescape false %}{{ "<" }}{% endautoescape %}');
       expect(t.render(), equals('&lt;<'));
     });
 
     test('required block throws if not implemented', () {
       final base = env.fromString('{% block req required %}{% endblock %}');
       expect(
-          () => base.render(), throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'msg', contains("Required block 'req' not found"))));
+          () => base.render(),
+          throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'msg',
+              contains("Required block 'req' not found"))));
     });
 
     test('error wrapping in interpolation', () {
-      final envThrowing = Environment(getAttribute: (attr, obj, {node, source}) => throw Exception('error'));
+      final envThrowing = Environment(
+          getAttribute: (attr, obj, {node, source}) =>
+              throw Exception('error'));
       final t = envThrowing.fromString('{{ bad.foo }}');
       expect(
           () => t.render({
@@ -92,8 +101,11 @@ void main() {
     });
 
     test('error wrapping in for loop body', () {
-      final envThrowing = Environment(getAttribute: (attr, obj, {node, source}) => throw Exception('error'));
-      final t = envThrowing.fromString('{% for x in bad %}{{ x.foo }}{% endfor %}');
+      final envThrowing = Environment(
+          getAttribute: (attr, obj, {node, source}) =>
+              throw Exception('error'));
+      final t =
+          envThrowing.fromString('{% for x in bad %}{{ x.foo }}{% endfor %}');
       expect(
           () => t.render({
                 'bad': [
@@ -127,13 +139,15 @@ void main() {
           'ngettext': (String sing, String pl, num c) => 'pl_$pl',
         },
       );
-      final tpl = env.fromString('{% set c = 2 %}{% trans "foo" c %}A{% pluralize %}B{% endtrans %}');
+      final tpl = env.fromString(
+          '{% set c = 2 %}{% trans "foo" c %}A{% pluralize %}B{% endtrans %}');
       expect(tpl.render(), equals('pl_B'));
     });
 
     test('trans with missing ngettext fallback', () {
       final env = Environment();
-      final tpl = env.fromString('{% set c = 2 %}{% trans c %}A{% pluralize %}B{% endtrans %}');
+      final tpl = env.fromString(
+          '{% set c = 2 %}{% trans c %}A{% pluralize %}B{% endtrans %}');
       expect(tpl.render(), equals('B'));
     });
   });

@@ -14,7 +14,8 @@ void main() {
       final controller = DebugController()..enabled = true;
       final renderer = AsyncDebugRenderer();
       final sink = StringBuffer();
-      final context = DebugRenderContext(env, sink, debugController: controller);
+      final context =
+          DebugRenderContext(env, sink, debugController: controller);
 
       final node = For(
         target: Name(name: 'i', context: AssignContext.store),
@@ -31,12 +32,15 @@ void main() {
       final controller = DebugController()..enabled = true;
       final renderer = AsyncDebugRenderer();
       final sink = StringBuffer();
-      final context = DebugRenderContext(env, sink, debugController: controller);
+      final context =
+          DebugRenderContext(env, sink, debugController: controller);
 
       final node = For(
         target: Name(name: 'i', context: AssignContext.store),
         iterable: Constant(value: [1, 2, 3, 4]),
-        test: Compare(value: Name(name: 'i'), operands: [(CompareOperator.greaterThan, Constant(value: 2))]),
+        test: Compare(
+            value: Name(name: 'i'),
+            operands: [(CompareOperator.greaterThan, Constant(value: 2))]),
         body: Interpolation(value: Name(name: 'i')),
       );
 
@@ -48,7 +52,8 @@ void main() {
       final controller = DebugController()..enabled = true;
       final renderer = AsyncDebugRenderer();
       final sink = StringBuffer();
-      final context = DebugRenderContext(env, sink, debugController: controller);
+      final context =
+          DebugRenderContext(env, sink, debugController: controller);
 
       final futureIterable = Future.value([1, 2]);
       final node = For(
@@ -68,7 +73,8 @@ void main() {
       controller.addBreakpoint(line: 1, condition: 'invalid +++ syntax');
 
       final renderer = AsyncDebugRenderer();
-      final context = DebugRenderContext(env, StringBuffer(), debugController: controller);
+      final context =
+          DebugRenderContext(env, StringBuffer(), debugController: controller);
 
       // Should not throw, but ignore the error as per implementation
       await renderer.visitData(Data(data: 'foo', line: 1), context);
@@ -78,13 +84,16 @@ void main() {
       final controller = DebugController()..enabled = true;
       final renderer = AsyncDebugRenderer();
       final sink = StringBuffer();
-      final context = DebugRenderContext(env, sink, debugController: controller);
+      final context =
+          DebugRenderContext(env, sink, debugController: controller);
 
       final node = For(
         target: Name(name: 'i', context: AssignContext.store),
         iterable: Constant(value: [1, 2, 3]),
         body: If(
-          test: Compare(value: Name(name: 'i'), operands: [(CompareOperator.equal, Constant(value: 2))]),
+          test: Compare(
+              value: Name(name: 'i'),
+              operands: [(CompareOperator.equal, Constant(value: 2))]),
           body: Break(),
           orElse: Interpolation(value: Name(name: 'i')),
         ),
@@ -98,13 +107,16 @@ void main() {
       final controller = DebugController()..enabled = true;
       final renderer = AsyncDebugRenderer();
       final sink = StringBuffer();
-      final context = DebugRenderContext(env, sink, debugController: controller);
+      final context =
+          DebugRenderContext(env, sink, debugController: controller);
 
       final node = For(
         target: Name(name: 'i', context: AssignContext.store),
         iterable: Constant(value: [1, 2, 3]),
         body: If(
-          test: Compare(value: Name(name: 'i'), operands: [(CompareOperator.equal, Constant(value: 2))]),
+          test: Compare(
+              value: Name(name: 'i'),
+              operands: [(CompareOperator.equal, Constant(value: 2))]),
           body: Continue(),
           orElse: Interpolation(value: Name(name: 'i')),
         ),
@@ -123,7 +135,8 @@ void main() {
 
       final renderer = AsyncDebugRenderer();
       final sink = StringBuffer();
-      final context = DebugRenderContext(env, sink, debugController: controller, data: {'x': 1});
+      final context = DebugRenderContext(env, sink,
+          debugController: controller, data: {'x': 1});
 
       var hit1 = false;
       var hit2 = false;
@@ -144,16 +157,23 @@ void main() {
       final controller = DebugController()..enabled = true;
       final renderer = AsyncDebugRenderer();
       final sink = StringBuffer();
-      final context = DebugRenderContext(env, sink, debugController: controller);
+      final context =
+          DebugRenderContext(env, sink, debugController: controller);
 
       // True branch
-      final nodeTrue = If(test: Constant(value: true), body: Data(data: 'yes'), orElse: Data(data: 'no'));
+      final nodeTrue = If(
+          test: Constant(value: true),
+          body: Data(data: 'yes'),
+          orElse: Data(data: 'no'));
       await renderer.visitIf(nodeTrue, context);
       expect(sink.toString(), equals('yes'));
 
       // False branch
       sink.clear();
-      final nodeFalse = If(test: Constant(value: false), body: Data(data: 'yes'), orElse: Data(data: 'no'));
+      final nodeFalse = If(
+          test: Constant(value: false),
+          body: Data(data: 'yes'),
+          orElse: Data(data: 'no'));
       await renderer.visitIf(nodeFalse, context);
       expect(sink.toString(), equals('no'));
     });
@@ -162,7 +182,8 @@ void main() {
       final controller = DebugController()..enabled = true;
       final renderer = AsyncDebugRenderer();
       final sink = StringBuffer();
-      final context = DebugRenderContext(env, sink, debugController: controller);
+      final context =
+          DebugRenderContext(env, sink, debugController: controller);
 
       final node = Macro(
         name: 'm',
@@ -198,7 +219,10 @@ void main() {
 
       final node = CallBlock(
         name: 'caller',
-        call: Call(value: Name(name: 'caller_user'), calling: Calling(arguments: [Constant(value: []), Constant(value: {})])),
+        call: Call(
+            value: Name(name: 'caller_user'),
+            calling:
+                Calling(arguments: [Constant(value: []), Constant(value: {})])),
         body: Data(data: 'inside'),
       );
 

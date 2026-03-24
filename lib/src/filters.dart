@@ -40,9 +40,11 @@ Object? Function(Object? object) makeAttributeGetter(
   Object? getter(Object? object) {
     for (var part in parts) {
       if (part is String) {
-        object = environment.getAttribute(part, object, node: attribute) ?? defaultValue;
+        object = environment.getAttribute(part, object, node: attribute) ??
+            defaultValue;
       } else {
-        object = environment.getItem(part, object, node: attribute) ?? defaultValue;
+        object =
+            environment.getItem(part, object, node: attribute) ?? defaultValue;
       }
     }
 
@@ -362,9 +364,11 @@ String doTruncate(
   int leeway = 5,
 ]) {
   if (length < end.length) {
-    throw ArgumentError.value(value, 'leeway', 'Expected length >= ${end.length}, got $length.');
+    throw ArgumentError.value(
+        value, 'leeway', 'Expected length >= ${end.length}, got $length.');
   } else if (leeway < 0) {
-    throw ArgumentError.value(value, 'leeway', 'Expected leeway >= 0, got $leeway.');
+    throw ArgumentError.value(
+        value, 'leeway', 'Expected leeway >= 0, got $leeway.');
   }
 
   if (value.length <= length + leeway) {
@@ -403,7 +407,10 @@ String doWordWrap(
   );
 
   var wrap = wrapString ?? environment.newLine;
-  return const LineSplitter().convert(value).expand<String>(wrapper.wrap).join(wrap);
+  return const LineSplitter()
+      .convert(value)
+      .expand<String>(wrapper.wrap)
+      .join(wrap);
 }
 
 int doWordCount(Object? value) {
@@ -543,23 +550,31 @@ Object? Function(Object? object) _prepareMap(
 ) {
   if (positional.isEmpty) {
     // Handle attribute parameter
-    if (named.remove('attribute') ?? named.remove(#attribute) case String attribute?) {
-      var defaultValue =
-          named.remove('defaultValue') ?? named.remove('default') ?? named.remove(#defaultValue) ?? named.remove(Symbol('default'));
+    if (named.remove('attribute') ?? named.remove(#attribute)
+        case String attribute?) {
+      var defaultValue = named.remove('defaultValue') ??
+          named.remove('default') ??
+          named.remove(#defaultValue) ??
+          named.remove(Symbol('default'));
       if (named.isNotEmpty) {
         var first = named.keys.first;
-        throw ArgumentError.value(named[first], first.toString(), 'Unexpected keyword argument.');
+        throw ArgumentError.value(
+            named[first], first.toString(), 'Unexpected keyword argument.');
       }
-      return makeAttributeGetter(context.environment, attribute, defaultValue: defaultValue);
+      return makeAttributeGetter(context.environment, attribute,
+          defaultValue: defaultValue);
     }
 
     // Handle item parameter
     if (named.remove('item') ?? named.remove(#item) case Object? item?) {
-      var defaultValue =
-          named.remove('defaultValue') ?? named.remove('default') ?? named.remove(#defaultValue) ?? named.remove(Symbol('default'));
+      var defaultValue = named.remove('defaultValue') ??
+          named.remove('default') ??
+          named.remove(#defaultValue) ??
+          named.remove(Symbol('default'));
       if (named.isNotEmpty) {
         var first = named.keys.first;
-        throw ArgumentError.value(named[first], first.toString(), 'Unexpected keyword argument.');
+        throw ArgumentError.value(
+            named[first], first.toString(), 'Unexpected keyword argument.');
       }
       return (Object? object) {
         var value = context.item(item, object, context.environment);
@@ -618,7 +633,8 @@ Iterable<Object?> doMap(
       }
     }
 
-    var func = _prepareMap(context, finalPositional, finalNamed.cast<String, Object?>());
+    var func = _prepareMap(
+        context, finalPositional, finalNamed.cast<String, Object?>());
     for (var value in values) {
       yield func(value);
     }
@@ -651,7 +667,8 @@ String doUrlEncode(Object? value) {
   if (value is Map) {
     var parts = <String>[];
     for (var entry in value.entries) {
-      parts.add('${Uri.encodeQueryComponent(entry.key.toString())}=${Uri.encodeQueryComponent(entry.value.toString())}');
+      parts.add(
+          '${Uri.encodeQueryComponent(entry.key.toString())}=${Uri.encodeQueryComponent(entry.value.toString())}');
     }
     return parts.join('&');
   }
@@ -714,7 +731,8 @@ Object? doMin(
   Object? attribute,
 }) {
   if (value.isEmpty) return null;
-  var sorted = doSort(environment, value, caseSensitive: caseSensitive, attribute: attribute);
+  var sorted = doSort(environment, value,
+      caseSensitive: caseSensitive, attribute: attribute);
   return sorted.first;
 }
 
@@ -725,7 +743,8 @@ Object? doMax(
   Object? attribute,
 }) {
   if (value.isEmpty) return null;
-  var sorted = doSort(environment, value, caseSensitive: caseSensitive, attribute: attribute);
+  var sorted = doSort(environment, value,
+      caseSensitive: caseSensitive, attribute: attribute);
   return sorted.last;
 }
 
@@ -791,7 +810,8 @@ String doUrlize(
   });
 }
 
-String doIndent(String value, [int width = 4, bool first = false, bool blank = false]) {
+String doIndent(String value,
+    [int width = 4, bool first = false, bool blank = false]) {
   var indent = ' ' * width;
   var lines = const LineSplitter().convert(value);
   var buffer = StringBuffer();
@@ -939,7 +959,8 @@ Future<List<Object?>> _doSelectAsync(
   var test = context.environment.tests[testName]!;
   var results = <Object?>[];
   for (var item in value) {
-    var result = await context.environment.callCommon(test, [item, ...?args], const {}, context);
+    var result = await context.environment
+        .callCommon(test, [item, ...?args], const {}, context);
     if (result == true) results.add(item);
   }
   return results;
@@ -1011,7 +1032,8 @@ Future<List<Object?>> _doRejectAsync(
   var test = context.environment.tests[testName]!;
   var results = <Object?>[];
   for (var item in value) {
-    var result = await context.environment.callCommon(test, [item, ...?args], const {}, context);
+    var result = await context.environment
+        .callCommon(test, [item, ...?args], const {}, context);
     if (result == false) results.add(item);
   }
   return results;
@@ -1090,7 +1112,8 @@ Future<List<Object?>> _doSelectAttrAsync(
   var results = <Object?>[];
   for (var item in value) {
     var attrVal = getter(item);
-    var result = await context.environment.callCommon(test, [attrVal, ...?args], const {}, context);
+    var result = await context.environment
+        .callCommon(test, [attrVal, ...?args], const {}, context);
     if (result == true) results.add(item);
   }
   return results;
@@ -1169,13 +1192,15 @@ Future<List<Object?>> _doRejectAttrAsync(
   var results = <Object?>[];
   for (var item in value) {
     var attrVal = getter(item);
-    var result = await context.environment.callCommon(test, [attrVal, ...?args], const {}, context);
+    var result = await context.environment
+        .callCommon(test, [attrVal, ...?args], const {}, context);
     if (result == false) results.add(item);
   }
   return results;
 }
 
-Map<Object?, Object?> doCombine(Map<Object?, Object?> value, Map<Object?, Object?> other) {
+Map<Object?, Object?> doCombine(
+    Map<Object?, Object?> value, Map<Object?, Object?> other) {
   return {...value, ...other};
 }
 
@@ -1186,19 +1211,29 @@ List<Object?> doShuffle(Environment environment, Iterable<Object?> value) {
 }
 
 bool doBool(Object? value) => utils.boolean(value);
-int doInt(Object? value, {int defaultValue = 0, int base = 10}) => doInteger(value, defaultValue: defaultValue, base: base);
-double doFloatFilter(Object? value, [double defaultValue = 0.0]) => doFloat(value, defaultValue);
+int doInt(Object? value, {int defaultValue = 0, int base = 10}) =>
+    doInteger(value, defaultValue: defaultValue, base: base);
+double doFloatFilter(Object? value, [double defaultValue = 0.0]) =>
+    doFloat(value, defaultValue);
 
-String doRegexReplaceFilter(String value, String pattern, String replacement, {bool ignoreCase = false}) {
-  return value.replaceAll(RegExp(pattern, caseSensitive: !ignoreCase), replacement);
+String doRegexReplaceFilter(String value, String pattern, String replacement,
+    {bool ignoreCase = false}) {
+  return value.replaceAll(
+      RegExp(pattern, caseSensitive: !ignoreCase), replacement);
 }
 
 Object? doRegexSearch(String value, String pattern, {bool ignoreCase = false}) {
-  return RegExp(pattern, caseSensitive: !ignoreCase).firstMatch(value)?.group(0);
+  return RegExp(pattern, caseSensitive: !ignoreCase)
+      .firstMatch(value)
+      ?.group(0);
 }
 
-List<String> doRegexFindall(String value, String pattern, {bool ignoreCase = false}) {
-  return RegExp(pattern, caseSensitive: !ignoreCase).allMatches(value).map((m) => m.group(0)!).toList();
+List<String> doRegexFindall(String value, String pattern,
+    {bool ignoreCase = false}) {
+  return RegExp(pattern, caseSensitive: !ignoreCase)
+      .allMatches(value)
+      .map((m) => m.group(0)!)
+      .toList();
 }
 
 /// Filters map.
@@ -1277,6 +1312,7 @@ final Map<String, Object> filters = <String, Object>{
   'shuffle': utils.EnvFilter(doShuffle),
   'combine': doCombine,
   'pluck': utils.ContextFilter(
-    (Context context, Iterable<Object?>? values, String attribute) => doMap(context, values, [attribute], {}),
+    (Context context, Iterable<Object?>? values, String attribute) =>
+        doMap(context, values, [attribute], {}),
   ),
 };

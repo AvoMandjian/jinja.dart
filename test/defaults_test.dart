@@ -13,6 +13,8 @@ void main() {
       expect(getAttribute('entries', map), isA<Iterable>());
       expect(getAttribute('keys', map), isA<Iterable>());
       expect(getAttribute('values', map), isA<Iterable>());
+      expect(getAttribute('items', map), isA<Function>());
+      expect((getAttribute('items', map) as Function)(), isA<Iterable>());
       expect(getAttribute('a', map), equals(1));
     });
 
@@ -20,7 +22,9 @@ void main() {
       final list = [1, 2];
       expect(getAttribute('add', list), isA<Function>());
       expect(
-          () => getAttribute('unknown', list), throwsA(isA<UndefinedError>()),);
+        () => getAttribute('unknown', list),
+        throwsA(isA<UndefinedError>()),
+      );
     });
 
     test('Cycler attributes', () {
@@ -28,8 +32,10 @@ void main() {
       expect(getAttribute('next', cycler), isA<Function>());
       expect(getAttribute('reset', cycler), isA<Function>());
       expect(getAttribute('current', cycler), equals('a'));
-      expect(() => getAttribute('unknown', cycler),
-          throwsA(isA<UndefinedError>()),);
+      expect(
+        () => getAttribute('unknown', cycler),
+        throwsA(isA<UndefinedError>()),
+      );
     });
 
     test('LoopContext attributes', () {
@@ -87,7 +93,7 @@ void main() {
       final z = zip([1, 2], [3, 4], [5, 6], [7, 8], [9, 10]);
       expect(z.toList(), [
         [1, 3, 5, 7, 9],
-        [2, 4, 6, 8, 10]
+        [2, 4, 6, 8, 10],
       ]);
     });
 
@@ -97,15 +103,19 @@ void main() {
     });
 
     test('dict edge cases', () {
-      expect(dict([
-        [const MapEntry('a', 1)]
-      ]), {'a': 1});
-      expect(() => dict([
-        [123]
-      ]), throwsA(isA<TemplateRuntimeError>()));
-      expect(() => dict([
-        456
-      ]), throwsA(isA<TemplateRuntimeError>()));
+      expect(
+        dict([
+          [const MapEntry('a', 1)],
+        ]),
+        {'a': 1},
+      );
+      expect(
+        () => dict([
+          [123],
+        ]),
+        throwsA(isA<TemplateRuntimeError>()),
+      );
+      expect(() => dict([456]), throwsA(isA<TemplateRuntimeError>()));
     });
   });
 }

@@ -44,7 +44,8 @@ void main() async {
     // Setup MapLoader with base templates for inheritance and inclusion
     final loader = MapLoader(
       {
-        'macro_property': '''{% macro macro_property(id, label, type, widget, value, value_text=none) %}
+        'macro_property':
+            '''{% macro macro_property(id, label, type, widget, value, value_text=none) %}
 {
     "property_id": "{{ id }}",
     "property_label": "{{ label }}",
@@ -178,7 +179,10 @@ void main() async {
       if (info.nodeName != null) print('Node name: ${info.nodeName}');
       print('Variables:');
       info.variables.forEach((key, value) {
-        if (key == 'loop' || key == 'item' || key == 'title' || key == 'items') {
+        if (key == 'loop' ||
+            key == 'item' ||
+            key == 'title' ||
+            key == 'items') {
           print('  $key: $value (type: ${value.runtimeType})');
         }
       });
@@ -187,11 +191,14 @@ void main() async {
       return DebugAction.continue_;
     };
     var template2 = env.fromString(jinjaScript);
-    var result2 = await template2.renderDebug(data: jinjaData, debugController: debugController);
+    var result2 = await template2.renderDebug(
+        data: jinjaData, debugController: debugController);
     print('Result length: ${result2.length}');
-    print('--------------------------------------------------------------------------------------------------------------------------------');
+    print(
+        '--------------------------------------------------------------------------------------------------------------------------------');
     print(result2);
-    print('--------------------------------------------------------------------------------------------------------------------------------');
+    print(
+        '--------------------------------------------------------------------------------------------------------------------------------');
   } catch (e, stack) {
     print('\n!!! UNHANDLED EXCEPTION !!!');
     print(e);

@@ -23,7 +23,8 @@ void main() {
         loader: MapLoader(
           {
             'base.html': '{% block b %}base{% endblock %}',
-            'child.html': '{% extends "base.html" %}{% block b %}child:{{ super() }}{% endblock %}',
+            'child.html':
+                '{% extends "base.html" %}{% block b %}child:{{ super() }}{% endblock %}',
           },
           globalJinjaData: {},
         ),
@@ -43,8 +44,10 @@ void main() {
         ),
       );
       final t = env.getTemplate('base.html');
-      expect(t.renderAsync(),
-          throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('Required block \'req\' not found'))));
+      expect(
+          t.renderAsync(),
+          throwsA(isA<TemplateRuntimeError>().having((e) => e.message,
+              'message', contains('Required block \'req\' not found'))));
     });
 
     test('async super() block not found error', () async {
@@ -52,7 +55,8 @@ void main() {
         loader: MapLoader(
           {
             'base.html': '{% block b %}base{% endblock %}',
-            'child.html': '{% extends "base.html" %}{% block b %}{{ super() }}{{ super() }}{% endblock %}',
+            'child.html':
+                '{% extends "base.html" %}{% block b %}{{ super() }}{{ super() }}{% endblock %}',
           },
           globalJinjaData: {},
         ),

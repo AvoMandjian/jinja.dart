@@ -22,17 +22,22 @@ void main() {
       // 7. It creates a checkFuture that calls sink.waitForAllFutures().
       // 8. It writes checkFuture to the sink.
 
-      final result = await t.renderAsync({'async_val': Future.delayed(Duration(milliseconds: 10), () => 'resolved')});
+      final result = await t.renderAsync({
+        'async_val':
+            Future.delayed(Duration(milliseconds: 10), () => 'resolved')
+      });
       expect(result, equals('resolved'));
     });
 
     test('visitFor async re-evaluation of iterable', () async {
       final env = Environment();
       // Similar to above but for the iterable in a for loop
-      final t = env.fromString('{% set items = async_items %}{% for i in items %}{{ i }}{% endfor %}');
+      final t = env.fromString(
+          '{% set items = async_items %}{% for i in items %}{{ i }}{% endfor %}');
 
       final result = await t.renderAsync({
-        'async_items': Future.delayed(Duration(milliseconds: 10), () => [1, 2, 3]),
+        'async_items':
+            Future.delayed(Duration(milliseconds: 10), () => [1, 2, 3]),
       });
       expect(result, equals('123'));
     });
@@ -43,7 +48,8 @@ void main() {
 
       final future = Future.error(Exception('async failure'));
       // We expect TemplateErrorWrapper
-      expect(t.renderAsync({'async_fail': future}), throwsA(isA<TemplateErrorWrapper>()));
+      expect(t.renderAsync({'async_fail': future}),
+          throwsA(isA<TemplateErrorWrapper>()));
     });
 
     test('visitAssign with Future error', () async {
@@ -51,7 +57,8 @@ void main() {
       final t = env.fromString('{% set x = async_fail %}{{ x }}');
 
       final future = Future.error(Exception('assign failure'));
-      expect(t.renderAsync({'async_fail': future}), throwsA(isA<TemplateErrorWrapper>()));
+      expect(t.renderAsync({'async_fail': future}),
+          throwsA(isA<TemplateErrorWrapper>()));
     });
   });
 }

@@ -31,7 +31,12 @@ Object finalize(Context context, Object? value) {
 /// Default attribute getter used for `.` access.
 ///
 /// Handles `Map`, `List` methods, `LoopContext`, and `Namespace` objects.
-Object? getAttribute(String attribute, Object? object, {Object? node, String? source}) {
+Object? getAttribute(
+  String attribute,
+  Object? object, {
+  Object? node,
+  String? source,
+}) {
   if (object == null) {
     // Collect available attributes for suggestions
     final suggestions = <String>[
@@ -56,11 +61,24 @@ Object? getAttribute(String attribute, Object? object, {Object? node, String? so
     }
 
     if (attribute == 'keys') {
+      // Return a function if it's being called, or the keys if accessed as a property
+      // But we don't know if it's a call or a property access.
+      // Wait, in Jinja2 `dict.keys()` returns keys.
+      // `dict.keys` returns a built-in method.
+      // If we just return `object.keys`, `Context.call` won't be able to invoke it.
+      // Wait, `Context.call` tries to call the object if it has a `.call()` method or if it is a function.
+      // If we return `object.keys` (Iterable), it doesn't have `.call()`, so `Context.call` will fail if the template does `params.keys()`.
       return object.keys;
     }
 
     if (attribute == 'values') {
       return object.values;
+    }
+
+    if (attribute == 'items') {
+      // In Jinja, dict.items() returns a sequence of (key, value) pairs.
+      // We return a closure so that Context.call() can invoke it when someone writes `params.items()`.
+      return () => object.entries;
     }
 
     // Return null (undefined) if key doesn't exist to match Jinja2 behavior
@@ -294,8 +312,20 @@ class Cycler {
   }
 }
 
-Cycler makeCycler([Object? arg1, Object? arg2, Object? arg3, Object? arg4, Object? arg5]) {
-  var args = [if (arg1 != null) arg1, if (arg2 != null) arg2, if (arg3 != null) arg3, if (arg4 != null) arg4, if (arg5 != null) arg5];
+Cycler makeCycler([
+  Object? arg1,
+  Object? arg2,
+  Object? arg3,
+  Object? arg4,
+  Object? arg5,
+]) {
+  var args = [
+    if (arg1 != null) arg1,
+    if (arg2 != null) arg2,
+    if (arg3 != null) arg3,
+    if (arg4 != null) arg4,
+    if (arg5 != null) arg5,
+  ];
   return Cycler(args);
 }
 
@@ -364,7 +394,13 @@ String lipsum({int n = 5, bool html = true, int min = 20, int max = 100}) {
 
 /// Zip multiple iterables.
 /// Supports up to 5 iterables.
-Iterable<List<Object?>> zip(Iterable<Object?> i1, [Iterable<Object?>? i2, Iterable<Object?>? i3, Iterable<Object?>? i4, Iterable<Object?>? i5]) {
+Iterable<List<Object?>> zip(
+  Iterable<Object?> i1, [
+  Iterable<Object?>? i2,
+  Iterable<Object?>? i3,
+  Iterable<Object?>? i4,
+  Iterable<Object?>? i5,
+]) {
   var iterables = [i1];
   if (i2 != null) iterables.add(i2);
   if (i3 != null) iterables.add(i3);

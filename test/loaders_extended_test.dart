@@ -16,19 +16,23 @@ void main() {
     setUp(() {
       tempDir = Directory.systemTemp.createTempSync('jinja_fs_test_');
 
-      File(p.join(tempDir.path, 'base.html')).writeAsStringSync('Base: {% block content %}{% endblock %}');
+      File(p.join(tempDir.path, 'base.html'))
+          .writeAsStringSync('Base: {% block content %}{% endblock %}');
 
       var pagesDir = Directory(p.join(tempDir.path, 'pages'))..createSync();
       File(p.join(pagesDir.path, 'child.html')).writeAsStringSync(
         '{% extends "base.html" %}{% block content %}Child{% endblock %}',
       );
 
-      var partialsDir = Directory(p.join(tempDir.path, 'partials'))..createSync();
+      var partialsDir = Directory(p.join(tempDir.path, 'partials'))
+        ..createSync();
       File(p.join(partialsDir.path, 'part.html')).writeAsStringSync('Part');
 
-      File(p.join(tempDir.path, 'main.html')).writeAsStringSync('Main -> {% include "partials/part.html" %}');
+      File(p.join(tempDir.path, 'main.html'))
+          .writeAsStringSync('Main -> {% include "partials/part.html" %}');
 
-      File(p.join(tempDir.path, 'broken.html')).writeAsStringSync('{% include "missing.html" %}');
+      File(p.join(tempDir.path, 'broken.html'))
+          .writeAsStringSync('{% include "missing.html" %}');
 
       File(p.join(tempDir.path, 'safe.html')).writeAsStringSync(
         'Safe -> {% include "missing.html" ignore missing %}',

@@ -221,7 +221,8 @@ void main() {
     test('callTest async error path', () async {
       final envAsyncFail = Environment(
         tests: {
-          'fail_async': (Object? _) => Future.error(Exception('async test fail')),
+          'fail_async': (Object? _) =>
+              Future.error(Exception('async test fail')),
         },
       );
       await expectLater(

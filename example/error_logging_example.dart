@@ -52,7 +52,8 @@ void main() {
     // Example 4: Filter Not Found Error
     print('\n=== Example 4: Filter Not Found Error ===');
     var env4 = Environment();
-    var template4 = env4.fromString('{{ text|uppercase }}', path: 'example.html');
+    var template4 =
+        env4.fromString('{{ text|uppercase }}', path: 'example.html');
 
     try {
       template4.render({'text': 'hello'});
@@ -79,7 +80,8 @@ void main() {
     var errorLogger6 = ErrorLogger();
     var env6 = Environment();
 
-    var template6 = env6.fromString('{{ undefinedVariable }}', path: 'example.html');
+    var template6 =
+        env6.fromString('{{ undefinedVariable }}', path: 'example.html');
     try {
       template6.render({'otherVar': 'value'});
     } catch (e) {
@@ -122,7 +124,8 @@ void main() {
     print('\n=== Example 10: ErrorLogger Disabled (None Level) ===');
     var errorLogger10 = ErrorLogger(level: LogLevel.none);
     var env10 = Environment();
-    var template10 = env10.fromString('{{ undefinedVar }}', path: 'example.html');
+    var template10 =
+        env10.fromString('{{ undefinedVar }}', path: 'example.html');
 
     try {
       template10.render({});
@@ -187,7 +190,8 @@ void main() {
         'secret': 'mysecret',
       });
     } catch (e) {
-      print('Error context excludes sensitive data (password, api_key, auth_token, secret):');
+      print(
+          'Error context excludes sensitive data (password, api_key, auth_token, secret):');
       final errorStr = e.toString();
       // Check that sensitive data is not in error message
       if (!errorStr.contains('secret123') &&
@@ -199,7 +203,9 @@ void main() {
         print('⚠ Sensitive data may be present in error context');
       }
       print('Error message (first 500 chars):');
-      print(errorStr.length > 500 ? '${errorStr.substring(0, 500)}...' : errorStr);
+      print(errorStr.length > 500
+          ? '${errorStr.substring(0, 500)}...'
+          : errorStr);
     }
 
     // ========== ERRORS IN MACROS AND INCLUDES ==========
@@ -284,7 +290,10 @@ void main() {
 
       comprehensiveLogger.logInfo(
         'Template rendered successfully',
-        context: {'template': 'comprehensive.html', 'resultLength': result16.length},
+        context: {
+          'template': 'comprehensive.html',
+          'resultLength': result16.length
+        },
       );
     } catch (e, stackTrace) {
       comprehensiveLogger.logError(

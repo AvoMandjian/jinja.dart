@@ -47,14 +47,18 @@ void main() {
     test('listTemplates', () {
       var loader = FileSystemLoader(paths: paths, extensions: {'html', 'txt'});
       var templates = loader.listTemplates();
-      expect(templates,
-          containsAll(['foo/test.html', 'test.html', 'mojibake.txt']),);
+      expect(
+        templates,
+        containsAll(['foo/test.html', 'test.html', 'mojibake.txt']),
+      );
     });
 
     test('TemplateNotFound', () {
       var loader = FileSystemLoader(paths: paths);
-      expect(() => loader.getSource('non_existent.html'),
-          throwsA(isA<TemplateNotFound>()),);
+      expect(
+        () => loader.getSource('non_existent.html'),
+        throwsA(isA<TemplateNotFound>()),
+      );
     });
 
     test('baseString', () {

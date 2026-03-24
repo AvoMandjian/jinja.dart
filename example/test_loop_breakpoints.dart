@@ -26,8 +26,10 @@ Future<void> testSimpleLoop() async {
 End''';
 
   await runDebugTest(template, {
-    'range': (int start, [int? stop, int step = 1]) =>
-        stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step),
+    'range': (int start, [int? stop, int step = 1]) => stop == null
+        ? Iterable<int>.generate(start)
+        : Iterable<int>.generate(
+            (stop - start) ~/ step, (i) => start + i * step),
   }, [
     3,
   ]); // Breakpoint on line 3 (Item {{ i }})
@@ -48,8 +50,10 @@ Future<void> testNestedLoops() async {
 End''';
 
   await runDebugTest(template, {
-    'range': (int start, [int? stop, int step = 1]) =>
-        stop == null ? Iterable<int>.generate(start) : Iterable<int>.generate((stop - start) ~/ step, (i) => start + i * step),
+    'range': (int start, [int? stop, int step = 1]) => stop == null
+        ? Iterable<int>.generate(start)
+        : Iterable<int>.generate(
+            (stop - start) ~/ step, (i) => start + i * step),
   }, [
     3,
     5,
@@ -79,7 +83,8 @@ Final: {{ total }}''';
   ]); // Breakpoints on Value, Running total, and Final
 }
 
-Future<void> runDebugTest(String template, Map<String, Object?> data, List<int> breakpointLines) async {
+Future<void> runDebugTest(String template, Map<String, Object?> data,
+    List<int> breakpointLines) async {
   // Show template with line numbers
   print('\nTemplate with line numbers:');
   var lines = template.split('\n');
@@ -108,7 +113,10 @@ Future<void> runDebugTest(String template, Map<String, Object?> data, List<int> 
     // Show only loop variables
     var loopVars = <String, Object?>{};
     for (var entry in info.variables.entries) {
-      if (entry.key == 'i' || entry.key == 'j' || entry.key == 'item' || entry.key == 'total') {
+      if (entry.key == 'i' ||
+          entry.key == 'j' ||
+          entry.key == 'item' ||
+          entry.key == 'total') {
         loopVars[entry.key] = entry.value;
       }
     }

@@ -29,7 +29,8 @@ void main() {
       );
     });
 
-    test('Capturing futures in _AsyncCollectingSink (extends fallback)', () async {
+    test('Capturing futures in _AsyncCollectingSink (extends fallback)',
+        () async {
       final env = Environment(
         loader: MapLoader(
           {
@@ -82,9 +83,11 @@ void main() {
     final env = Environment();
 
     test('async assign future fallback and error', () async {
-      final envWithFuture = Environment(globals: {'f': Future.error(Exception('future assignment failure'))});
+      final envWithFuture = Environment(
+          globals: {'f': Future.error(Exception('future assignment failure'))});
       final t = envWithFuture.fromString('{% set x = f %}');
-      await expectLater(() => t.renderAsync(), throwsA(isA<TemplateErrorWrapper>()));
+      await expectLater(
+          () => t.renderAsync(), throwsA(isA<TemplateErrorWrapper>()));
     });
 
     test('async assign block sync fallback', () async {
@@ -93,12 +96,14 @@ void main() {
     });
 
     test('async autoescape sync fallback', () async {
-      final t = env.fromString('{% autoescape true %}{{ "<i>" }}{% endautoescape %}');
+      final t =
+          env.fromString('{% autoescape true %}{{ "<i>" }}{% endautoescape %}');
       expect(await t.renderAsync(), equals('&lt;i&gt;'));
     });
 
     test('async callblock sync fallback', () async {
-      final t = env.fromString('{% macro m() %}{{ caller() }}{% endmacro %}{% call m() %}a{% endcall %}');
+      final t = env.fromString(
+          '{% macro m() %}{{ caller() }}{% endmacro %}{% call m() %}a{% endcall %}');
       // sync fallback doesn't output correctly for async test, comment out expectation
     });
   });

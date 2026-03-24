@@ -15,8 +15,14 @@ void main() {
       final node = Macro(
         name: 'm',
         positional: [Name(name: 'x', context: AssignContext.store)],
-        named: [(Name(name: 'y', context: AssignContext.store), Constant(value: 2))],
-        body: Interpolation(value: Scalar(operator: ScalarOperator.plus, left: Name(name: 'x'), right: Name(name: 'y'))),
+        named: [
+          (Name(name: 'y', context: AssignContext.store), Constant(value: 2))
+        ],
+        body: Interpolation(
+            value: Scalar(
+                operator: ScalarOperator.plus,
+                left: Name(name: 'x'),
+                right: Name(name: 'y'))),
       );
 
       final macro = renderer.getMacroFunction(node, context);
@@ -42,7 +48,8 @@ void main() {
       final macro = renderer.getMacroFunction(node, context);
       expect(
         () => macro([], {}),
-        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('Missing required macro argument "req"'))),
+        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message',
+            contains('Missing required macro argument "req"'))),
       );
     });
 
@@ -85,7 +92,8 @@ void main() {
         body: Interpolation(value: Name(name: 'kwargs')),
       );
       final macro = renderer.getMacroFunction(node, context);
-      expect(macro([], {Symbol('a'): 1, 'b': 2}).toString(), equals('{a: 1, b: 2}'));
+      expect(macro([], {Symbol('a'): 1, 'b': 2}).toString(),
+          equals('{a: 1, b: 2}'));
     });
 
     test('too many positional arguments error', () {
@@ -99,7 +107,8 @@ void main() {
       final macro = renderer.getMacroFunction(node, context);
       expect(
         () => macro([1, 2], {}),
-        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('expected arguments count: 1'))),
+        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message',
+            contains('expected arguments count: 1'))),
       );
     });
 
@@ -114,7 +123,8 @@ void main() {
       final macro = renderer.getMacroFunction(node, context);
       expect(
         () => macro([], {Symbol('extra'): 1}),
-        throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('remaining.isNotEmpty'))),
+        throwsA(isA<TemplateRuntimeError>().having(
+            (e) => e.message, 'message', contains('remaining.isNotEmpty'))),
       );
     });
   });

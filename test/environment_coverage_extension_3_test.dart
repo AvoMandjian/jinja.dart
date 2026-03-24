@@ -8,7 +8,9 @@ void main() {
     test('modifiers in fromString', () {
       final env = Environment(
         modifiers: [
-          (node) => node is TemplateNode ? TemplateNode(body: Data(data: 'modified')) : node,
+          (node) => node is TemplateNode
+              ? TemplateNode(body: Data(data: 'modified'))
+              : node,
         ],
       );
       final t = env.fromString('original');

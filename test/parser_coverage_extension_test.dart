@@ -6,27 +6,32 @@ void main() {
 
   group('Parser Coverage Extensions', () {
     test('parseFrom with context', () {
-      final template = env.fromString("{% from 'template' import macro with context %}");
+      final template =
+          env.fromString("{% from 'template' import macro with context %}");
       expect(template, isNotNull);
     });
 
     test('parseFrom without context', () {
-      final template = env.fromString("{% from 'template' import macro without context %}");
+      final template =
+          env.fromString("{% from 'template' import macro without context %}");
       expect(template, isNotNull);
     });
 
     test('parseImport with context', () {
-      final template = env.fromString("{% import 'template' as t with context %}");
+      final template =
+          env.fromString("{% import 'template' as t with context %}");
       expect(template, isNotNull);
     });
 
     test('parseImport without context', () {
-      final template = env.fromString("{% import 'template' as t without context %}");
+      final template =
+          env.fromString("{% import 'template' as t without context %}");
       expect(template, isNotNull);
     });
 
     test('parseFrom multiple imports with alias', () {
-      final template = env.fromString("{% from 'template' import macro1 as m1, macro2 %}");
+      final template =
+          env.fromString("{% from 'template' import macro1 as m1, macro2 %}");
       expect(template, isNotNull);
     });
 
@@ -42,7 +47,8 @@ void main() {
     });
 
     test('parseWith multiple assignments', () {
-      final template = env.fromString('{% with a=1, b=2 %}{{ a }}{{ b }}{% endwith %}');
+      final template =
+          env.fromString('{% with a=1, b=2 %}{{ a }}{{ b }}{% endwith %}');
       expect(template, isNotNull);
     });
 

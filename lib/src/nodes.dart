@@ -77,7 +77,12 @@ abstract base class Statement extends Node {
 }
 
 final class Slice extends Expression {
-  const Slice({required this.value, required this.start, this.stop, super.line, super.column});
+  const Slice(
+      {required this.value,
+      required this.start,
+      this.stop,
+      super.line,
+      super.column});
 
   final Expression value;
 

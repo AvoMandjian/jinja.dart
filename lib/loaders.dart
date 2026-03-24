@@ -131,7 +131,10 @@ class FileSystemLoader extends Loader {
         globals: globals,
       );
     }
-    return environment.fromString(getSource(path),
-        path: path, globals: globals,);
+    return environment.fromString(
+      getSource(path),
+      path: path,
+      globals: globals,
+    );
   }
 }

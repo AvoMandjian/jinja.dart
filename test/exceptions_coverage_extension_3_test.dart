@@ -23,7 +23,8 @@ void main() {
             for (var i = 0; i < 12; i++) 'var$i': 'value$i',
           },
           callStackValue: List.generate(12, (i) => 'frame$i'),
-          stackTraceValue: StackTrace.fromString('line1\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10\nline11\nline12'),
+          stackTraceValue: StackTrace.fromString(
+              'line1\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10\nline11\nline12'),
         ),
         TemplateSyntaxError(
           'Syntax message',
@@ -37,13 +38,18 @@ void main() {
             for (var i = 0; i < 12; i++) 'svar$i': 'svalue$i',
           },
           callStack: ['frame1'],
-          stackTrace: StackTrace.fromString('line1\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10\nline11\nline12'),
+          stackTrace: StackTrace.fromString(
+              'line1\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10\nline11\nline12'),
         ),
       ];
 
       for (final error in errors) {
         final str = error.toString();
-        expect(str, contains(error is TemplateSyntaxError ? 'Syntax message' : 'Runtime message'));
+        expect(
+            str,
+            contains(error is TemplateSyntaxError
+                ? 'Syntax message'
+                : 'Runtime message'));
         expect(str, contains('Operation:'));
         expect(str, contains('Suggestions:'));
         expect(str, contains('Context:'));

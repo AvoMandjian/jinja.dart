@@ -30,7 +30,7 @@ void findUncoveredLines(String targetFile) async {
   }
 
   print('Uncovered lines in $targetFile:');
-  
+
   // Group lines into ranges for easier reading
   List<String> ranges = [];
   if (uncoveredLines.isNotEmpty) {

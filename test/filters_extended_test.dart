@@ -96,7 +96,9 @@ void main() {
         });
       }
 
-      test('Idempotency check: passing an existing SafeString returns the same instance', () {
+      test(
+          'Idempotency check: passing an existing SafeString returns the same instance',
+          () {
         final alreadySafe = utils.SafeString('<div></div>');
         final resultDoubleSafe = doSafe(alreadySafe);
         expect(identical(alreadySafe, resultDoubleSafe), isTrue);
@@ -177,7 +179,8 @@ void main() {
     });
 
     test('doMap with symbol kwargs', () {
-      expect(() => doMap(context, [1], ['string'], {'test': 1}).toList(), throwsA(isA<TemplateErrorWrapper>()));
+      expect(() => doMap(context, [1], ['string'], {'test': 1}).toList(),
+          throwsA(isA<TemplateErrorWrapper>()));
     });
 
     test('_compare with nulls', () {
@@ -216,7 +219,8 @@ void main() {
       final result = await (doSelect(context, list, 'is_async_true') as Future);
       expect(result, equals([1, 2]));
 
-      final result2 = await (doSelect(context, list, 'is_async_false') as Future);
+      final result2 =
+          await (doSelect(context, list, 'is_async_false') as Future);
       expect(result2, equals([]));
     });
 
@@ -225,7 +229,8 @@ void main() {
       final result = await (doReject(context, list, 'is_async_true') as Future);
       expect(result, equals([]));
 
-      final result2 = await (doReject(context, list, 'is_async_false') as Future);
+      final result2 =
+          await (doReject(context, list, 'is_async_false') as Future);
       expect(result2, equals([1, 2]));
     });
 
@@ -234,7 +239,8 @@ void main() {
         {'a': 1},
         {'a': 2},
       ];
-      final result = await (doSelectAttr(context, items, 'a', 'is_async_true') as Future);
+      final result =
+          await (doSelectAttr(context, items, 'a', 'is_async_true') as Future);
       expect(result as List, hasLength(2));
     });
 
@@ -243,7 +249,8 @@ void main() {
         {'a': 1},
         {'a': 2},
       ];
-      final result = await (doRejectAttr(context, items, 'a', 'is_async_true') as Future);
+      final result =
+          await (doRejectAttr(context, items, 'a', 'is_async_true') as Future);
       expect(result as List, isEmpty);
     });
   });

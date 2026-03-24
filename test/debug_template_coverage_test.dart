@@ -8,7 +8,7 @@ void main() {
     final env = Environment();
     final template = env.fromString('original');
     final controller = DebugController()..enabled = true;
-    
+
     final result = await template.renderDebug(
       {},
       debugController: controller,

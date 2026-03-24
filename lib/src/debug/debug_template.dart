@@ -16,7 +16,8 @@ extension DebugTemplate on Template {
     String? templateSource,
   }) async {
     var buffer = StringBuffer();
-    await renderDebugTo(buffer, data, debugController: debugController, templateSource: templateSource);
+    await renderDebugTo(buffer, data,
+        debugController: debugController, templateSource: templateSource);
     return buffer.toString();
   }
 

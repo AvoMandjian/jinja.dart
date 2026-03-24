@@ -1,4 +1,11 @@
-import 'package:jinja/src/lexer.dart' show Token, ValueToken, SimpleToken, describeTokenType, describeToken, describeExpression;
+import 'package:jinja/src/lexer.dart'
+    show
+        Token,
+        ValueToken,
+        SimpleToken,
+        describeTokenType,
+        describeToken,
+        describeExpression;
 import 'package:test/test.dart';
 
 void main() {

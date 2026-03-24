@@ -26,9 +26,11 @@ void main() {
       // Dart VM might only allow it if obj is a Function.
 
       // Let's use a closure that mimics a callable object
-      String callable(Object? arg, {Object? named}) => 'called with $arg and $named';
+      String callable(Object? arg, {Object? named}) =>
+          'called with $arg and $named';
       final context = Context(env);
-      final result = env.callCommon(callable, ['arg1'], {#named: 'val1'}, context);
+      final result =
+          env.callCommon(callable, ['arg1'], {#named: 'val1'}, context);
       expect(result, equals('called with arg1 and val1'));
     });
 
@@ -59,7 +61,8 @@ void main() {
     test('callTest catch block', () {
       final myEnv = Environment();
       // Test that throws non-TemplateError
-      myEnv.tests['throwing_test'] = (Object? val) => throw Exception('Generic failure');
+      myEnv.tests['throwing_test'] =
+          (Object? val) => throw Exception('Generic failure');
 
       expect(
         () => myEnv.callTest('throwing_test', [123]),

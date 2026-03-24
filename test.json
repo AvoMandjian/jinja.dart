@@ -1,6 +1,6 @@
 [
     {
-        "id": "aa97178b-1e9f-4517-8b1c-2dad5d809fab",
+        "id": "d3daded0-9199-40ba-a034-41c8f4f82014",
         "ui_widget": "single_line_text",
         "property_label": "Font Name",
         "property_id": "font_name",
@@ -11,7 +11,55 @@
         }
     },
     {
-        "id": "fe59ed58-9577-4cee-b1d7-f5f4d9277181",
+        "id": "86742d9d-c9c2-46f5-9b7e-3f723954c8c7",
+        "data_type": "dt_base64",
+        "data": {
+            "value": "SGVsbG8gV29ybGQ=",
+            "value_text": "Hello World"
+        }
+    },
+    {
+        "id": "0d200447-47a6-4c04-b4c1-13cbbece187b",
+        "data_type": "dt_uuid",
+        "data": {
+            "value": "065d4098-8c9e-4ec1-8348-9a6beaf6a135",
+            "value_text": "065d4098-8c9e-4ec1-8348-9a6beaf6a135"
+        }
+    },
+    {
+        "id": "719098be-41be-4fda-8f4e-6063cbd6164b",
+        "data_type": "dt_datetime",
+        "data": {
+            "value": "2026-10-10 10:10:10",
+            "value_text": "2026-10-10 10:10:10"
+        }
+    },
+    {
+        "id": "111cc8c3-1056-44a6-82c9-c5c6db2ce9dc",
+        "data_type": "dt_datetime",
+        "data": {
+            "value": "2026-10-10 10:10:10",
+            "value_text": "2026-10-10 10:10:10"
+        }
+    },
+    {
+        "id": "dd71af76-33d3-432c-8eb4-6ef02270bdbf",
+        "data_type": "dt_date",
+        "data": {
+            "value": "2026-10-10",
+            "value_text": "2026-10-10"
+        }
+    },
+    {
+        "id": "3751d7f1-0053-4d22-a61d-3ff461cac531",
+        "data_type": "dt_time",
+        "data": {
+            "value": "10:10:10",
+            "value_text": "10:10:10"
+        }
+    },
+    {
+        "id": "dbeae70d-79b4-4d85-ba86-2c34c85f5e5a",
         "ui_widget": "number_input",
         "data_type": "dt_number",
         "data": {
@@ -20,68 +68,19 @@
         }
     },
     {
-        "id": "1210692d-538a-4e71-a1c1-77960648e758",
-        "ui_widget": "switch",
-        "data_type": "dt_boolean",
+        "id": "bd12ca63-bf98-4ac1-808c-043061dc293e",
+        "data_type": "dt_percent",
         "data": {
-            "value": 1,
-            "value_text": "On"
+            "value": 10,
+            "value_text": "10.00%"
         }
     },
     {
-        "id": "4b814fc7-8c04-47ec-b255-3785f02e488f",
-        "data_type": "dt_datetime",
-        "data": {
-            "value": "2026-10-10 10:10:10",
-            "value_text": "2026-10-10 10:10:10"
-        }
-    },
-    {
-        "id": "a8b4142d-9261-4167-980b-1ea7d27baefe",
-        "data_type": "dt_datetime",
-        "data": {
-            "value": "2026-10-10 10:10:10",
-            "value_text": "2026-10-10 10:10:10"
-        }
-    },
-    {
-        "id": "960db126-1fd2-43f8-a2ab-42f4e9bc91fc",
-        "data_type": "dt_date",
-        "data": {
-            "value": "2026-10-10",
-            "value_text": "2026-10-10"
-        }
-    },
-    {
-        "id": "5035ca13-dd71-4dd6-ac01-9ce09934990d",
-        "data_type": "dt_time",
-        "data": {
-            "value": "10:10:10",
-            "value_text": "10:10:10"
-        }
-    },
-    {
-        "id": "c7e402d6-33b6-4ca4-9606-ca1b6ef1bec1",
-        "data_type": "dt_uuid",
-        "data": {
-            "value": "065d4098-8c9e-4ec1-8348-9a6beaf6a135",
-            "value_text": "065d4098-8c9e-4ec1-8348-9a6beaf6a135"
-        }
-    },
-    {
-        "id": "3bc5a658-3822-47eb-bdc2-263b0c889caf",
-        "data_type": "dt_base64",
-        "data": {
-            "value": "SGVsbG8gV29ybGQ=",
-            "value_text": "Hello World"
-        }
-    },
-    {
-        "id": "fabde8c2-1b4c-4884-8bc8-0f50bf3deb95",
+        "id": "cd23231f-8b6d-424f-8d53-4b23ac566888",
         "data_type": "dt_money",
         "data": {
-            "value": {
-                "amount": 1000,
+            "value": 1000,
+            "value_metadata": {
                 "currency_id": "USD",
                 "currency_symb": "$",
                 "convert_rate": null
@@ -90,11 +89,20 @@
         }
     },
     {
-        "id": "c99578d5-f37d-4952-9820-4fae0465604b",
+        "id": "e83da737-c467-4483-aff1-18af03e76029",
+        "ui_widget": "switch",
+        "data_type": "dt_boolean",
+        "data": {
+            "value": 1,
+            "value_text": "On"
+        }
+    },
+    {
+        "id": "dd3df352-0360-4c53-9b93-d8ce24e3d082",
         "data_type": "dt_list",
         "data": [
             {
-                "id": "4f97771f-73d6-4e18-bfcf-afab5950084b",
+                "id": "d44356f7-09ef-4fa3-b2e3-e8aad8abed60",
                 "data_type": "dt_number",
                 "data": {
                     "value": 1,
@@ -102,7 +110,7 @@
                 }
             },
             {
-                "id": "4eed0133-a786-4e0c-b1e2-4dfc277c0130",
+                "id": "33ff97eb-a82a-4c24-902b-c840367d5e38",
                 "data_type": "dt_number",
                 "data": {
                     "value": 2,
@@ -110,7 +118,7 @@
                 }
             },
             {
-                "id": "24e13719-3d55-4fc3-90ae-6eef75f081ae",
+                "id": "06e8e42b-2715-455d-b412-0b514d37b75e",
                 "data_type": "dt_number",
                 "data": {
                     "value": 3,
@@ -120,12 +128,12 @@
         ]
     },
     {
-        "id": "bd280fd9-d3a6-4848-a9f5-d1b5fc2aefbf",
+        "id": "52713ee4-5137-4da1-b361-30ecd4a81d84",
         "ui_widget": "complex_object",
         "data_type": "dt_object",
         "data": {
             "a": {
-                "id": "6a36fb48-f1fe-4092-96b0-762b6d46834c",
+                "id": "63003b21-f933-4b54-8f4c-9a9fc0f1f40a",
                 "data_type": "dt_number",
                 "data": {
                     "value": 1,
@@ -133,7 +141,7 @@
                 }
             },
             "b": {
-                "id": "a02f0af2-689e-4fa7-a3fa-c4bc667d94b4",
+                "id": "26923dfb-ba51-4707-b46a-eeb82c937a20",
                 "data_type": "dt_text",
                 "data": {
                     "value": "2",

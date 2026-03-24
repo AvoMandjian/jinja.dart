@@ -30,8 +30,10 @@ void main() async {
       if (currentFile != null && instrumentedLines > 0) {
         final percentage = (coveredLines / instrumentedLines) * 100;
         if (percentage < 100) {
-          final relativeFile = currentFile.replaceAll(Directory.current.path + '/', '');
-          print('| $relativeFile | ${percentage.toStringAsFixed(1)}% | $coveredLines / $instrumentedLines |');
+          final relativeFile =
+              currentFile.replaceAll(Directory.current.path + '/', '');
+          print(
+              '| $relativeFile | ${percentage.toStringAsFixed(1)}% | $coveredLines / $instrumentedLines |');
         }
       }
     }

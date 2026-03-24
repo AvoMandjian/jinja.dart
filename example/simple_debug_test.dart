@@ -51,7 +51,11 @@ HELLO
             'model': 'Camry',
             'year': 2021,
             'features': ['Bluetooth', 'Backup Camera', 'Cruise Control'],
-            'specs': {'engine': '2.5L', 'transmission': 'Automatic', 'fuelType': 'Gasoline'},
+            'specs': {
+              'engine': '2.5L',
+              'transmission': 'Automatic',
+              'fuelType': 'Gasoline'
+            },
           },
           {
             'id': 2,
@@ -59,10 +63,18 @@ HELLO
             'model': 'Model 3',
             'year': 2023,
             'features': ['Autopilot', 'Electric', 'Touchscreen'],
-            'specs': {'engine': 'Electric', 'transmission': 'Single-speed', 'fuelType': 'Electric'},
+            'specs': {
+              'engine': 'Electric',
+              'transmission': 'Single-speed',
+              'fuelType': 'Electric'
+            },
           }
         ],
-        'openHours': {'mon-fri': '9:00-18:00', 'sat': '10:00-15:00', 'sun': 'Closed'},
+        'openHours': {
+          'mon-fri': '9:00-18:00',
+          'sat': '10:00-15:00',
+          'sun': 'Closed'
+        },
       },
     },
     debugController: debugController,

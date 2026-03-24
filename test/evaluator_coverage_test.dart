@@ -47,7 +47,8 @@ void main() {
       final attrNode = Attribute(value: Name(name: 'map'), attribute: 'k');
       expect(evaluator.visitAttribute(attrNode, dataCtx), equals('v'));
 
-      final itemNode = Item(value: Name(name: 'map'), key: Constant(value: 'k'));
+      final itemNode =
+          Item(value: Name(name: 'map'), key: Constant(value: 'k'));
       expect(evaluator.visitItem(itemNode, dataCtx), equals('v'));
     });
 
@@ -56,16 +57,27 @@ void main() {
         Assign(target: Name(name: 'x'), value: Constant(value: 1)),
         AssignBlock(target: Name(name: 'x'), body: TemplateNode(body: Data())),
         AutoEscape(enable: true, body: TemplateNode(body: Data())),
-        Block(name: 'b', scoped: false, required: false, body: TemplateNode(body: Data())),
+        Block(
+            name: 'b',
+            scoped: false,
+            required: false,
+            body: TemplateNode(body: Data())),
         Break(),
-        CallBlock(name: 'c', call: Call(value: Name(name: 'f')), body: TemplateNode(body: Data())),
+        CallBlock(
+            name: 'c',
+            call: Call(value: Name(name: 'f')),
+            body: TemplateNode(body: Data())),
         Continue(),
         Data(),
         Debug(),
         Do(value: Constant(value: 1)),
         Extends(template: Constant(value: 't')),
-        FilterBlock(filters: [Filter(name: 'f')], body: TemplateNode(body: Data())),
-        For(target: Name(name: 'x'), iterable: Array(values: []), body: TemplateNode(body: Data())),
+        FilterBlock(
+            filters: [Filter(name: 'f')], body: TemplateNode(body: Data())),
+        For(
+            target: Name(name: 'x'),
+            iterable: Array(values: []),
+            body: TemplateNode(body: Data())),
         FromImport(template: Constant(value: 't'), names: []),
         If(test: Constant(value: true), body: TemplateNode(body: Data())),
         Import(template: Constant(value: 't'), target: 't'),
@@ -75,7 +87,9 @@ void main() {
         Output(),
         TemplateNode(body: Data()),
         Trans(body: Data()),
-        TryCatch(body: TemplateNode(body: Data()), catchBody: TemplateNode(body: Data())),
+        TryCatch(
+            body: TemplateNode(body: Data()),
+            catchBody: TemplateNode(body: Data())),
         With(targets: [], values: [], body: TemplateNode(body: Data())),
       ];
 
@@ -90,12 +104,21 @@ void main() {
         Call(value: Name(name: 'f')),
         Calling(),
         Concat(values: []),
-        Condition(test: Constant(value: true), trueValue: Constant(value: 1), falseValue: Constant(value: 0)),
+        Condition(
+            test: Constant(value: true),
+            trueValue: Constant(value: 1),
+            falseValue: Constant(value: 0)),
         Dict(pairs: []),
         Filter(name: 'f'),
-        Logical(operator: LogicalOperator.and, left: Constant(value: true), right: Constant(value: true)),
+        Logical(
+            operator: LogicalOperator.and,
+            left: Constant(value: true),
+            right: Constant(value: true)),
         NamespaceRef(name: 'n', attribute: 'a'),
-        Scalar(operator: ScalarOperator.plus, left: Constant(value: 1), right: Constant(value: 1)),
+        Scalar(
+            operator: ScalarOperator.plus,
+            left: Constant(value: 1),
+            right: Constant(value: 1)),
         Slice(value: Name(name: 'v'), start: Constant(value: 0)),
         Test(name: 't'),
         Tuple(values: []),

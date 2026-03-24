@@ -28,17 +28,29 @@ void main() {
           StringSinkRenderContext(env, StringBuffer(), data: {'ns': 42});
       final nsValue = NamespaceValue('ns', 'item');
       expect(
-          () => context.assignTargets(nsValue, 10),
-          throwsA(isA<TemplateRuntimeError>().having(
-              (e) => e.message, 'message', contains('Non-namespace object'),),),);
+        () => context.assignTargets(nsValue, 10),
+        throwsA(
+          isA<TemplateRuntimeError>().having(
+            (e) => e.message,
+            'message',
+            contains('Non-namespace object'),
+          ),
+        ),
+      );
     });
 
     test('assignTargets Invalid target', () {
       final context = StringSinkRenderContext(env, StringBuffer());
       expect(
-          () => context.assignTargets(42, 1),
-          throwsA(isA<TemplateRuntimeError>().having(
-              (e) => e.message, 'message', contains('Invalid target'),),),);
+        () => context.assignTargets(42, 1),
+        throwsA(
+          isA<TemplateRuntimeError>().having(
+            (e) => e.message,
+            'message',
+            contains('Invalid target'),
+          ),
+        ),
+      );
     });
 
     test('AsyncRenderContext derived', () {
@@ -93,8 +105,9 @@ void main() {
     test('visitCompare', () {
       final context = StringSinkRenderContext(env, StringBuffer());
       const node = Compare(
-          value: Constant(value: 1),
-          operands: [(CompareOperator.equal, Constant(value: 1))],);
+        value: Constant(value: 1),
+        operands: [(CompareOperator.equal, Constant(value: 1))],
+      );
       final result = renderer.visitCompare(node, context);
       expect(result, isTrue);
     });
@@ -102,9 +115,10 @@ void main() {
     test('visitCondition', () {
       final context = StringSinkRenderContext(env, StringBuffer());
       const node = Condition(
-          test: Constant(value: true),
-          trueValue: Constant(value: 1),
-          falseValue: Constant(value: 2),);
+        test: Constant(value: true),
+        trueValue: Constant(value: 1),
+        falseValue: Constant(value: 2),
+      );
       final result = renderer.visitCondition(node, context);
       expect(result, equals(1));
     });
@@ -112,9 +126,10 @@ void main() {
     test('visitLogical', () {
       final context = StringSinkRenderContext(env, StringBuffer());
       const node = Logical(
-          operator: LogicalOperator.and,
-          left: Constant(value: true),
-          right: Constant(value: false),);
+        operator: LogicalOperator.and,
+        left: Constant(value: true),
+        right: Constant(value: false),
+      );
       final result = renderer.visitLogical(node, context);
       expect(result, isFalse);
     });
@@ -133,57 +148,91 @@ void main() {
       });
 
       test('multiple targets', () {
-        expect(renderer.getDataForTargets(['a', 'b'], [1, 2]),
-            equals({'a': 1, 'b': 2}),);
+        expect(
+          renderer.getDataForTargets(['a', 'b'], [1, 2]),
+          equals({'a': 1, 'b': 2}),
+        );
       });
 
       test('too few values', () {
         expect(
-            () => renderer.getDataForTargets(['a', 'b'], [1]),
-            throwsA(isA<TemplateRuntimeError>().having((e) => e.message,
-                'message', contains('Not enough values to unpack'),),),);
+          () => renderer.getDataForTargets(['a', 'b'], [1]),
+          throwsA(
+            isA<TemplateRuntimeError>().having(
+              (e) => e.message,
+              'message',
+              contains('Not enough values to unpack'),
+            ),
+          ),
+        );
       });
 
       test('too many values', () {
         expect(
-            () => renderer.getDataForTargets(['a'], [1, 2]),
-            throwsA(isA<TemplateRuntimeError>().having((e) => e.message,
-                'message', contains('Too many values to unpack'),),),);
+          () => renderer.getDataForTargets(['a'], [1, 2]),
+          throwsA(
+            isA<TemplateRuntimeError>().having(
+              (e) => e.message,
+              'message',
+              contains('Too many values to unpack'),
+            ),
+          ),
+        );
       });
 
       test('invalid target type', () {
         expect(
-            () => renderer.getDataForTargets(42, 1),
-            throwsA(isA<TemplateRuntimeError>().having(
-                (e) => e.message, 'message', contains('Invalid target type'),),),);
+          () => renderer.getDataForTargets(42, 1),
+          throwsA(
+            isA<TemplateRuntimeError>().having(
+              (e) => e.message,
+              'message',
+              contains('Invalid target type'),
+            ),
+          ),
+        );
       });
     });
   });
 
   group('AsyncRenderer', () {
     test('render with async global error', () async {
-      final env = Environment(globals: {
-        'async_err': Future<int>.delayed(
-            Duration.zero, () => throw Exception('async error'),),
-      },);
+      final env = Environment(
+        globals: {
+          'async_err': Future<int>.delayed(
+            Duration.zero,
+            () => throw Exception('async error'),
+          ),
+        },
+      );
       final renderer = AsyncRenderer();
       final context =
           AsyncRenderContext(env, StringBuffer(), parent: env.globals);
       final node = TemplateNode(body: const Data(data: 'foo'));
       expect(
-          renderer.render(node, context), throwsA(isA<TemplateErrorWrapper>()),);
+        renderer.render(node, context),
+        throwsA(isA<TemplateErrorWrapper>()),
+      );
     });
 
     test('render with async variable error', () async {
       final env = Environment();
       final renderer = AsyncRenderer();
-      final context = AsyncRenderContext(env, StringBuffer(), data: {
-        'async_var': Future<int>.delayed(
-            Duration.zero, () => throw Exception('var error'),),
-      },);
+      final context = AsyncRenderContext(
+        env,
+        StringBuffer(),
+        data: {
+          'async_var': Future<int>.delayed(
+            Duration.zero,
+            () => throw Exception('var error'),
+          ),
+        },
+      );
       final node = TemplateNode(body: const Data(data: 'foo'));
       expect(
-          renderer.render(node, context), throwsA(isA<TemplateErrorWrapper>()),);
+        renderer.render(node, context),
+        throwsA(isA<TemplateErrorWrapper>()),
+      );
     });
 
     test('collecting sink methods', () async {
@@ -205,7 +254,8 @@ void main() {
 
     test('visitName error wrapping', () {
       final env = Environment(
-          undefined: (name, [tmpl]) => throw Exception('custom error'),);
+        undefined: (name, [tmpl]) => throw Exception('custom error'),
+      );
       final renderer = StringSinkRenderer();
       final context = StringSinkRenderContext(env, StringBuffer());
       final node = Name(name: 'missing');
@@ -221,7 +271,8 @@ void main() {
 
     test('visitName rethrows TemplateError', () {
       final env = Environment(
-          undefined: (name, [tmpl]) => throw UndefinedError('rethrow me'),);
+        undefined: (name, [tmpl]) => throw UndefinedError('rethrow me'),
+      );
       final renderer = StringSinkRenderer();
       final context = StringSinkRenderContext(env, StringBuffer());
       final node = Name(name: 'missing');
@@ -239,8 +290,10 @@ void main() {
       final env = Environment();
       // Create a template that uses a Future that throws
       final template = env.fromString('{{ async_error }}');
-      expect(template.renderAsync({'async_error': Future.error('error')}),
-          throwsA(isA<TemplateErrorWrapper>()),);
+      expect(
+        template.renderAsync({'async_error': Future.error('error')}),
+        throwsA(isA<TemplateErrorWrapper>()),
+      );
     });
   });
 }

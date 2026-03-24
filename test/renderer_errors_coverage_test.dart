@@ -32,12 +32,14 @@ void main() {
         undefined: (name, [tmpl]) => throw Exception('undefined'),
         globals: {'user_name': 'admin'},
       );
-      final context = StringSinkRenderContext(envWithErr, StringBuffer(), parent: envWithErr.globals);
+      final context = StringSinkRenderContext(envWithErr, StringBuffer(),
+          parent: envWithErr.globals);
       final node = Name(name: 'user_nme');
 
       expect(
         () => renderer.visitName(node, context),
-        throwsA(isA<TemplateErrorWrapper>().having((e) => e.suggestions, 'suggestions', contains('Did you mean one of these? user_name'))),
+        throwsA(isA<TemplateErrorWrapper>().having((e) => e.suggestions,
+            'suggestions', contains('Did you mean one of these? user_name'))),
       );
     });
 
@@ -47,7 +49,8 @@ void main() {
 
       expect(
         () => renderer.visitExtends(node, context),
-        throwsA(isA<TemplateErrorWrapper>().having((e) => e.message, 'message', contains('Error extending template'))),
+        throwsA(isA<TemplateErrorWrapper>().having(
+            (e) => e.message, 'message', contains('Error extending template'))),
       );
     });
 
@@ -63,7 +66,8 @@ void main() {
 
       expect(
         () => renderer.visitFor(node, context),
-        throwsA(isA<TemplateErrorWrapper>().having((e) => e.message, 'message', contains('Error processing for loop iterable'))),
+        throwsA(isA<TemplateErrorWrapper>().having((e) => e.message, 'message',
+            contains('Error processing for loop iterable'))),
       );
     });
 
@@ -77,7 +81,8 @@ void main() {
 
       expect(
         () => renderer.visitFor(node, context),
-        throwsA(isA<TemplateErrorWrapper>().having((e) => e.message, 'message', contains('Error rendering for loop'))),
+        throwsA(isA<TemplateErrorWrapper>().having(
+            (e) => e.message, 'message', contains('Error rendering for loop'))),
       );
     });
 
@@ -92,7 +97,8 @@ void main() {
 
       expect(
         () => renderer.visitFor(node, context),
-        throwsA(isA<TemplateErrorWrapper>().having((e) => e.message, 'message', contains('Error in for loop body'))),
+        throwsA(isA<TemplateErrorWrapper>().having(
+            (e) => e.message, 'message', contains('Error in for loop body'))),
       );
     });
   });

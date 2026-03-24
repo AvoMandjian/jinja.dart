@@ -97,7 +97,8 @@ abstract final class Token {
 
   const Token._();
 
-  const factory Token(int line, int column, String type, String value) = ValueToken;
+  const factory Token(int line, int column, String type, String value) =
+      ValueToken;
 
   const factory Token.simple(int line, int column, String type) = SimpleToken;
 
@@ -121,7 +122,11 @@ abstract final class Token {
       return true;
     }
 
-    return other is Token && type == other.type && line == other.line && column == other.column && value == other.value;
+    return other is Token &&
+        type == other.type &&
+        line == other.line &&
+        column == other.column &&
+        value == other.value;
   }
 
   Token change({int? line, int? column, String? type, String? value});

@@ -420,7 +420,8 @@ final class CallBlock extends MacroCall {
 
     if (positional.isNotEmpty || named.isNotEmpty) {
       var args = positional.map((a) => a.toSource()).toList();
-      var kwargs = named.map((n) => '${n.$1.toSource()}=${n.$2.toSource()}').toList();
+      var kwargs =
+          named.map((n) => '${n.$1.toSource()}=${n.$2.toSource()}').toList();
       source += '(${[...args, ...kwargs].join(', ')})';
     }
 
@@ -885,7 +886,8 @@ final class TryCatch extends Statement {
 }
 
 final class Assign extends Statement {
-  const Assign({required this.target, required this.value, super.line, super.column});
+  const Assign(
+      {required this.target, required this.value, super.line, super.column});
 
   final Expression target;
 

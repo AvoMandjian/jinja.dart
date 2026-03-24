@@ -10,15 +10,31 @@ void main() {
       test('null object throws UndefinedError', () {
         expect(
           () => getAttribute('attr', null),
-          throwsA(isA<UndefinedError>().having((e) => e.message, 'message', contains('Cannot access attribute `attr` on a null object.'))),
+          throwsA(
+            isA<UndefinedError>().having(
+              (e) => e.message,
+              'message',
+              contains('Cannot access attribute `attr` on a null object.'),
+            ),
+          ),
         );
       });
 
-      test('Map entries, keys, values', () {
+      test('Map entries, keys, values, items', () {
         final map = {'a': 1, 'b': 2};
-        expect((getAttribute('entries', map) as Iterable).toList(), hasLength(2));
-        expect((getAttribute('keys', map) as Iterable).toList(), containsAll(['a', 'b']));
-        expect((getAttribute('values', map) as Iterable).toList(), containsAll([1, 2]));
+        expect(
+          (getAttribute('entries', map) as Iterable).toList(),
+          hasLength(2),
+        );
+        expect(
+          (getAttribute('keys', map) as Iterable).toList(),
+          containsAll(['a', 'b']),
+        );
+        expect(
+          (getAttribute('values', map) as Iterable).toList(),
+          containsAll([1, 2]),
+        );
+        expect((getAttribute('items', map) as Function)(), isA<Iterable>());
         expect(getAttribute('a', map), equals(1));
         expect(getAttribute('missing', map), isNull);
       });
@@ -28,7 +44,13 @@ void main() {
         expect(getAttribute('add', list), equals(list.add));
         expect(
           () => getAttribute('missing', list),
-          throwsA(isA<UndefinedError>().having((e) => e.message, 'message', contains('List does not have attribute `missing`'))),
+          throwsA(
+            isA<UndefinedError>().having(
+              (e) => e.message,
+              'message',
+              contains('List does not have attribute `missing`'),
+            ),
+          ),
         );
       });
 
@@ -39,7 +61,13 @@ void main() {
         expect(getAttribute('current', cycler), equals(cycler.current));
         expect(
           () => getAttribute('missing', cycler),
-          throwsA(isA<UndefinedError>().having((e) => e.message, 'message', contains('Cycler does not have attribute `missing`'))),
+          throwsA(
+            isA<UndefinedError>().having(
+              (e) => e.message,
+              'message',
+              contains('Cycler does not have attribute `missing`'),
+            ),
+          ),
         );
       });
 
@@ -71,7 +99,13 @@ void main() {
       test('null object throws UndefinedError', () {
         expect(
           () => getItem('key', null),
-          throwsA(isA<UndefinedError>().having((e) => e.message, 'message', contains('Cannot access item `key` on a null object.'))),
+          throwsA(
+            isA<UndefinedError>().having(
+              (e) => e.message,
+              'message',
+              contains('Cannot access item `key` on a null object.'),
+            ),
+          ),
         );
       });
 
@@ -87,11 +121,23 @@ void main() {
         expect(getItem(1, list), equals(20));
         expect(
           () => getItem(2, list),
-          throwsA(isA<UndefinedError>().having((e) => e.message, 'message', contains('Index `2` is out of bounds'))),
+          throwsA(
+            isA<UndefinedError>().having(
+              (e) => e.message,
+              'message',
+              contains('Index `2` is out of bounds'),
+            ),
+          ),
         );
         expect(
           () => getItem('not an int', list),
-          throwsA(isA<TemplateRuntimeError>().having((e) => e.message, 'message', contains('List index must be an integer'))),
+          throwsA(
+            isA<TemplateRuntimeError>().having(
+              (e) => e.message,
+              'message',
+              contains('List index must be an integer'),
+            ),
+          ),
         );
       });
 
@@ -101,7 +147,13 @@ void main() {
         expect(getItem(1, entry), equals('v'));
         expect(
           () => getItem(2, entry),
-          throwsA(isA<UndefinedError>().having((e) => e.message, 'message', contains('MapEntry index must be 0 or 1'))),
+          throwsA(
+            isA<UndefinedError>().having(
+              (e) => e.message,
+              'message',
+              contains('MapEntry index must be 0 or 1'),
+            ),
+          ),
         );
       });
 
@@ -115,17 +167,19 @@ void main() {
     group('Builtin functions', () {
       test('dict', () {
         expect(
-            dict([
-              {'a': 1}
-            ]),
-            equals({'a': 1}));
+          dict([
+            {'a': 1},
+          ]),
+          equals({'a': 1}),
+        );
         expect(
-            dict([
-              [
-                ['a', 1]
-              ]
-            ]),
-            equals({'a': 1}));
+          dict([
+            [
+              ['a', 1],
+            ]
+          ]),
+          equals({'a': 1}),
+        );
       });
 
       test('list', () {
@@ -143,11 +197,12 @@ void main() {
       test('zip', () {
         final result = zip([1, 2], ['a', 'b']);
         expect(
-            result.toList(),
-            equals([
-              [1, 'a'],
-              [2, 'b']
-            ]));
+          result.toList(),
+          equals([
+            [1, 'a'],
+            [2, 'b'],
+          ]),
+        );
       });
 
       test('lipsum', () {

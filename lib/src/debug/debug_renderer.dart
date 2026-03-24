@@ -81,7 +81,8 @@ base class DebugRenderer extends StringSinkRenderer {
       context.setLine(node.line!);
     }
 
-    var breakpoints = context.debugController.getBreakpoints(context.currentLine);
+    var breakpoints =
+        context.debugController.getBreakpoints(context.currentLine);
 
     if (breakpoints.isNotEmpty) {
       var shouldBreak = false;
@@ -92,7 +93,8 @@ base class DebugRenderer extends StringSinkRenderer {
         }
         try {
           // Render the condition as a template to evaluate it
-          var template = context.environment.fromString('{{ ${bp.condition} }}');
+          var template =
+              context.environment.fromString('{{ ${bp.condition} }}');
           // Use a new context derived from current variables to avoid side effects
           var result = template.render(context.getAllVariables());
 
@@ -130,7 +132,8 @@ base class DebugRenderer extends StringSinkRenderer {
   }
 
   @override
-  Future<void> visitInterpolation(Interpolation node, StringSinkRenderContext context) async {
+  Future<void> visitInterpolation(
+      Interpolation node, StringSinkRenderContext context) async {
     if (context is DebugRenderContext) {
       await _checkBreakpoint(node, context).then((_) {
         super.visitInterpolation(node, context);
@@ -163,7 +166,8 @@ base class DebugRenderer extends StringSinkRenderer {
   }
 
   @override
-  Future<void> visitAutoEscape(AutoEscape node, StringSinkRenderContext context) async {
+  Future<void> visitAutoEscape(
+      AutoEscape node, StringSinkRenderContext context) async {
     if (context is DebugRenderContext) {
       await _checkBreakpoint(node, context).then((_) {
         super.visitAutoEscape(node, context);

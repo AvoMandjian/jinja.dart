@@ -46,14 +46,20 @@ base class Context {
         }
         final suggestions = <String>[
           'Check if the function is defined before calling it',
-          if (functionName != null) 'Ensure \'$functionName\' is passed to the template context',
+          if (functionName != null)
+            'Ensure \'$functionName\' is passed to the template context',
         ];
         throw TemplateRuntimeError(
-          functionName != null ? 'The function $functionName is null at $positional' : 'Object is null at $positional',
+          functionName != null
+              ? 'The function $functionName is null at $positional'
+              : 'Object is null at $positional',
           nodeValue: node is Node ? node : null,
           operationValue: 'Calling null function',
           suggestionsValue: suggestions,
-          contextSnippetValue: (source != null && node is Node && node.line != null && node.column != null)
+          contextSnippetValue: (source != null &&
+                  node is Node &&
+                  node.line != null &&
+                  node.column != null)
               ? errorContextSnippet(source!, node.line!, node.column!)
               : null,
         );
@@ -120,10 +126,14 @@ base class Context {
         stackTrace: stackTrace,
         node: node is Node ? node : null,
         contextSnapshot: contextSnapshot,
-        operation: 'Calling function with ${positional.length} positional and ${named.length} named arguments',
+        operation:
+            'Calling function with ${positional.length} positional and ${named.length} named arguments',
         suggestions: suggestions,
         templatePath: template,
-        contextSnippet: (source != null && node is Node && node.line != null && node.column != null)
+        contextSnippet: (source != null &&
+                node is Node &&
+                node.line != null &&
+                node.column != null)
             ? errorContextSnippet(source!, node.line!, node.column!)
             : null,
         callStack: captureCallStack(),
@@ -179,7 +189,7 @@ base class Context {
         final value = context[name];
         try {
           environment.debugJinja(
-            'Context.resolve: Found "$name" in context = $value '
+            'Context.resolve: Found "$name" in context =  '
             '(type: ${value.runtimeType})',
           );
         } catch (e) {
@@ -195,7 +205,7 @@ base class Context {
         final value = parent[name];
         try {
           environment.debugJinja(
-            'Context.resolve: Found "$name" in parent = $value '
+            'Context.resolve: Found "$name" in parent =  '
             '(type: ${value.runtimeType})',
           );
         } catch (e) {
@@ -211,7 +221,7 @@ base class Context {
         final value = environment.loader!.globals![name];
         try {
           environment.debugJinja(
-            'Context.resolve: Found "$name" in loader.globals = $value '
+            'Context.resolve: Found "$name" in loader.globals =  '
             '(type: ${value.runtimeType})',
           );
         } catch (e) {
@@ -241,9 +251,11 @@ base class Context {
       final similarNames = getSimilarNames(name, availableKeys);
       final suggestions = <String>[
         'Check if \'$name\' is defined before using it: {% if $name %}...{% endif %}',
-        if (similarNames.isNotEmpty) 'Did you mean one of these? ${similarNames.join(', ')}',
+        if (similarNames.isNotEmpty)
+          'Did you mean one of these? ${similarNames.join(', ')}',
         'Ensure \'$name\' is passed to the template context',
-        if (availableKeys.isNotEmpty) 'Available variables: ${availableKeys.take(10).join(', ')}${availableKeys.length > 10 ? '...' : ''}',
+        if (availableKeys.isNotEmpty)
+          'Available variables: ${availableKeys.take(10).join(', ')}${availableKeys.length > 10 ? '...' : ''}',
       ];
       throw TemplateErrorWrapper(
         e,
@@ -273,7 +285,7 @@ base class Context {
         );
         final resolved = await value;
         environment.debugJinja(
-          'Context.resolveAsync: "$name" Future resolved to = $resolved',
+          r'Context.resolveAsync: "$name" Future resolved to = $resolved',
         );
         return resolved;
       }
@@ -293,7 +305,7 @@ base class Context {
         );
         final resolved = await value;
         environment.debugJinja(
-          'Context.resolveAsync: "$name" Future resolved to = $resolved',
+          r'Context.resolveAsync: "$name" Future resolved to = $resolved',
         );
         return resolved;
       }
@@ -313,7 +325,7 @@ base class Context {
         );
         final resolved = await value;
         environment.debugJinja(
-          'Context.resolveAsync: "$name" Future resolved to = $resolved',
+          r'Context.resolveAsync: "$name" Future resolved to = $resolved',
         );
         return resolved;
       }
@@ -341,7 +353,7 @@ base class Context {
 
   void set(String key, Object? value) {
     environment.debugJinja(
-      'Context.set: Setting key "$key" = $value '
+      'Context.set: Setting key "$key" = '
       '(type: ${value.runtimeType})',
     );
     context[key] = value;
@@ -383,7 +395,10 @@ base class Context {
         operation: 'Accessing attribute \'$name\' on ${value.runtimeType}',
         suggestions: suggestions,
         templatePath: template,
-        contextSnippet: (source != null && node is Node && node.line != null && node.column != null)
+        contextSnippet: (source != null &&
+                node is Node &&
+                node.line != null &&
+                node.column != null)
             ? errorContextSnippet(source!, node.line!, node.column!)
             : null,
         callStack: captureCallStack(),
@@ -404,7 +419,8 @@ base class Context {
         'Check if the object is null before accessing items',
         'Use conditional rendering: {% if object %}{{ object[$name] }}{% endif %}',
         'Verify the key type matches the object type',
-        if (value is Map) 'Check if the key exists: {% if object.$name is defined %}...{% endif %}',
+        if (value is Map)
+          'Check if the key exists: {% if object.$name is defined %}...{% endif %}',
       ];
       throw TemplateErrorWrapper(
         e,
@@ -415,7 +431,10 @@ base class Context {
         operation: 'Accessing item \'$name\' on ${value.runtimeType}',
         suggestions: suggestions,
         templatePath: template,
-        contextSnippet: (source != null && node is Node && node.line != null && node.column != null)
+        contextSnippet: (source != null &&
+                node is Node &&
+                node.line != null &&
+                node.column != null)
             ? errorContextSnippet(source!, node.line!, node.column!)
             : null,
         callStack: captureCallStack(),
@@ -440,7 +459,8 @@ base class Context {
       final similarFilters = getSimilarNames(name, availableFilters);
       final suggestions = <String>[
         'Check if the filter \'$name\' exists',
-        if (similarFilters.isNotEmpty) 'Did you mean one of these? ${similarFilters.join(', ')}',
+        if (similarFilters.isNotEmpty)
+          'Did you mean one of these? ${similarFilters.join(', ')}',
         'Verify the filter arguments match the expected signature',
         if (availableFilters.isNotEmpty)
           'Available filters: ${availableFilters.take(10).join(', ')}${availableFilters.length > 10 ? '...' : ''}',
@@ -450,7 +470,8 @@ base class Context {
         message: 'Error calling filter \'$name\': ${e.toString()}',
         stackTrace: stackTrace,
         contextSnapshot: contextSnapshot,
-        operation: 'Calling filter \'$name\' with ${positional.length} positional and ${named.length} named arguments',
+        operation:
+            'Calling filter \'$name\' with ${positional.length} positional and ${named.length} named arguments',
         suggestions: suggestions,
         templatePath: template,
         callStack: captureCallStack(),
@@ -475,16 +496,19 @@ base class Context {
       final similarTests = getSimilarNames(name, availableTests);
       final suggestions = <String>[
         'Check if the test \'$name\' exists',
-        if (similarTests.isNotEmpty) 'Did you mean one of these? ${similarTests.join(', ')}',
+        if (similarTests.isNotEmpty)
+          'Did you mean one of these? ${similarTests.join(', ')}',
         'Verify the test arguments match the expected signature',
-        if (availableTests.isNotEmpty) 'Available tests: ${availableTests.take(10).join(', ')}${availableTests.length > 10 ? '...' : ''}',
+        if (availableTests.isNotEmpty)
+          'Available tests: ${availableTests.take(10).join(', ')}${availableTests.length > 10 ? '...' : ''}',
       ];
       throw TemplateErrorWrapper(
         e,
         message: 'Error calling test \'$name\': ${e.toString()}',
         stackTrace: stackTrace,
         contextSnapshot: contextSnapshot,
-        operation: 'Calling test \'$name\' with ${positional.length} positional and ${named.length} named arguments',
+        operation:
+            'Calling test \'$name\' with ${positional.length} positional and ${named.length} named arguments',
         suggestions: suggestions,
         templatePath: template,
         callStack: captureCallStack(),
@@ -651,7 +675,8 @@ final class LoopIterator implements Iterator<Object?> {
 }
 
 base class Namespace {
-  Namespace([Map<String, Object?>? data]) : context = <String, Object?>{...?data};
+  Namespace([Map<String, Object?>? data])
+      : context = <String, Object?>{...?data};
 
   final Map<String, Object?> context;
 

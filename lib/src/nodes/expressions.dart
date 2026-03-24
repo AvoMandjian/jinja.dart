@@ -7,12 +7,25 @@ enum AssignContext {
 }
 
 final class Name extends Expression {
-  const Name({required this.name, this.context = AssignContext.load, super.line, super.column});
+  const Name(
+      {required this.name,
+      this.context = AssignContext.load,
+      super.line,
+      super.column});
 
-  const Name.store({required String name, int? line, int? column}) : this(name: name, context: AssignContext.store, line: line, column: column);
+  const Name.store({required String name, int? line, int? column})
+      : this(
+            name: name,
+            context: AssignContext.store,
+            line: line,
+            column: column);
 
   const Name.parameter({required String name, int? line, int? column})
-      : this(name: name, context: AssignContext.parameter, line: line, column: column);
+      : this(
+            name: name,
+            context: AssignContext.parameter,
+            line: line,
+            column: column);
 
   final String name;
 
@@ -49,7 +62,8 @@ final class Name extends Expression {
 }
 
 final class NamespaceRef extends Expression {
-  const NamespaceRef({required this.name, required this.attribute, super.line, super.column});
+  const NamespaceRef(
+      {required this.name, required this.attribute, super.line, super.column});
 
   final String name;
 
@@ -324,7 +338,8 @@ final class Condition extends Expression {
       'class': 'Condition',
       'test': test.toJson(),
       'trueValue': trueValue.toJson(),
-      if (falseValue case Expression falseValue?) 'falseValue': falseValue.toJson(),
+      if (falseValue case Expression falseValue?)
+        'falseValue': falseValue.toJson(),
     };
   }
 
@@ -519,8 +534,11 @@ final class Filter extends Expression {
     source += '|$name';
 
     if (calling.arguments.length > 1 || calling.keywords.isNotEmpty) {
-      var arguments = calling.arguments.skip(1).map((a) => a.toSource()).toList();
-      var keywords = calling.keywords.map((k) => '${k.key}=${k.value.toSource()}').toList();
+      var arguments =
+          calling.arguments.skip(1).map((a) => a.toSource()).toList();
+      var keywords = calling.keywords
+          .map((k) => '${k.key}=${k.value.toSource()}')
+          .toList();
       source += '(${[...arguments, ...keywords].join(', ')})';
     }
 
@@ -577,8 +595,11 @@ final class Test extends Expression {
     source += ' is $name';
 
     if (calling.arguments.length > 1 || calling.keywords.isNotEmpty) {
-      var arguments = calling.arguments.skip(1).map((a) => a.toSource()).toList();
-      var keywords = calling.keywords.map((k) => '${k.key}=${k.value.toSource()}').toList();
+      var arguments =
+          calling.arguments.skip(1).map((a) => a.toSource()).toList();
+      var keywords = calling.keywords
+          .map((k) => '${k.key}=${k.value.toSource()}')
+          .toList();
       source += '(${[...arguments, ...keywords].join(', ')})';
     }
 
@@ -587,7 +608,8 @@ final class Test extends Expression {
 }
 
 final class Item extends Expression {
-  const Item({required this.key, required this.value, super.line, super.column});
+  const Item(
+      {required this.key, required this.value, super.line, super.column});
 
   final Expression key;
 
@@ -639,7 +661,8 @@ final class Item extends Expression {
 }
 
 final class Attribute extends Expression {
-  const Attribute({required this.attribute, required this.value, super.line, super.column});
+  const Attribute(
+      {required this.attribute, required this.value, super.line, super.column});
 
   final String attribute;
 

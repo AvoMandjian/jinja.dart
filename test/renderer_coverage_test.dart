@@ -19,7 +19,8 @@ void main() {
     });
 
     test('StringSinkRenderContext coverage', () {
-      final ctx = StringSinkRenderContext(env, StringBuffer(), parent: {'a': 1});
+      final ctx =
+          StringSinkRenderContext(env, StringBuffer(), parent: {'a': 1});
       final derived = ctx.derived(withContext: false);
       expect(derived.parent, containsPair('a', 1));
 
@@ -31,7 +32,10 @@ void main() {
       final renderer = StringSinkRenderer();
       final context = StringSinkRenderContext(env, StringBuffer());
       // visitAssign calls context.assignTargets. We can make target an unsupported Node.
-      expect(() => renderer.visitAssign(Assign(target: Constant(value: 1), value: Constant(value: 2)), context),
+      expect(
+          () => renderer.visitAssign(
+              Assign(target: Constant(value: 1), value: Constant(value: 2)),
+              context),
           throwsA(isA<TemplateRuntimeError>()));
     });
 
@@ -71,7 +75,8 @@ void main() {
 
     test('visitInterpolation with Future and SafeString', () async {
       final t = env.fromString('{{ val }}');
-      final out = await t.renderAsync({'val': Future.value(utils.SafeString('<br>'))});
+      final out =
+          await t.renderAsync({'val': Future.value(utils.SafeString('<br>'))});
       expect(out, equals('<br>'));
     });
 

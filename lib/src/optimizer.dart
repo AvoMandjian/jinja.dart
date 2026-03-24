@@ -65,7 +65,8 @@ class Optimizer implements Visitor<Context, Node> {
     return node.copyWith(
       arguments: visitNodes<Expression>(node.arguments, context),
       keywords: <Keyword>[
-        for (var (:key, :value) in node.keywords) (key: key, value: visitNode<Expression>(value, context)),
+        for (var (:key, :value) in node.keywords)
+          (key: key, value: visitNode<Expression>(value, context)),
       ],
     );
   }
@@ -75,7 +76,8 @@ class Optimizer implements Visitor<Context, Node> {
     return node.copyWith(
       value: visitNode<Expression>(node.value, context),
       operands: <Operand>[
-        for (var (operator, value) in node.operands) (operator, visitNode<Expression>(value, context)),
+        for (var (operator, value) in node.operands)
+          (operator, visitNode<Expression>(value, context)),
       ],
     );
   }
@@ -86,7 +88,10 @@ class Optimizer implements Visitor<Context, Node> {
 
     if (values.every((value) => value is Constant)) {
       return Constant(
-        value: values.cast<Constant>().map<Object?>((constant) => constant.value).join(),
+        value: values
+            .cast<Constant>()
+            .map<Object?>((constant) => constant.value)
+            .join(),
       );
     }
 
@@ -151,7 +156,8 @@ class Optimizer implements Visitor<Context, Node> {
     if (pairs.every((pair) => pair.key is Constant && pair.value is Constant)) {
       return Constant(
         value: <Object?, Object?>{
-          for (var (:key, :value) in pairs) (key as Constant).value: (value as Constant).value,
+          for (var (:key, :value) in pairs)
+            (key as Constant).value: (value as Constant).value,
         },
       );
     }
@@ -209,7 +215,8 @@ class Optimizer implements Visitor<Context, Node> {
     if (left is Constant && right is Constant) {
       return Constant(
         value: switch (node.operator) {
-          ScalarOperator.power => math.pow(left.value as num, right.value as num),
+          ScalarOperator.power =>
+            math.pow(left.value as num, right.value as num),
           // ignore: avoid_dynamic_calls
           ScalarOperator.module => (left.value as dynamic) % right.value,
           ScalarOperator.floorDivision =>

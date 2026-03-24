@@ -27,7 +27,9 @@ Map<String, dynamic> dataToPassToJinja = {
         'events': {
           'on_click': {
             'workflow_id': 'navigate_to_jinja_code_editor',
-            'properties': {'jinja_script_id': '21cccedc-2e91-45a0-8662-a3befb2d58c0'},
+            'properties': {
+              'jinja_script_id': '21cccedc-2e91-45a0-8662-a3befb2d58c0'
+            },
           },
         },
         'description': 'description',
