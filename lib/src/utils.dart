@@ -171,12 +171,7 @@ String escape(String text) {
 String htmlSafeJsonEncode(Object? value, [String? indent]) {
   var encoder = indent == null ? json.encoder : JsonEncoder.withIndent(indent);
 
-  return encoder
-      .convert(value)
-      .replaceAll('<', '\\u003c')
-      .replaceAll('>', '\\u003e')
-      .replaceAll('&', '\\u0026')
-      .replaceAll("'", '\\u0027');
+  return encoder.convert(value).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e').replaceAll('&', '\\u0026').replaceAll("'", '\\u0027');
 }
 
 String unescape(String text) {
@@ -243,8 +238,7 @@ Map<String, Object?> captureContext(
     }
 
     // Check if key matches sensitive patterns
-    var isSensitive =
-        _sensitivePatterns.any((pattern) => pattern.hasMatch(entry.key));
+    var isSensitive = _sensitivePatterns.any((pattern) => pattern.hasMatch(entry.key));
     if (isSensitive) {
       continue;
     }
@@ -271,8 +265,7 @@ Map<String, Object?> sanitizeForLogging(Map<String, Object?> context) {
   final sanitized = <String, Object?>{};
 
   for (var entry in context.entries) {
-    var isSensitive =
-        _sensitivePatterns.any((pattern) => pattern.hasMatch(entry.key));
+    var isSensitive = _sensitivePatterns.any((pattern) => pattern.hasMatch(entry.key));
     if (!isSensitive) {
       sanitized[entry.key] = entry.value;
     }
@@ -285,10 +278,7 @@ Map<String, Object?> sanitizeForLogging(Map<String, Object?> context) {
 String getNodeType(Node node) {
   var typeName = node.runtimeType.toString();
   // Remove common suffixes and make readable
-  typeName = typeName
-      .replaceAll('Node', '')
-      .replaceAll('Expression', '')
-      .replaceAll('Statement', '');
+  typeName = typeName.replaceAll('Node', '').replaceAll('Expression', '').replaceAll('Statement', '');
   if (typeName.isEmpty) {
     typeName = node.runtimeType.toString();
   }
@@ -356,11 +346,7 @@ List<String> getSimilarNames(
 
   // Return top matches (within reasonable distance)
   final maxDistance = (name.length / 2).ceil();
-  return distances
-      .where((entry) => entry.$2 <= maxDistance)
-      .take(maxResults)
-      .map((entry) => entry.$1)
-      .toList();
+  return distances.where((entry) => entry.$2 <= maxDistance).take(maxResults).map((entry) => entry.$1).toList();
 }
 
 /// Zone key used to store the current rendering call stack.
@@ -404,7 +390,9 @@ T _withRenderFrame<T>(_RenderFrame frame, T Function() body) {
 }
 
 Future<T> _withRenderFrameAsync<T>(
-    _RenderFrame frame, Future<T> Function() body) {
+  _RenderFrame frame,
+  Future<T> Function() body,
+) {
   final current = _getCurrentFrames();
   final updated = List<_RenderFrame>.of(current)..add(frame);
   return runZoned<Future<T>>(
@@ -511,18 +499,17 @@ List<String> getErrorSuggestions(TemplateError error) {
   } else if (error is TemplateRuntimeError) {
     if (error.operation != null) {
       if (error.operation!.contains('attribute')) {
-        suggestions
-            .add('Check if the object is null before accessing attributes');
+        suggestions.add('Check if the object is null before accessing attributes');
         suggestions.add(
-            'Use conditional rendering: {% if object %}{{ object.attr }}{% endif %}');
+          'Use conditional rendering: {% if object %}{{ object.attr }}{% endif %}',
+        );
       } else if (error.operation!.contains('item')) {
         suggestions.add('Check if the key exists before accessing items');
         suggestions.add('Verify the key type matches the object type');
       }
     }
   } else if (error is TemplateSyntaxError) {
-    suggestions
-        .add('Check the template syntax at the indicated line and column');
+    suggestions.add('Check the template syntax at the indicated line and column');
     suggestions.add('Verify all tags are properly closed');
     suggestions.add('Check for typos in tag names');
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../environment.dart';
 import '../exceptions.dart';
 import '../nodes.dart';
 import '../renderer.dart';
@@ -73,8 +74,7 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
     var breakpoints = context.debugController.getBreakpoints(currentLine);
 
-    if ((breakpoints.isNotEmpty || isStepOverHit) &&
-        !_linesHitThisRender.contains(currentLine)) {
+    if ((breakpoints.isNotEmpty || isStepOverHit) && !_linesHitThisRender.contains(currentLine)) {
       var shouldBreak = isStepOverHit;
       if (!shouldBreak) {
         for (var bp in breakpoints) {
@@ -83,8 +83,7 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
             break;
           }
           try {
-            var template =
-                context.environment.fromString('{{ ${bp.condition} }}');
+            var template = context.environment.fromString('{{ ${bp.condition} }}');
             var result = template.render(context.getAllVariables());
             if (result == 'true') {
               shouldBreak = true;
@@ -104,9 +103,8 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 
         var totalOutput = context.outputSoFar;
         var current = currentOutput ?? '';
-        var soFar = (current.isNotEmpty && totalOutput.endsWith(current))
-            ? totalOutput.substring(0, totalOutput.length - current.length)
-            : totalOutput;
+        var soFar =
+            (current.isNotEmpty && totalOutput.endsWith(current)) ? totalOutput.substring(0, totalOutput.length - current.length) : totalOutput;
 
         var info = BreakpointInfo(
           nodeType: nodeType,
@@ -223,9 +221,7 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     if (boolean(testResult)) {
       result = await node.trueValue.accept(this, context);
     } else {
-      result = node.falseValue != null
-          ? await node.falseValue!.accept(this, context)
-          : null;
+      result = node.falseValue != null ? await node.falseValue!.accept(this, context) : null;
     }
     await _checkBreakpoint(node, context, 'Condition', nodeData: result);
     return result;
@@ -595,7 +591,58 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
     DebugRenderContext context,
   ) async {
     await _checkBreakpoint(node, context, 'FromImport');
-    _baseRenderer.visitFromImport(node, context);
+
+    var templateOrPath = await node.template.accept(this, context);
+    var template = switch (templateOrPath) {
+      String path => context.environment.getTemplate(path),
+      Template template => template,
+      Object? value => throw ArgumentError.value(value, 'template'),
+    };
+
+    var asyncModuleContext = context.derived(
+      withContext: node.withContext,
+      sink: AsyncCollectingSink(StringBuffer(), context.environment),
+    );
+    await template.body.accept(this, asyncModuleContext);
+
+    var syncModuleContext = StringSinkRenderContext(
+      asyncModuleContext.environment,
+      asyncModuleContext.sink,
+      template: asyncModuleContext.template,
+      blocks: asyncModuleContext.blocks,
+      parent: asyncModuleContext.parent,
+      data: asyncModuleContext.context,
+      autoEscape: asyncModuleContext.autoEscape,
+    );
+
+    for (var (name, alias) in node.names) {
+      Object? macro(List<Object?> positional, Map<Object?, Object?> named) {
+        Macro? targetMacro;
+
+        for (var macro in template.body.macros) {
+          if (macro.name == name) {
+            targetMacro = macro;
+            break;
+          }
+        }
+
+        if (targetMacro == null) {
+          throw TemplateRuntimeError(
+            "The '${template.path}' does not export the requested name: '$name'",
+          );
+        }
+
+        MacroFunction function = _baseRenderer.getMacroFunction(
+          targetMacro,
+          syncModuleContext,
+          visitor: _AsyncDebugRendererWrapper(this, context),
+        );
+
+        return function(positional, named);
+      }
+
+      context.set(alias ?? name, macro);
+    }
   }
 
   @override
@@ -616,13 +663,84 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
   @override
   Future<void> visitImport(Import node, DebugRenderContext context) async {
     await _checkBreakpoint(node, context, 'Import');
-    _baseRenderer.visitImport(node, context);
+
+    var templateOrPath = await node.template.accept(this, context);
+    var template = switch (templateOrPath) {
+      String path => context.environment.getTemplate(path),
+      Template template => template,
+      Object? value => throw ArgumentError.value(value, 'template'),
+    };
+
+    var namespace = Namespace();
+
+    var asyncModuleContext = context.derived(
+      withContext: node.withContext,
+      sink: AsyncCollectingSink(StringBuffer(), context.environment),
+    );
+    await template.body.accept(this, asyncModuleContext);
+
+    var syncModuleContext = StringSinkRenderContext(
+      asyncModuleContext.environment,
+      asyncModuleContext.sink,
+      template: asyncModuleContext.template,
+      blocks: asyncModuleContext.blocks,
+      parent: asyncModuleContext.parent,
+      data: asyncModuleContext.context,
+      autoEscape: asyncModuleContext.autoEscape,
+    );
+
+    for (var macro in template.body.macros) {
+      namespace[macro.name] = _baseRenderer.getMacroFunction(
+        macro,
+        syncModuleContext,
+        visitor: _AsyncDebugRendererWrapper(this, context),
+      );
+    }
+
+    context.set(node.target, namespace);
   }
 
   @override
   Future<void> visitInclude(Include node, DebugRenderContext context) async {
     await _checkBreakpoint(node, context, 'Include');
-    _baseRenderer.visitInclude(node, context);
+
+    var templateOrPath = await node.template.accept(this, context);
+    Template? template;
+
+    try {
+      if (templateOrPath is String) {
+        template = context.environment.getTemplate(templateOrPath);
+      } else if (templateOrPath is Template) {
+        template = templateOrPath;
+      } else if (templateOrPath is List) {
+        template = context.environment.selectTemplate(templateOrPath.cast<Object?>());
+      } else {
+        throw ArgumentError.value(templateOrPath, 'template');
+      }
+    } on TemplateNotFound {
+      if (!node.ignoreMissing) {
+        rethrow;
+      }
+    }
+
+    if (template != null) {
+      final Template includedTemplate = template;
+      var includeContext = context.derived(
+        template: includedTemplate.path ?? context.template,
+        withContext: node.withContext,
+      );
+
+      final templatePath = includedTemplate.path ?? context.template ?? '<unknown>';
+
+      await withRenderFrameAsync<void>(
+        templatePath: templatePath,
+        line: node.line,
+        description: includedTemplate.path != null ? 'include ${includedTemplate.path}' : 'include',
+        body: () async {
+          await includedTemplate.body.accept(this, includeContext);
+        },
+      );
+    }
   }
 
   @override
@@ -758,8 +876,7 @@ class AsyncDebugRenderer extends Visitor<DebugRenderContext, Future<Object?>> {
 /// This is used inside macros to allow the macro body to be rendered
 /// asynchronously while still being compatible with the synchronous
 /// macro calling convention.
-class _AsyncDebugRendererWrapper
-    extends Visitor<StringSinkRenderContext, Object?> {
+class _AsyncDebugRendererWrapper extends Visitor<StringSinkRenderContext, Object?> {
   _AsyncDebugRendererWrapper(this.asyncRenderer, this.debugContext);
 
   final AsyncDebugRenderer asyncRenderer;
@@ -844,7 +961,9 @@ class _AsyncDebugRendererWrapper
 
   @override
   Object? visitNamespaceRef(
-      NamespaceRef node, StringSinkRenderContext context) {
+    NamespaceRef node,
+    StringSinkRenderContext context,
+  ) {
     return asyncRenderer.visitNamespaceRef(node, _toDebug(context));
   }
 
@@ -955,7 +1074,9 @@ class _AsyncDebugRendererWrapper
 
   @override
   Object? visitInterpolation(
-      Interpolation node, StringSinkRenderContext context) {
+    Interpolation node,
+    StringSinkRenderContext context,
+  ) {
     return asyncRenderer.visitInterpolation(node, _toDebug(context));
   }
 
@@ -971,7 +1092,9 @@ class _AsyncDebugRendererWrapper
 
   @override
   Object? visitTemplateNode(
-      TemplateNode node, StringSinkRenderContext context) {
+    TemplateNode node,
+    StringSinkRenderContext context,
+  ) {
     return asyncRenderer.visitTemplateNode(node, _toDebug(context));
   }
 

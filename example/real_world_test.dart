@@ -609,7 +609,7 @@ Args:
     {% set currency_id = _populate(currency_id, "text", strict=false, optional=true) | fromjson %}
     {% set currency_symb = _populate(currency_symb, "text", strict=false, optional=true) | fromjson %}
     {% set convert_rate = _populate(convert_rate, "number", strict=false, optional=true) | fromjson %}
-    {% set data = {
+    {% set macro_data = {
         "value": amount,
         "value_metadata": {
             "currency_id": currency_id,
@@ -696,13 +696,13 @@ Args:
                  ui_widget=none, property_label=none, property_id=none,
                  uid=none) -%}
     {# vars #}
-    {% set data = _list_data(value, param) %}
+    {% set macro_data = _list_data(value, param) %}
 
     {# output #}
     {
         {{  _preamble(uid, ui_widget, property_label, property_id) }}
         "data_type": "{{ _fallback(data_type, "dt_list") }}",
-        "data": {{ data }}
+        "data": {{ macro_data }}
     }
 {%- endmacro %}
 
@@ -741,13 +741,13 @@ Args:
                    ui_widget=none, property_label=none, property_id=none,
                    optional=true, uid=none) -%}
     {# vars #}
-    {% set data = _object_data(value, kwargs, data_type or 'dt_object', optional) %}
+    {% set macro_data = _object_data(value, kwargs, data_type or 'dt_object', optional) %}
 
     {# output #}
     {
         {{  _preamble(uid, ui_widget, property_label, property_id) }}
         "data_type": "{{ _fallback(data_type, "dt_object") }}",
-        "data": {{ data }}
+        "data": {{ macro_data }}
     }
 {%- endmacro %}
 ''',
@@ -794,10 +794,12 @@ Args:
     var result2 = await template2.renderAsync(jinjaData);
     print('Result length: ${result2.length}');
     print(
-        '--------------------------------------------------------------------------------------------------------------------------------');
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
     print(result2);
     print(
-        '--------------------------------------------------------------------------------------------------------------------------------');
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
   } catch (e, stack) {
     print('\n!!! UNHANDLED EXCEPTION !!!');
     print(e);

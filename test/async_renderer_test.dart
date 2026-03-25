@@ -31,9 +31,87 @@ void main() {
         ),
       );
       final t = env.fromString(
-          '{% import "macro.html" as m with context %}{{ m.m(1) }}');
+        '{% import "macro.html" as m with context %}{{ m.m(1) }}',
+      );
       final out = await t.renderAsync({});
       expect(out, equals('1'));
+    });
+
+    test('async imported macro awaits correctly', () async {
+      final env = Environment(
+        loader: MapLoader(
+          {
+            'macros.html': '{% macro action() %}Result: {{ jinja_action() }}{% endmacro %}',
+          },
+          globalJinjaData: {},
+        ),
+        globals: {
+          'jinja_action': () async => 'success',
+        },
+      );
+
+      final t = env.fromString('{% import "macros.html" as m %}{{ m.action() }}');
+      final result = await t.renderAsync({});
+
+      expect(result, isNot(contains('Instance of')));
+      expect(result, contains('Result: success'));
+    });
+
+    test('async from import macro awaits correctly', () async {
+      final env = Environment(
+        loader: MapLoader(
+          {
+            'macros.html': '{% macro action() %}Result: {{ jinja_action() }}{% endmacro %}',
+          },
+          globalJinjaData: {},
+        ),
+        globals: {
+          'jinja_action': () async => 'success',
+        },
+      );
+
+      final t = env.fromString('{% from "macros.html" import action %}{{ action() }}');
+      final result = await t.renderAsync({});
+
+      expect(result, isNot(contains('Instance of')));
+      expect(result, contains('Result: success'));
+    });
+
+    test('async imported macro awaits arguments correctly', () async {
+      final env = Environment(
+        loader: MapLoader(
+          {
+            'macros.html': '{% macro format_val(val) %}Value: {{ val }}{% endmacro %}',
+          },
+          globalJinjaData: {},
+        ),
+      );
+
+      final t = env.fromString('{% import "macros.html" as m %}{{ m.format_val(future_val) }}');
+      final result = await t.renderAsync({'future_val': Future.value('awaited_val')});
+
+      expect(result, isNot(contains('Instance of')));
+      expect(result, contains('Value: awaited_val'));
+    });
+
+    test('async include properly awaits', () async {
+      final env = Environment(
+        loader: MapLoader(
+          {
+            'inc.html': 'Included: {{ jinja_action() }}',
+          },
+          globalJinjaData: {},
+        ),
+        globals: {
+          'jinja_action': () async => 'success',
+        },
+      );
+
+      final t = env.fromString('{% include "inc.html" %}');
+      final result = await t.renderAsync({});
+
+      expect(result, isNot(contains('Instance of')));
+      expect(result, contains('Included: success'));
     });
 
     test('async block required throws', () async {
@@ -48,7 +126,8 @@ void main() {
     test('async for loop with break and continue', () async {
       final env = Environment();
       final t = env.fromString(
-          '{% for x in [1, 2, 3, 4] %}{% if x == 2 %}{% continue %}{% endif %}{% if x == 4 %}{% break %}{% endif %}{{ x }}{% endfor %}');
+        '{% for x in [1, 2, 3, 4] %}{% if x == 2 %}{% continue %}{% endif %}{% if x == 4 %}{% break %}{% endif %}{{ x }}{% endfor %}',
+      );
       final out = await t.renderAsync();
       expect(out, equals('13'));
     });
@@ -64,27 +143,31 @@ void main() {
 
     test('async error wrapping in interpolation', () async {
       final envThrowing = Environment(
-          getAttribute: (attr, obj, {node, source}) =>
-              throw Exception('error'));
+        getAttribute: (attr, obj, {node, source}) => throw Exception('error'),
+      );
       final t = envThrowing.fromString('{{ bad.foo }}');
-      await expectLater(() => t.renderAsync({'bad': _ThrowingObj()}),
-          throwsA(isA<TemplateErrorWrapper>()));
+      await expectLater(
+        () => t.renderAsync({'bad': _ThrowingObj()}),
+        throwsA(isA<TemplateErrorWrapper>()),
+      );
     });
 
     test('async error wrapping in for loop body', () async {
       final envThrowing = Environment(
-          getAttribute: (attr, obj, {node, source}) =>
-              throw Exception('error'));
-      final t =
-          envThrowing.fromString('{% for x in [bad] %}{{ x.foo }}{% endfor %}');
-      await expectLater(() => t.renderAsync({'bad': _ThrowingObj()}),
-          throwsA(isA<TemplateErrorWrapper>()));
+        getAttribute: (attr, obj, {node, source}) => throw Exception('error'),
+      );
+      final t = envThrowing.fromString('{% for x in [bad] %}{{ x.foo }}{% endfor %}');
+      await expectLater(
+        () => t.renderAsync({'bad': _ThrowingObj()}),
+        throwsA(isA<TemplateErrorWrapper>()),
+      );
     });
 
     test('async autoescape enable/disable', () async {
       final env = Environment();
       final t = env.fromString(
-          '{% autoescape true %}{{ "<" }}{% endautoescape %}{% autoescape false %}{{ "<" }}{% endautoescape %}');
+        '{% autoescape true %}{{ "<" }}{% endautoescape %}{% autoescape false %}{{ "<" }}{% endautoescape %}',
+      );
       final out = await t.renderAsync();
       expect(out, equals('&lt;<'));
     });
@@ -97,11 +180,12 @@ void main() {
     });
 
     test('async template error wrap', () async {
-      final envThrowing =
-          Environment(undefined: (name, [tmpl]) => throw Exception('error'));
+      final envThrowing = Environment(undefined: (name, [tmpl]) => throw Exception('error'));
       final t = envThrowing.fromString('{{ missing }}');
       await expectLater(
-          () => t.renderAsync(), throwsA(isA<TemplateErrorWrapper>()));
+        () => t.renderAsync(),
+        throwsA(isA<TemplateErrorWrapper>()),
+      );
     });
   });
 
@@ -110,23 +194,27 @@ void main() {
       final env = Environment();
       final t = env.fromString('{{ super() }}');
       await expectLater(
-          () => t.renderAsync(), throwsA(isA<TemplateRuntimeError>()));
+        () => t.renderAsync(),
+        throwsA(isA<TemplateRuntimeError>()),
+      );
     });
 
-    test('async filter throws TemplateRuntimeError on invalid filter',
-        () async {
+    test('async filter throws TemplateRuntimeError on invalid filter', () async {
       final env = Environment();
       final t = env.fromString('{{ "a"|bad_filter }}');
       await expectLater(
-          () => t.renderAsync(), throwsA(isA<TemplateRuntimeError>()));
+        () => t.renderAsync(),
+        throwsA(isA<TemplateRuntimeError>()),
+      );
     });
 
     test('async macro args count mismatch', () async {
       final env = Environment();
-      final t = env
-          .fromString('{% macro foo(a, b) %}{% endmacro %}{{ foo(1, 2, 3) }}');
+      final t = env.fromString('{% macro foo(a, b) %}{% endmacro %}{{ foo(1, 2, 3) }}');
       await expectLater(
-          () => t.renderAsync(), throwsA(isA<TemplateRuntimeError>()));
+        () => t.renderAsync(),
+        throwsA(isA<TemplateRuntimeError>()),
+      );
     });
   });
 

@@ -1,838 +1,1249 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:jinja/jinja.dart';
 
 import '../get_jinja.dart';
 
-final jinjaScript = r'''
-{% import "native_types.jinja" as native %}
-
-{% macro title_view(s) -%}
-    {{ s | title }}
-{%- endmacro %}
-
-{% macro round_view(n) -%}
-    {{ n | round(2) }}
-{%- endmacro %}
-
-{% macro switch_view(b) -%}
-    {{ "True" if b else "False" }}
-{%- endmacro %}
-
-{% macro decode_view(s) -%}
-    {{ s | frombase64 }}
-{%- endmacro %}
-
-[
-{{ native.dt_text("test string", title_view, ui_widget="single_line_text", property_label="Font Name", property_id="font_name")}},
-{{ native.dt_number(1000.252, round_view, ui_widget="number_input", ge=0) }},
-{{ native.dt_boolean(1, ui_widget="switch") }},
-{{ native.dt_datetime("2026-10-10 10:10:10") }},
-{{ native.dt_datetime(datetime.fromisoformat("2026-10-10 10:10:10")) }},
-{{ native.dt_date("2026-10-10 10:10:10") }},
-{{ native.dt_time("2026-10-10 10:10:10") }},
-{{ native.dt_uuid(UUID("065d4098-8c9e-4ec1-8348-9a6beaf6a135")) }},
-{{ native.dt_base64("SGVsbG8gV29ybGQ=", decode_view) }},
-{{ native.dt_money(amount=1000, currency_id="USD", currency_symb="$") }},
-{{ native.dt_list([1, 2, 3], param={"macro": native.dt_number}) }},
-{{ native.dt_object({"a": 1, "b": 2, "c": 3}, a={"macro": native.dt_number}, b={"macro": native.dt_text}, ui_widget="complex_object")}}
-]
-''';
 final Map<String, dynamic> jinjaData = {
-  'title': 'Test Widget',
-  'items': [
-    {
-      'name': 'Item 1',
-      'value': 10,
+  'data': {
+    'payload': {
+      'extra_data_payload': 'extra_data_payload',
+      'cell_value': 'scripts_list_add_new_slideover',
+      'form_id': 'output_doc_jframe_scripts_list',
+      'type': 'jform',
+      'page_id': null,
+      'table_name': 'content',
+      'column_name': 'content_id',
+      'open_slideover': true,
+      'widget_data_id': 'add_new_slide_over_data',
+      'content_id': 'slideover.jinja',
+      'is_macro': true,
+      'title': 'CREATE SCRIPT',
+      'block_view_mode': {
+        'mode': 'column_mode',
+      },
+      'parent_id': 'scripts_list_add_new_slideover',
+      'content_type': 'content_type_block_controls',
     },
-    {
-      'name': 'Item 2',
-      'value': 20,
-    }
-  ],
+    'settings': {
+      'extra_data_settings': 'extra_data_settings',
+    },
+    'properties': {},
+    'slideover_data_types': {
+      'title': '',
+      'description': '',
+      'script_type': {
+        'label': 'Script Type',
+        'toggle': {
+          'values': [
+            'script',
+            'server',
+          ],
+          'selected': '',
+        },
+      },
+      'output_type': {
+        'label': 'Output Type',
+        'toggle': {
+          'values': [
+            'html',
+            'json',
+          ],
+          'selected': null,
+        },
+      },
+    },
+    'controls': [
+      {
+        'data': {
+          'data_type': 'dt_text',
+          'ui_widget': 'input_text_single_line',
+          'widget_id': 'text',
+          'property_label': null,
+          'property_id': 'add_new_slide_over_control_title_property',
+          'data': {
+            'value': null,
+          },
+        },
+        'properties': {
+          'show_label': {
+            'property_label': 'Show label text',
+            'property_id': 'show_label',
+            'data_type': 'dt_boolean',
+            'ui_widget': 'switch',
+            'data': {
+              'value': 1,
+              'value_text': null,
+            },
+          },
+          'label_text': {
+            'data_type': 'dt_text',
+            'ui_widget': 'input_text_single_line',
+            'property_label': 'Label text',
+            'property_id': 'label_text',
+            'data': {
+              'value': 'Title',
+              'value_text': 'Tilte',
+            },
+          },
+          'label_style': {
+            'property_id': 'label_style',
+            'property_label': 'Label Text Style',
+            'data_type': 'dt_text_styles',
+            'ui_widget': 'text_styles',
+            'data': {
+              'value': 'body',
+              'value_text': 'body',
+              'value_metadata': {
+                'font_family': {
+                  'property_id': 'font_family',
+                  'property_label': 'Font Family',
+                  'data_type': 'dt_single_select',
+                  'ui_widget': 'single_select_dropdown',
+                  'data': {
+                    'value': null,
+                    'value_text': null,
+                  },
+                },
+                'font_size': {
+                  'property_id': 'font_size',
+                  'property_label': 'Font Size',
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'data': {
+                    'value': 16,
+                    'value_text': 16,
+                  },
+                },
+                'font_weight': {
+                  'property_id': 'font_weight',
+                  'property_label': 'Font Weight',
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'data': {
+                    'value': 400,
+                    'value_text': 400,
+                  },
+                },
+                'text_color': {
+                  'property_id': 'text_color',
+                  'property_label': 'Text Color',
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'data': {
+                    'value': 'neutral_dark',
+                    'value_text': 'neutral_dark',
+                  },
+                },
+                'text_align': {
+                  'property_id': 'text_align',
+                  'property_label': 'Text Align',
+                  'data_type': 'dt_single_select',
+                  'ui_widget': 'single_select_segmented_button',
+                  'data': {
+                    'value': 'center',
+                    'value_text': 'center',
+                  },
+                },
+                'text_decoration_color': {
+                  'property_id': 'text_decoration_color',
+                  'property_label': 'Decoration Color',
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'data': {
+                    'value': null,
+                    'value_text': null,
+                  },
+                },
+                'text_decoration_style': {
+                  'property_id': 'text_decoration_style',
+                  'property_label': 'Decoration Style',
+                  'data_type': 'dt_single_select',
+                  'ui_widget': 'single_select_dropdown',
+                  'data': {
+                    'value': null,
+                    'value_text': null,
+                  },
+                },
+                'text_decoration_line': {
+                  'property_id': 'text_decoration_line',
+                  'property_label': 'Decoration Line',
+                  'data_type': 'dt_single_select',
+                  'ui_widget': 'single_select_dropdown',
+                  'data': {
+                    'value': null,
+                    'value_text': null,
+                  },
+                },
+                'font_style': {
+                  'property_id': 'font_style',
+                  'property_label': 'Font Style',
+                  'data_type': 'dt_single_select',
+                  'ui_widget': 'single_select_dropdown',
+                  'data': {
+                    'value': null,
+                    'value_text': null,
+                  },
+                },
+                'letter_spacing': {
+                  'property_id': 'letter_spacing',
+                  'property_label': 'Letter Spacing',
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'data': {
+                    'value': 0,
+                    'value_text': 0,
+                  },
+                },
+                'line_height': {
+                  'property_id': 'line_height',
+                  'property_label': 'Line Height',
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'data': {
+                    'value': 1.5,
+                    'value_text': 1.5,
+                  },
+                },
+              },
+            },
+          },
+          'style': {
+            'fill_color': {
+              'property_label': 'Fill color',
+              'property_id': 'fill_color',
+              'data_type': 'dt_system_colors',
+              'ui_widget': 'system_colors',
+              'data': {
+                'value': 'neutral_white',
+                'value_text': 'neutral_white',
+              },
+            },
+            'hover_color': {
+              'property_label': 'Hover color',
+              'property_id': 'hover_color',
+              'data_type': 'dt_system_colors',
+              'ui_widget': 'system_colors',
+              'data': {
+                'value': 'transparent',
+                'value_text': 'transparent',
+              },
+            },
+            'cursor_color': {
+              'property_label': 'Cursor color',
+              'property_id': 'cursor_color',
+              'data_type': 'dt_system_colors',
+              'ui_widget': 'system_colors',
+              'data': {
+                'value': 'primary',
+                'value_text': 'primary',
+              },
+            },
+          },
+          'enabled_border': {
+            'data_type': 'dt_border',
+            'ui_widget': 'border',
+            'property_label': 'Border',
+            'property_id': 'enabled_border',
+            'data': {
+              'value': 1,
+              'value_text': null,
+              'value_metadata': {
+                'border_color': {
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'property_label': 'Border color',
+                  'property_id': 'border_color',
+                  'data': {
+                    'value': 'neutral_lighter',
+                    'value_text': 'neutral_lighter',
+                  },
+                },
+                'border_width': {
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'property_label': 'Border width',
+                  'property_id': 'border_width',
+                  'data': {
+                    'value': 1,
+                    'value_text': 1,
+                  },
+                },
+                'border_radius': {
+                  'data_type': 'dt_radius',
+                  'ui_widget': 'radius',
+                  'property_id': 'border_radius',
+                  'property_label': 'Border radius',
+                  'data': {
+                    'value': 10,
+                    'value_text': 10.0,
+                    'value_metadata': {
+                      'top_left': {
+                        'property_id': 'top_left',
+                        'property_label': 'Top-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'top_right': {
+                        'property_id': 'top_right',
+                        'property_label': 'Top-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_left': {
+                        'property_id': 'bottom_left',
+                        'property_label': 'Bottom-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_right': {
+                        'property_id': 'bottom_right',
+                        'property_label': 'Bottom-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'focused_border': {
+            'data_type': 'dt_border',
+            'ui_widget': 'border',
+            'property_label': 'Focused border',
+            'property_id': 'focused_border',
+            'data': {
+              'value': 1,
+              'value_text': null,
+              'value_metadata': {
+                'border_color': {
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'property_label': 'Border color',
+                  'property_id': 'border_color',
+                  'data': {
+                    'value': 'primary',
+                    'value_text': 'primary',
+                  },
+                },
+                'border_width': {
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'property_label': 'Border width',
+                  'property_id': 'border_width',
+                  'data': {
+                    'value': 1,
+                    'value_text': 1,
+                  },
+                },
+                'border_radius': {
+                  'data_type': 'dt_radius',
+                  'ui_widget': 'radius',
+                  'property_id': 'border_radius',
+                  'property_label': 'Border radius',
+                  'data': {
+                    'value': 10,
+                    'value_text': 10.0,
+                    'value_metadata': {
+                      'top_left': {
+                        'property_id': 'top_left',
+                        'property_label': 'Top-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'top_right': {
+                        'property_id': 'top_right',
+                        'property_label': 'Top-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_left': {
+                        'property_id': 'bottom_left',
+                        'property_label': 'Bottom-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_right': {
+                        'property_id': 'bottom_right',
+                        'property_label': 'Bottom-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'disabled_border': {
+            'data_type': 'dt_border',
+            'ui_widget': 'border',
+            'property_label': 'Disabled border',
+            'property_id': 'disabled_border',
+            'data': {
+              'value': 1,
+              'value_text': null,
+              'value_metadata': {
+                'border_color': {
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'property_label': 'Border color',
+                  'property_id': 'border_color',
+                  'data': {
+                    'value': 'neutral_lighter',
+                    'value_text': 'neutral_lighter',
+                  },
+                },
+                'border_width': {
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'property_label': 'Border width',
+                  'property_id': 'border_width',
+                  'data': {
+                    'value': 1,
+                    'value_text': 1,
+                  },
+                },
+                'border_radius': {
+                  'data_type': 'dt_radius',
+                  'ui_widget': 'radius',
+                  'property_id': 'border_radius',
+                  'property_label': 'Border radius',
+                  'data': {
+                    'value': 10,
+                    'value_text': 10.0,
+                    'value_metadata': {
+                      'top_left': {
+                        'property_id': 'top_left',
+                        'property_label': 'Top-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'top_right': {
+                        'property_id': 'top_right',
+                        'property_label': 'Top-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_left': {
+                        'property_id': 'bottom_left',
+                        'property_label': 'Bottom-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_right': {
+                        'property_id': 'bottom_right',
+                        'property_label': 'Bottom-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'error_border': {
+            'property_label': 'Error Border',
+            'property_id': 'error_border',
+            'data_type': 'dt_border',
+            'ui_widget': 'border',
+            'data': {
+              'value': 1,
+              'value_text': null,
+              'value_metadata': {
+                'border_color': {
+                  'property_label': 'Border Color',
+                  'property_id': 'border_color',
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'data': {
+                    'value': 'secondary',
+                    'value_text': 'secondary',
+                  },
+                },
+                'border_width': {
+                  'property_label': 'Border Width',
+                  'property_id': 'border_width',
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'data': {
+                    'value': 1,
+                    'value_text': 1,
+                  },
+                },
+                'border_radius': {
+                  'data_type': 'dt_radius',
+                  'ui_widget': 'radius',
+                  'property_id': 'border_radius',
+                  'property_label': 'Border radius',
+                  'data': {
+                    'value': 10,
+                    'value_text': 10.0,
+                    'value_metadata': {
+                      'top_left': {
+                        'property_id': 'top_left',
+                        'property_label': 'Top-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'top_right': {
+                        'property_id': 'top_right',
+                        'property_label': 'Top-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_left': {
+                        'property_id': 'bottom_left',
+                        'property_label': 'Bottom-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_right': {
+                        'property_id': 'bottom_right',
+                        'property_label': 'Bottom-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        'data': {
+          'data_type': 'text',
+          'ui_widget': 'input_text_single_line',
+          'property_id': 'add_new_slide_over_control_description_property',
+          'data': {
+            'value': null,
+          },
+        },
+        'properties': {
+          'show_label': {
+            'property_label': 'Show label text',
+            'property_id': 'show_label',
+            'data_type': 'dt_boolean',
+            'ui_widget': 'switch',
+            'data': {
+              'value': 1,
+              'value_text': null,
+            },
+          },
+          'label_text': {
+            'data_type': 'dt_text',
+            'ui_widget': 'input_text_single_line',
+            'property_label': 'Label text',
+            'property_id': 'label_text',
+            'data': {
+              'value': 'description',
+              'value_text': 'Description',
+            },
+          },
+          'label_style': {
+            'property_id': 'label_style',
+            'property_label': 'Label Text Style',
+            'data_type': 'dt_text_styles',
+            'ui_widget': 'text_styles',
+            'data': {
+              'value': 'body',
+              'value_text': 'body',
+              'value_metadata': {
+                'font_family': {
+                  'property_id': 'font_family',
+                  'property_label': 'Font Family',
+                  'data_type': 'dt_single_select',
+                  'ui_widget': 'single_select_dropdown',
+                  'data': {
+                    'value': null,
+                    'value_text': null,
+                  },
+                },
+                'font_size': {
+                  'property_id': 'font_size',
+                  'property_label': 'Font Size',
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'data': {
+                    'value': 16,
+                    'value_text': 16,
+                  },
+                },
+                'font_weight': {
+                  'property_id': 'font_weight',
+                  'property_label': 'Font Weight',
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'data': {
+                    'value': 400,
+                    'value_text': 400,
+                  },
+                },
+                'text_color': {
+                  'property_id': 'text_color',
+                  'property_label': 'Text Color',
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'data': {
+                    'value': 'neutral_dark',
+                    'value_text': 'neutral_dark',
+                  },
+                },
+                'text_align': {
+                  'property_id': 'text_align',
+                  'property_label': 'Text Align',
+                  'data_type': 'dt_single_select',
+                  'ui_widget': 'single_select_segmented_button',
+                  'data': {
+                    'value': 'center',
+                    'value_text': 'center',
+                  },
+                },
+                'text_decoration_color': {
+                  'property_id': 'text_decoration_color',
+                  'property_label': 'Decoration Color',
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'data': {
+                    'value': null,
+                    'value_text': null,
+                  },
+                },
+                'text_decoration_style': {
+                  'property_id': 'text_decoration_style',
+                  'property_label': 'Decoration Style',
+                  'data_type': 'dt_single_select',
+                  'ui_widget': 'single_select_dropdown',
+                  'data': {
+                    'value': null,
+                    'value_text': null,
+                  },
+                },
+                'text_decoration_line': {
+                  'property_id': 'text_decoration_line',
+                  'property_label': 'Decoration Line',
+                  'data_type': 'dt_single_select',
+                  'ui_widget': 'single_select_dropdown',
+                  'data': {
+                    'value': null,
+                    'value_text': null,
+                  },
+                },
+                'font_style': {
+                  'property_id': 'font_style',
+                  'property_label': 'Font Style',
+                  'data_type': 'dt_single_select',
+                  'ui_widget': 'single_select_dropdown',
+                  'data': {
+                    'value': null,
+                    'value_text': null,
+                  },
+                },
+                'letter_spacing': {
+                  'property_id': 'letter_spacing',
+                  'property_label': 'Letter Spacing',
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'data': {
+                    'value': 0,
+                    'value_text': 0,
+                  },
+                },
+                'line_height': {
+                  'property_id': 'line_height',
+                  'property_label': 'Line Height',
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'data': {
+                    'value': 1.5,
+                    'value_text': 1.5,
+                  },
+                },
+              },
+            },
+          },
+          'style': {
+            'fill_color': {
+              'property_label': 'Fill color',
+              'property_id': 'fill_color',
+              'data_type': 'dt_system_colors',
+              'ui_widget': 'system_colors',
+              'data': {
+                'value': 'neutral_white',
+                'value_text': 'neutral_white',
+              },
+            },
+            'hover_color': {
+              'property_label': 'Hover color',
+              'property_id': 'hover_color',
+              'data_type': 'dt_system_colors',
+              'ui_widget': 'system_colors',
+              'data': {
+                'value': 'transparent',
+                'value_text': 'transparent',
+              },
+            },
+            'cursor_color': {
+              'property_label': 'Cursor color',
+              'property_id': 'cursor_color',
+              'data_type': 'dt_system_colors',
+              'ui_widget': 'system_colors',
+              'data': {
+                'value': 'primary',
+                'value_text': 'primary',
+              },
+            },
+          },
+          'enabled_border': {
+            'data_type': 'dt_border',
+            'ui_widget': 'border',
+            'property_label': 'Border',
+            'property_id': 'enabled_border',
+            'data': {
+              'value': 1,
+              'value_text': null,
+              'value_metadata': {
+                'border_color': {
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'property_label': 'Border color',
+                  'property_id': 'border_color',
+                  'data': {
+                    'value': 'neutral_lighter',
+                    'value_text': 'neutral_lighter',
+                  },
+                },
+                'border_width': {
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'property_label': 'Border width',
+                  'property_id': 'border_width',
+                  'data': {
+                    'value': 1,
+                    'value_text': 1,
+                  },
+                },
+                'border_radius': {
+                  'data_type': 'dt_radius',
+                  'ui_widget': 'radius',
+                  'property_id': 'border_radius',
+                  'property_label': 'Border radius',
+                  'data': {
+                    'value': 10,
+                    'value_text': 10.0,
+                    'value_metadata': {
+                      'top_left': {
+                        'property_id': 'top_left',
+                        'property_label': 'Top-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'top_right': {
+                        'property_id': 'top_right',
+                        'property_label': 'Top-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_left': {
+                        'property_id': 'bottom_left',
+                        'property_label': 'Bottom-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_right': {
+                        'property_id': 'bottom_right',
+                        'property_label': 'Bottom-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'focused_border': {
+            'data_type': 'dt_border',
+            'ui_widget': 'border',
+            'property_label': 'Focused border',
+            'property_id': 'focused_border',
+            'data': {
+              'value': 1,
+              'value_text': null,
+              'value_metadata': {
+                'border_color': {
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'property_label': 'Border color',
+                  'property_id': 'border_color',
+                  'data': {
+                    'value': 'primary',
+                    'value_text': 'primary',
+                  },
+                },
+                'border_width': {
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'property_label': 'Border width',
+                  'property_id': 'border_width',
+                  'data': {
+                    'value': 1,
+                    'value_text': 1,
+                  },
+                },
+                'border_radius': {
+                  'data_type': 'dt_radius',
+                  'ui_widget': 'radius',
+                  'property_id': 'border_radius',
+                  'property_label': 'Border radius',
+                  'data': {
+                    'value': 10,
+                    'value_text': 10.0,
+                    'value_metadata': {
+                      'top_left': {
+                        'property_id': 'top_left',
+                        'property_label': 'Top-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'top_right': {
+                        'property_id': 'top_right',
+                        'property_label': 'Top-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_left': {
+                        'property_id': 'bottom_left',
+                        'property_label': 'Bottom-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_right': {
+                        'property_id': 'bottom_right',
+                        'property_label': 'Bottom-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'disabled_border': {
+            'data_type': 'dt_border',
+            'ui_widget': 'border',
+            'property_label': 'Disabled border',
+            'property_id': 'disabled_border',
+            'data': {
+              'value': 1,
+              'value_text': null,
+              'value_metadata': {
+                'border_color': {
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'property_label': 'Border color',
+                  'property_id': 'border_color',
+                  'data': {
+                    'value': 'neutral_lighter',
+                    'value_text': 'neutral_lighter',
+                  },
+                },
+                'border_width': {
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'property_label': 'Border width',
+                  'property_id': 'border_width',
+                  'data': {
+                    'value': 1,
+                    'value_text': 1,
+                  },
+                },
+                'border_radius': {
+                  'data_type': 'dt_radius',
+                  'ui_widget': 'radius',
+                  'property_id': 'border_radius',
+                  'property_label': 'Border radius',
+                  'data': {
+                    'value': 10,
+                    'value_text': 10.0,
+                    'value_metadata': {
+                      'top_left': {
+                        'property_id': 'top_left',
+                        'property_label': 'Top-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'top_right': {
+                        'property_id': 'top_right',
+                        'property_label': 'Top-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_left': {
+                        'property_id': 'bottom_left',
+                        'property_label': 'Bottom-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_right': {
+                        'property_id': 'bottom_right',
+                        'property_label': 'Bottom-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          'error_border': {
+            'property_label': 'Error Border',
+            'property_id': 'error_border',
+            'data_type': 'dt_border',
+            'ui_widget': 'border',
+            'data': {
+              'value': 1,
+              'value_text': null,
+              'value_metadata': {
+                'border_color': {
+                  'property_label': 'Border Color',
+                  'property_id': 'border_color',
+                  'data_type': 'dt_system_colors',
+                  'ui_widget': 'system_colors',
+                  'data': {
+                    'value': 'secondary',
+                    'value_text': 'secondary',
+                  },
+                },
+                'border_width': {
+                  'property_label': 'Border Width',
+                  'property_id': 'border_width',
+                  'data_type': 'dt_number',
+                  'ui_widget': 'input_text_number',
+                  'data': {
+                    'value': 1,
+                    'value_text': 1,
+                  },
+                },
+                'border_radius': {
+                  'data_type': 'dt_radius',
+                  'ui_widget': 'radius',
+                  'property_id': 'border_radius',
+                  'property_label': 'Border radius',
+                  'data': {
+                    'value': 10,
+                    'value_text': 10.0,
+                    'value_metadata': {
+                      'top_left': {
+                        'property_id': 'top_left',
+                        'property_label': 'Top-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'top_right': {
+                        'property_id': 'top_right',
+                        'property_label': 'Top-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_left': {
+                        'property_id': 'bottom_left',
+                        'property_label': 'Bottom-left border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                      'bottom_right': {
+                        'property_id': 'bottom_right',
+                        'property_label': 'Bottom-right border',
+                        'data_type': 'dt_number',
+                        'ui_widget': 'input_text_number',
+                        'data': {
+                          'value': 10,
+                          'value_text': 10.0,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        'data': {
+          'ui_widget': 'custom_container',
+          'data': {
+            'value': [
+              {
+                'data_type': 'dt_text',
+                'ui_widget': 'text_single_line',
+                'property_label': null,
+                'property_id': 'add_new_slide_over_control_toggle_script_type_text_single_line_script_type_property',
+                'data': {
+                  'value': 'script_type',
+                  'value_text': 'Script Type',
+                },
+              },
+              {
+                'data_type': 'toggle',
+                'ui_widget': 'single_select_segmented_button',
+                'property_label': null,
+                'property_id': 'add_new_slide_over_control_toggle_script_type_text_single_select_segmented_button_property',
+                'type': 'toggle',
+                'data': {
+                  'value': [
+                    {
+                      'data': {
+                        'value': 'script',
+                        'value_text': 'SCRIPT',
+                      },
+                      'property_settings': {
+                        'type': {
+                          'value': 'text',
+                        },
+                      },
+                    },
+                    {
+                      'data': {
+                        'value': 'server',
+                        'value_text': 'SERVER',
+                      },
+                      'property_settings': {
+                        'type': {
+                          'value': 'text',
+                        },
+                      },
+                    }
+                  ],
+                },
+              }
+            ],
+          },
+        },
+        'properties': null,
+      },
+      {
+        'data': {
+          'ui_widget': 'custom_container',
+          'data': {
+            'value': [
+              {
+                'data_type': 'dt_text',
+                'ui_widget': 'text_single_line',
+                'property_label': null,
+                'property_id': 'add_new_slide_over_control_toggle_output_type_text_single_line_script_type_property',
+                'data': {
+                  'value': 'output_type',
+                  'value_text': 'Output Type',
+                },
+              },
+              {
+                'data_type': 'toggle',
+                'ui_widget': 'single_select_segmented_button',
+                'type': 'toggle',
+                'property_id': 'add_new_slide_over_control_toggle_output_type_text_single_select_segmented_button_property',
+                'data': {
+                  'value': [
+                    {
+                      'data': {
+                        'value': 'json',
+                        'value_text': 'JSON',
+                      },
+                      'property_settings': {
+                        'type': {
+                          'value': 'text',
+                        },
+                      },
+                    },
+                    {
+                      'data': {
+                        'value': 'html',
+                        'value_text': 'HTML',
+                      },
+                      'property_settings': {
+                        'type': {
+                          'value': 'text',
+                        },
+                      },
+                    }
+                  ],
+                },
+              }
+            ],
+          },
+        },
+        'properties': null,
+      }
+    ],
+  },
 };
 
 void main() async {
   try {
     final errors = <String?>[];
-
+    final nativeTypesIn = await File('data-types/examples/native_types_in.jinja').readAsString();
+    final slideoverIn = await File('data-types/examples/slideover_in.jinja').readAsString();
+    final containerTypesIn = await File('data-types/examples/container_types_in.jinja').readAsString();
+    final viewsTemplate = await File('data-types/jinja/views.jinja').readAsString();
+    final nativeTypesTemplate = await File(
+      'data-types/jinja/native_types.jinja',
+    ).readAsString();
+    final mediaTypesTemplate = await File(
+      'data-types/jinja/media_types.jinja',
+    ).readAsString();
+    final containerTypesTemplate = await File(
+      'data-types/jinja/container_types.jinja',
+    ).readAsString();
+    final slideoverTemplate = await File(
+      'data-types/jinja/slideover.jinja',
+    ).readAsString();
+    final customJinjaScript = '''
+{% import "slideover.jinja" as slideover %}
+{% set slideover_data = slideover.dt_slideover_object(data.slideover_data_types) %}
+{{ slideover_data }}
+''';
     // Setup MapLoader with base templates for inheritance and inclusion
     final loader = MapLoader(
       {
-        'views.jinja':
-            r'''{# Macros implementing different views (text representation for stored data). #}
-
-{#
--------------------------------------------------------------------------------
-General Views
--------------------------------------------------------------------------------
-#}
-
-{# Return default string representation for an object. #}
-{% macro plain_view(v) -%}
-    {{ v }}
-{%- endmacro %}
-
-{# Return null regardless of the input. #}
-{% macro empty_view(_) -%}
-{%- endmacro %}
-
-{#
--------------------------------------------------------------------------------
-String Views
--------------------------------------------------------------------------------
-#}
-
-{# Return title representation for a string. #}
-{% macro title_view(s) -%}
-    {{ s | title }}
-{%- endmacro %}
-
-{#
--------------------------------------------------------------------------------
-Number Views
--------------------------------------------------------------------------------
-#}
-
-{# Return default string representation for a number (2 decimals, with commas). #}
-{% macro number_view(n) -%}
-    {{ "{:,.2f}".format(n) }}
-{%- endmacro %}
-
-{#
--------------------------------------------------------------------------------
-Boolean Views
--------------------------------------------------------------------------------
-#}
-
-{# Return default string representation for a boolean (On/Off). #}
-{% macro boolean_view(b) -%}
-    {{ "On" if b else "Off" }}
-{%- endmacro %}
-
-{#
--------------------------------------------------------------------------------
-Money Views
--------------------------------------------------------------------------------
-#}
-
-{# Return default string representation for money. #}
-{% macro money_view(v) -%}
-    {{ v.currency_symb }}{{ "{:,.2f}".format(v.amount) }}
-{%- endmacro %}
-''',
-        'native_types.jinja': r'''
-{# Data type macros implementing native data types (basic and compound). #}
-
-{% import "views.jinja" as views %}
-
-{#
--------------------------------------------------------------------------------
-Helpers
--------------------------------------------------------------------------------
-#}
-
-{# Raise AssertionError if value is none or undefined. #}
-{% macro _isdefined(name, cls, value) %}
-    {% do check(not (value is none or value is undefined or (value is string and not value)),
-        "Required value `" ~ name ~ "` of `" ~ cls ~ "` is none or undefined") %}
-{% endmacro %}
-
-{# Raise AssertionError if value is not an instance of a given type. #}
-{% macro _isinstance(value, type) %}
-    {% if type == "text" %}
-        {% do check(value is string, "Not a `text`: " ~ value) %}
-    {% elif type == "number"  %}
-        {% do check(value is not boolean and value is number, "Not a `number`: " ~ value) %}
-    {% elif type == "boolean" %}
-        {% do check(value is boolean, "Not a `boolean`: " ~ value) %}
-    {% else %}
-        {% do check(false, "Invalid type: " ~ type) %}
-    {% endif %}
-{% endmacro %}
-
-{# Raise AssertionError if value is not a valid identifier. #}
-{% macro _isident(value) %}
-    {% if value is not none and value is defined %}
-        {% do check(value | match("[a-zA-Z_]+[a-zA-Z0-9_]*"), "Not a valid identifier: " ~ value) %}
-    {% endif %}
-{% endmacro %}
-
-{# Convert value into an object of a given type or raise AssertionError. #}
-{%- macro _convert(value, type, strict) -%}
-    {%- if strict -%}
-        {% do _isinstance(value, type) %}
-        {{ value | tojson }}
-    {%- else -%}
-        {%- if type == "text" -%}
-            "{{ value | string }}"
-        {%- elif type == "number" -%}
-            {% if (value | float) == (value | int) %}
-                {{ value | int }}
-            {% else %}
-                {{ value | float }}
-            {% endif %}
-        {%- elif type == "boolean" -%}
-            {{ value | bool | tojson }}
-        {%- else -%}
-            {% do check(false, "Invalid type: " ~ type) %}
-        {%- endif -%}
-    {%- endif -%}
-{%- endmacro -%}
-
-{# Deduce value based on given arguments or raise AssertionError.#}
-{%- macro _populate(value, type, strict, optional, default) -%}
-    {%- if value is undefined or value is none -%}
-        {%- if default -%}
-            {{ _convert(default, type, strict) }}
-        {%- elif optional -%}
-            null
-        {%- else -%}
-            {% do check(false, "Required value is undefined") %}
-        {%- endif %}
-    {%- else -%}
-        {{- _convert(value, type, strict) -}}
-    {%- endif %}
-{%- endmacro -%}
-
-{# Return first defined object (auxiliary). #}
-{% macro _fallback(fst, sec) -%}
-    {{ fst if fst is not none and fst is defined else sec }}
-{%- endmacro %}
-
-{#
--------------------------------------------------------------------------------
-Components
--------------------------------------------------------------------------------
-#}
-
-{# Reusable fields for data objects. #}
-{% macro _preamble(uid, ui_widget, property_label, property_id) -%}
-    "id": "{{  _fallback(uid, uuid()) }}",
-
-    {%- if ui_widget is not none -%}
-        {%- do _isident(ui_widget) -%}
-        "ui_widget": "{{ ui_widget }}",
-    {%- endif -%}
-
-    {%- if property_label is not none -%}
-        "property_label": "{{ property_label }}",
-    {%- endif -%}
-
-    {%- if property_id is not none -%}
-        {%- do _isident(property_id) -%}
-        "property_id": "{{ property_id }}",
-    {%- endif -%}
-{%- endmacro %}
-
-{# Render value text field if value is defined. #}
-{% macro _value_text(value, view) -%}
-    {% if value %}
-        {% set out = view(value) %}
-{{ print('_value_text')}}
-{{ print(value)}}
-{{ print(view)}}
-{{ print(out)}}
-        {% if out %}
-            , "value_text": "{{ out }}"
-        {% endif %}
-    {% endif %}
-{%- endmacro  %}
-
-{# Create a raw text data object. #}
-{% macro _raw_text(value, view, data_type, 
-                   ui_widget=none, property_label=none, property_id=none,
-                   strict=false, optional=false, default=none, uid=none,
-                   min_length=none, max_length=none, pattern=none) %}
-    {# vars #}
-    {% set value = _populate(value, "text", strict, optional, default) | fromjson %}
-    {% set length = value | length %}
-
-    {# min length #}
-    {% if min_length is not none %}
-        {% do check(length >= min_length,
-           "Failed `min_length` check for: '" ~ value ~ "', min_length: " ~ min_length) %}
-    {% endif %}
-
-    {# max length #}
-    {% if max_length is not none %}
-        {% do check(length <= max_length,
-           "Failed `max_length` check for ': " ~ value ~ "', max_length: " ~ max_length) %}
-    {% endif %}
-
-    {# pattern #}
-    {% if pattern is not none %}
-        {% do check(value | match(pattern),
-           "Failed `pattern` check for: '" ~ value ~ "' , pattern: " ~ pattern) %}
-    {% endif %}
-
-    {# output #}
-    {
-        {{ _preamble(uid, ui_widget, property_label, property_id) }}
-        "data_type": "{{ data_type }}",
-        "data": {
-            "value": {{ value | tojson }}
-            {{ _value_text(value, view) }}
-        }
-    }
-{% endmacro %}
-
-{#
--------------------------------------------------------------------------------
-Basic Types
--------------------------------------------------------------------------------
-#}
-
-{#
-Create a text.
-
-Args:
-    value: Raw input data.
-	view: View which converts stored data into text representation for UI.
-	ui_widget: Name of the corresponding UI widget.
-	property_label: Property label for Designer.
-	property_id: Property ID for Designer.
-	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
-	uid: Unique identifier for data object.
-	min_length: Min length of string.
-	max_length: Max length of string.
-	pattern: Regex that should be used for input data validation.
-#}
-{% macro dt_text(value, view=views.plain_view,
-                 ui_widget=none, property_label=none, property_id=none,
-                 strict=false, optional=false, default=none, uid=none,
-                 min_length=none, max_length=none, pattern=none) -%}
-    {{- _raw_text(value, view, "dt_text",
-                  ui_widget, property_label, property_id,
-                  strict, optional, default, uid,
-                  min_length, max_length, pattern) -}}
-{%- endmacro %}
-
-
-{#
-Create a datetime.
-
-Args:
-    value: Raw input data.
-	view: View which converts stored data into text representation for UI.
-	ui_widget: Name of the corresponding UI widget.
-	property_label: Property label for Designer.
-	property_id: Property ID for Designer.
-	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
-	uid: Unique identifier for data object.
-#}
-{% macro dt_datetime(value, view=views.plain_view,
-                     ui_widget=none, property_label=none, property_id=none,
-                     strict=false, optional=false, default=none, uid=none) -%}
-    {# vars #}
-    {% set value = _populate(value, "text", strict, optional, default) | fromjson %}
-
-    {# data #}
-    {{- _raw_text(value[:19], view, "dt_datetime",
-                  ui_widget, property_label, property_id,
-                  strict, optional, default, uid,
-                  min_length=none, max_length=none,
-                  pattern="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}") -}}
-{%- endmacro %}
-
-{#
-Create a date.
-
-Args:
-    value: Raw input data.
-	view: View which converts stored data into text representation for UI.
-	ui_widget: Name of the corresponding UI widget.
-	property_label: Property label for Designer.
-	property_id: Property ID for Designer.
-	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
-	uid: Unique identifier for data object.
-#}
-{% macro dt_date(value, view=views.plain_view,
-                 ui_widget=none, property_label=none, property_id=none,
-                 strict=false, optional=false, default=none, uid=none) -%}
-    {# vars #}
-    {% set value = _populate(value, "text", strict, optional, default) | fromjson %}
-
-    {# data #}
-    {% if value[:19] | match("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}") -%}
-        {{- _raw_text(value[:10], view, "dt_date",
-                      ui_widget, property_label, property_id,
-                      strict, optional, default, uid,
-                      min_length=none, max_length=none, pattern=none) -}}
-    {%- else -%}
-        {{- _raw_text(value, view, "dt_date",
-                      ui_widget, property_label, property_id,
-                      strict, optional, default, uid,
-                      min_length=none, max_length=none,
-                      pattern="\d{4}-\d{2}-\d{2}") -}}
-    {%- endif %}
-{%- endmacro %}
-
-{#
-Create a time.
-
-Args:
-    value: Raw input data.
-	view: View which converts stored data into text representation for UI.
-	ui_widget: Name of the corresponding UI widget.
-	property_label: Property label for Designer.
-	property_id: Property ID for Designer.
-	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
-	uid: Unique identifier for data object.
-#}
-{% macro dt_time(value, view=views.plain_view,
-                 ui_widget=none, property_label=none, property_id=none,
-                 strict=false, optional=false, default=none, uid=none) -%}
-    {# variables #}
-    {% set value = _populate(value, "text", strict, optional, default) | fromjson %}
-
-    {# data #}
-    {% if value[:19] | match("\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}") -%}
-        {{- _raw_text(value[11:19], view, "dt_time",
-                      ui_widget, property_label, property_id,
-                      strict, optional, default, uid,
-                      min_length=none, max_length=none, pattern=none) -}}
-    {%- else -%}
-        {{- _raw_text(value, view, "dt_time",
-                      ui_widget, property_label, property_id,
-                      strict, optional, default, uid,
-                      min_length=none, max_length=none,
-                      pattern="\d{2}:\d{2}:\d{2}") -}}
-    {%- endif %}
-{%- endmacro %}
-
-{#
-Create a uuid.
-
-Args:
-    value: Raw input data.
-	view: View which converts stored data into text representation for UI.
-	ui_widget: Name of the corresponding UI widget.
-	property_label: Property label for Designer.
-	property_id: Property ID for Designer.
-	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
-	uid: Unique identifier for data object.
-#}
-{% macro dt_uuid(value, view=views.plain_view,
-                 ui_widget=none, property_label=none, property_id=none,
-                 strict=false, optional=false, default=none, uid=none) -%}
-    {{- _raw_text(value, view, "dt_uuid",
-                  ui_widget, property_label, property_id,
-                  strict, optional, default, uid,
-                  min_length=none, max_length=none,
-                  pattern="[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}") -}}
-{%- endmacro %}
-
-{#
-Create base64.
-
-Args:
-    value: Raw input data.
-	view: View which converts stored data into text representation for UI.
-	ui_widget: Name of the corresponding UI widget.
-	property_label: Property label for Designer.
-	property_id: Property ID for Designer.
-	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
-	uid: Unique identifier for data object.
-	min_length: Min length of decoded string.
-	max_length: Max length of decoded string.
-#}
-{% macro dt_base64(value, view=views.empty_view,
-                   ui_widget=none, property_label=none, property_id=none,
-                   strict=false, optional=false, default=none, uid=none,
-                   min_length=none, max_length=none) %}
-    {{- _raw_text(value, view, "dt_base64", ui_widget, property_label, property_id,
-                  strict, optional, default, uid,
-                  min_length, max_length,
-                  pattern="(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?") -}}
-{% endmacro %}
-
-{#
-Create a number.
-
-Args:
-    value: Raw input data.
-	view: View which converts stored data into text representation for UI.
-	ui_widget: Name of the corresponding UI widget.
-	property_label: Property label for Designer.
-	property_id: Property ID for Designer.
-	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
-	uid: Unique identifier for data object.
-    gt: Greater than check.
-    ge: Greater or equal check.
-    lt: Less than check.
-    le: Less or equal check.
-    multiple_of: Multiple of check.
-    max_digits: Max number of digits (including decimal part).
-    decimal_places: Max number of decimal places.
-#}
-{% macro dt_number(value, view=views.number_view,
-                   ui_widget=none, property_label=none, property_id=none,
-                   strict=false, optional=false, default=none, uid=none,
-                   gt=none, ge=none, lt=none, le=none, multiple_of=none,
-                   max_digits=none, decimal_places=none) %}
-    {# variables #}
-    {% set value = _populate(value, "number", strict, optional, default) | fromjson %}
-
-    {# greater than #}
-    {% if gt is not none %}
-        {% do check(value > gt, "Not `gt`: ! " ~ value ~ " > " ~ gt) %}
-    {% endif %}
-
-    {# greater or equal #}
-    {% if ge is not none %}
-        {% do check(value >= ge, "Not `ge`: ! " ~ value ~ " >= " ~ ge) %}
-    {% endif %}
-
-    {# less than #}
-    {% if lt is not none %}
-        {% do check(value < lt, "Not `lt`: ! " ~ value ~ " < " ~ lt) %}
-    {% endif %}
-
-    {# less or equal #}
-    {% if le is not none %}
-        {% do check(value <= le, "Not `le`: ! " ~ value ~ " <= " ~ le) %}
-    {% endif %}
-
-    {# multiple_of #}
-    {% if multiple_of is not none %}
-        {% do check(value % multiple_of == 0, "Not `multiple_of`: ! " ~ value ~ " % " ~ multiple_of ~ " == 0") %}
-    {% endif %}
-
-    {# max_digits #}
-    {% if max_digits is not none %}
-        {% set digits = (value|string)|replace('.', '')|replace('-', '')|length %}
-        {% do check(digits <= max_digits, "Invalid `max_digits`: " ~ value) %}
-    {% endif %}
-
-    {# decimal_places #}
-    {% if decimal_places is not none %}
-        {% set parts = (value | string).split('.') %}
-        {% if parts | length > 1 %}
-            {% set decimals = parts[1] | length %}
-        {% else %}
-            {% set decimals = 0 %}
-        {% endif %}
-        {% do check(decimals <= decimal_places, "Invalid `decimal_places`: " ~ value) %}
-    {% endif %}
-
-    {# output #}
-    {
-        {{  _preamble(uid, ui_widget, property_label, property_id) }}
-        "data_type": "dt_number",
-        "data": {
-            "value": {{ value | tojson }}
-            {{ _value_text(value, view) }}
-        }
-    }
-{% endmacro %}
-
-{#
-Create a boolean.
-
-Args:
-    value: Raw input data.
-	view: View which converts stored data into text representation for UI.
-	ui_widget: Name of the corresponding UI widget.
-	property_label: Property label for Designer.
-	property_id: Property ID for Designer.
-	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
-	uid: Unique identifier for data object.
-#}
-{% macro dt_boolean(value, view=views.boolean_view,
-                    ui_widget=none, property_label=none, property_id=none,
-                    strict=false, optional=false, default=none, uid=none) %}
-    {# vars #}
-    {% set value = _populate(value, "boolean", strict, optional, default) | fromjson %}
-
-    {# output #}
-    {
-        {{  _preamble(uid, ui_widget, property_label, property_id) }}
-        "data_type": "dt_boolean",
-        "data": {
-            "value": {{ value | tojson }}
-            {{ _value_text(value, view) }}
-        }
-    }
-{% endmacro %}
-
-{#
-Create a money.
-
-Args:
-    value: Raw input data.
-	view: View which converts stored data into text representation for UI.
-	ui_widget: Name of the corresponding UI widget.
-	property_label: Property label for Designer.
-	property_id: Property ID for Designer.
-	strict: If true, prohibit auto type conversions.
-	optional: If true, input data is not mandatory (can be null or undefined).
-	default: Default in case of input data is null or undefined.
-	uid: Unique identifier for data object.
-#}
-{% macro dt_money(amount, currency_id, currency_symb, convert_rate=None,
-                  view=views.money_view, uid=none, ui_widget=none, property_label=none,
-                  property_id=none) -%}
-    {# vars #}
-    {% set amount = _populate(amount, "number", strict=false, optional=false, default=none) | fromjson %}
-    {% set currency_id = _populate(currency_id, "text", strict=false, optional=false, default=none) | fromjson %}
-    {% set currency_symb = _populate(currency_symb, "text", strict=false, optional=false, default=none) | fromjson %}
-    {% set convert_rate = _populate(convert_rate, "number", strict=false, optional=true) | fromjson %}
-    {% set value = {
-        "amount": amount,
-        "currency_id": currency_id,
-        "currency_symb": currency_symb,
-        "convert_rate": convert_rate
-    } %}
-
-    {# output #}
-    {
-        {{  _preamble(uid, ui_widget, property_label, property_id) }}
-        "data_type": "dt_money",
-        "data": {
-            "value": {{ value | tojson }}
-            {{ _value_text(value, view) }}
-        }
-    }
-{%- endmacro %}
-
-{#
--------------------------------------------------------------------------------
-Compound types
--------------------------------------------------------------------------------
-#}
-
-{# Create list data by iterating over values. #}
-{% macro _list_data(values, param) -%}
-    [
-    {% for v in values -%}
-       {{- materialize(v, param) -}}{% if not loop.last %},{% endif %}
-    {%- endfor %}
-    ]
-{%- endmacro %}
-
-{#
-Create a list.
-
-Args:
-    value: Iterable with input data.
-    param: Dictionary describing storing type.
-    data_type: List data type.
-    ui_widget: Name of the corresponding UI widget.
-	property_label: Property label for Designer.
-	property_id: Property ID for Designer.
-	uid: Unique identifier for data object.
-#}
-{% macro dt_list(value, param, data_type=none, view=views.empty_view,
-                 ui_widget=none, property_label=none, property_id=none,
-                 uid=none) -%}
-    {# vars #}
-    {% set data = _list_data(value, param) %}
-
-    {# output #}
-    {
-        {{  _preamble(uid, ui_widget, property_label, property_id) }}
-        "data_type": "{{ _fallback(data_type, "dt_list") }}",
-        "data": {{ data }}
-    }
-{%- endmacro %}
-
-{# Create map data by iterating over params. #}
-{% macro _object_data(value, params, data_type) -%}
-    {
-    {% for k, v in params -%}
-        {% do _isident(k) %}
-        {% do _isdefined(k, data_type, value[k]) %}
-        "{{ k }}": {{- materialize(value[k], v) -}}{% if not loop.last %},{% endif %}
-    {%- endfor %}
-    }
-{%- endmacro %}
-
-{#
-Create a map.
-
-Args:
-    value: Mapping with input data.
-    data_type: Map subtype.
-    ui_widget: Name of the corresponding UI widget.
-	property_label: Property label for Designer.
-	property_id: Property ID for Designer.
-	uid: Unique identifier for data object.
-	**kwargs: Field description.
-#}
-{% macro dt_object(value, data_type=none, view=views.empty_view,
-                   ui_widget=none, property_label=none, property_id=none,
-                   uid=none) -%}
-    {# vars #}
-    {% set data = _object_data(value, kwargs, data_type or 'dt_list') %}
-
-    {# output #}
-    {
-        {{  _preamble(uid, ui_widget, property_label, property_id) }}
-        "data_type": "{{ _fallback(data_type, "dt_object") }}",
-        "data": {{ data }}
-    }
-{%- endmacro %}
-''',
-        'media_types.jinja': r'''
-{% import "native_types.jinja" as native %}
-
-{% set max_image_size = 10485760 %} {# 10Mb #}
-{% set image_extensions = ["png", "svg", "webp"] %}
-
-{# Create an image. #}
-{% macro dt_image(value) -%}
-    {{ native.dt_object(value,
-        data_type="dt_image",
-        image_type={"macro": native.dt_text, "pattern": image_extensions | join('|')},
-        image_content={"macro": native.dt_base64, "max_length": max_image_size},
-        image_size={"macro": f.dt_number, "ge": 0},
-        secure={"macro": native.dt_boolean, "default": false}) }}
-{%- endmacro %}
-''',
-        'container_types.jinja': r'''
-{% import "native_types.jinja" as native %}
-{% import "media_types.jinja" as media %}
-{% import "views.jinja" as views %}
-
-{# 
--------------------------------------------------------------------------------
-Options
--------------------------------------------------------------------------------
-#}
-
-{# Create an `option` object containing `icon`, `text`, and `hint` fields #}
-{% macro dt_option(value) -%}
-    {{ native.dt_object(value,
-        data_type="dt_option",
-        ui_widget="option_widget",
-        icon={"macro": media.dt_image},
-        text={"macro": native.dt_text},
-        hint={"macro": native.dt_text, "optional": true}) }}
-{%- endmacro %}
-
-{# Create a list of `option` objects #}
-{% macro dt_options_list(value) -%}
-    {{ native.dt_list(value,
-        data_type="dt_options_list",
-        param={"macro": dt_option}) }}
-{%- endmacro %}
-
-{# 
--------------------------------------------------------------------------------
-Option groups
--------------------------------------------------------------------------------
-#}
-
-{# Create an `option_group` object containing `icon`, `subtitle`, and `content` fields #}
-{% macro dt_option_group(value) -%}
-    {{ native.dt_object(value,
-       data_type="dt_option_group",
-       ui_widget="option_group_section",
-       icon={"macro": media.dt_image},
-       subtitle={"macro": native.dt_text},
-       content={"macro": dt_options_list}) }}
-{%- endmacro %}
-
-{# Create a list of `option_group` objects #}
-{% macro dt_option_groups_list(value) -%}
-    {{ native.dt_list(value,
-        data_type="dt_option_groups_list",
-        param={"macro": dt_option_group}) }}
-{%- endmacro %}
-
-{# Create option groups container #}
-{% macro dt_option_groups_container(value) -%}
-    {{ native.dt_object(value,
-        data_type="dt_option_groups_container",
-        ui_widget="option_groups_form",
-        title={"macro":  native.dt_text, "view": views.title_view, "optional": true},
-        groups={"macro": dt_option_groups_list}) }}
-{%- endmacro %}
-''',
-        'container_types_in.jinja': r'''
-{% import "container_types.jinja" as containers %}
-
-{# Input #}
-{% set tag_groups = {
-    "title": "all tags",
-    "groups": [
-        {
-            "icon": {
-                "image_type": "png",
-                "image_content": "SGVsbG8gV29ybGQ=",
-                "image_size": 12345,
-                "secure": 0
-            },
-            "subtitle": "Team",
-            "content": [
-                {
-                    "icon": {
-                        "image_type": "png",
-                        "image_content": "SGVsbG8gV29ybGQ=",
-                        "image_size": "12345",
-                        "secure": true
-                    },
-                    "text": "Domain Expertise Required",
-                    "hint": "Deep industry knowledge needed"
-                }
-            ]
-        },
-        {
-            "icon": {
-                "image_type": "png",
-                "image_content": "SGVsbG8gV29ybGQ=",
-                "image_size": 12345,
-                "secure": false
-            },
-            "subtitle": "Scale",
-            "content": [
-                {
-                    "icon": {
-                        "image_type": "png",
-                        "image_content": "SGVsbG8gV29ybGQ=",
-                        "image_size": 12345,
-                        "secure": false
-                    },
-                    "text": "Venture Scale",
-                    "hint": "Could be venture backable"
-                },
-                {
-                    "icon": {
-                        "image_type": "png",
-                        "image_content": "SGVsbG8gV29ybGQ=",
-                        "image_size": 12345,
-                        "secure": false
-                    },
-                    "text": "Quick MVP",
-                    "hint": "Can launch MVP quickly"
-                }
-            ]
-        }
-    ]
-} %}
-
-{# Convert to data types #}
-{{ containers.dt_option_groups_container(tag_groups) }}
-''',
+        'views.jinja': viewsTemplate,
+        'slideover.jinja': slideoverTemplate,
+        'native_types.jinja': nativeTypesTemplate,
+        'media_types.jinja': mediaTypesTemplate,
+        'container_types.jinja': containerTypesTemplate,
       },
       globalJinjaData: jinjaData,
     );
@@ -869,16 +1280,66 @@ Option groups
       },
       // enableJinjaDebugLogging: true,
     );
-    // example 2: real world example
-    print('\n=== Example 2: Real world example ===');
-    var template2 = env.fromString(jinjaScript);
-    var result2 = await template2.renderAsync(jinjaData);
-    print('Result length: ${result2.length}');
+    // // Example 1: native_types_in.jinja
+    // print('\n=== Example 1: native_types_in.jinja ===');
+    // final template4 = env.fromString(nativeTypesIn);
+    // final result4 = await template4.renderAsync(jinjaData);
+    // print('Result length: ${result4.length}');
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
+    // print(result4.replaceAll('\n', ''));
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
+    // Example 2: slideover_in.jinja
+    // print('\n=== Example 2: slideover_in.jinja ===');
+    // final template5 = env.fromString(slideoverIn);
+    // final result5 = await template5.renderAsync(jinjaData);
+    // print('Result length: ${result5.length}');
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
+    // print(result5.replaceAll('\n', ''));
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
+    // // Example 3: container_types_in.jinja
+    // print('\n=== Example 3: container_types_in.jinja ===');
+    // final template6 = env.fromString(containerTypesIn);
+    // final result6 = await template6.renderAsync(jinjaData);
+    // print('Result length: ${result6.length}');
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
+    // print(result6.replaceAll('\n', ''));
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
+    // // Example 4: views.jinja
+    // print('\n=== Example 4: views.jinja ===');
+    // final template7 = env.fromString(viewsTemplate);
+    // final result7 = await template7.renderAsync(jinjaData);
+    // print('Result length: ${result7.length}');
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
+    // print(result7.replaceAll('\n', ''));
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
+    // Example 5: custom_jinja_script.jinja
+    print('\n=== Example 5: custom_jinja_script.jinja ===');
+    final template8 = env.fromString(customJinjaScript);
+    final result8 = await template8.renderAsync(jinjaData);
+    print('Result length: ${result8.length}');
     print(
-        '--------------------------------------------------------------------------------------------------------------------------------');
-    print(result2.replaceAll('\n', ''));
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(result8.replaceAll('\n', ''));
     print(
-        '--------------------------------------------------------------------------------------------------------------------------------');
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
   } catch (e, stack) {
     print('\n!!! UNHANDLED EXCEPTION !!!');
     print(e);
