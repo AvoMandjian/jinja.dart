@@ -471,6 +471,33 @@ base class StringSinkRenderer extends Visitor<StringSinkRenderContext, Object?> 
   @override
   Object? visitCall(Call node, StringSinkRenderContext context) {
     context.environment.debugJinja('visitCall: Calling function');
+
+    // Intercept Map properties: keys, values, items, entries
+    if (node.value is Attribute) {
+      var attributeNode = node.value as Attribute;
+      if (const ['keys', 'values', 'items', 'entries'].contains(attributeNode.attribute)) {
+        var object = attributeNode.value.accept(this, context);
+        if (object is Map) {
+          context.environment.debugJinja(
+            'visitCall: Intercepted Map method "${attributeNode.attribute}"',
+          );
+          switch (attributeNode.attribute) {
+            case 'keys':
+              return object.keys;
+            case 'values':
+              return object.values;
+            case 'items':
+            case 'entries':
+              return object.entries;
+          }
+        }
+
+        var function = context.attribute(attributeNode.attribute, object, attributeNode);
+        var (positional, named) = node.calling.accept(this, context) as Parameters;
+        return context.call(function, node, positional, named);
+      }
+    }
+
     var function = node.value.accept(this, context);
     context.environment.debugJinja(
       'visitCall: Function = $function (type: ${function.runtimeType})',
@@ -2074,13 +2101,34 @@ class AsyncStringSinkRenderer extends Visitor<AsyncRenderContext, Future<Object?
 
   @override
   Future<Object?> visitCall(Call node, AsyncRenderContext context) async {
+    // Intercept Map properties: keys, values, items, entries
+    if (node.value is Attribute) {
+      var attributeNode = node.value as Attribute;
+      if (const ['keys', 'values', 'items', 'entries'].contains(attributeNode.attribute)) {
+        var object = await attributeNode.value.accept(this, context);
+        if (object is Map) {
+          switch (attributeNode.attribute) {
+            case 'keys':
+              return object.keys;
+            case 'values':
+              return object.values;
+            case 'items':
+            case 'entries':
+              return object.entries;
+          }
+        }
+
+        var function = context.attribute(attributeNode.attribute, object, attributeNode);
+        var params = await node.calling.accept(this, context) as Parameters;
+        var (positional, named) = params;
+        return context.call(function, node, positional, named);
+      }
+    }
+
     var function = await node.value.accept(this, context);
     var params = await node.calling.accept(this, context) as Parameters;
     var (positional, named) = params;
     var result = context.call(function, node, positional, named);
-    print(
-      'AsyncRenderer.visitCall result: $result, type: ${result.runtimeType}, isFuture: ${result is Future}',
-    );
     if (result is Future) {
       return result;
     }
