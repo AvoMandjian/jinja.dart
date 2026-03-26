@@ -1210,6 +1210,37 @@ final Map<String, dynamic> jinjaData = {
       }
     ],
   },
+  'macro_toggle_data': {
+    'id': '4d8a9708-21ae-4e75-adc9-4925bb461483',
+    'property_id': 'add_new_slide_over_output_type_property_toggle',
+    'data': {
+      'values': {
+        'id': '4d8a9708-21ae-4e75-adc9-4925bb461483',
+        'data_type': 'dt_list',
+        'data': [
+          {
+            'id': '25b8a684-6dbc-475c-8d50-b926ab92e348',
+            'property_label': 'Output Type',
+            'property_id': 'add_new_slide_over_output_type_property_toggle',
+            'data_type': 'dt_text',
+            'data': {'value': 'html', 'value_text': 'html'},
+          },
+          {
+            'id': 'f54a4d15-96f7-4284-b647-b19a755ccb6d',
+            'property_label': 'Output Type',
+            'property_id': 'add_new_slide_over_output_type_property_toggle',
+            'data_type': 'dt_text',
+            'data': {'value': 'json', 'value_text': 'json'},
+          },
+        ],
+      },
+      'selected': {
+        'id': 'edc176af-b20a-4347-964d-13f00373e6a5',
+        'data_type': 'dt_text',
+        'data': {'value': 'html', 'value_text': 'html'},
+      },
+    },
+  },
 };
 
 void main() async {
@@ -1231,10 +1262,17 @@ void main() async {
     final slideoverTemplate = await File(
       'data-types/jinja/slideover.jinja',
     ).readAsString();
+    final macroToggleTemplate = await File(
+      'example/data_types/macro_toggle.jinja',
+    ).readAsString();
     final customJinjaScript = '''
 {% import "slideover.jinja" as slideover %}
 {% set slideover_data = slideover.dt_slideover_object(data.slideover_data_types) %}
 {{ slideover_data }}
+''';
+    final toggleExecutionScript = '''
+{% import "macro_toggle.jinja" as toggle %}
+{{ toggle.macro_toggle(macro_toggle_data, {}) }}
 ''';
     // Setup MapLoader with base templates for inheritance and inclusion
     final loader = MapLoader(
@@ -1244,6 +1282,7 @@ void main() async {
         'native_types.jinja': nativeTypesTemplate,
         'media_types.jinja': mediaTypesTemplate,
         'container_types.jinja': containerTypesTemplate,
+        'macro_toggle.jinja': macroToggleTemplate,
       },
       globalJinjaData: jinjaData,
     );
@@ -1258,6 +1297,37 @@ void main() async {
       },
       callbackToParentProject: ({required payload}) async {
         await Future<void>.delayed(const Duration(seconds: 2));
+
+        if (payload['action'] == 'run_data_source' && payload['data_source_id'] == 'get_properties_by_widget_property_id') {
+          return {
+            'values': {
+              'id': '4d8a9708-21ae-4e75-adc9-4925bb461483',
+              'data_type': 'dt_list',
+              'data': [
+                {
+                  'id': '25b8a684-6dbc-475c-8d50-b926ab92e348',
+                  'property_label': 'Output Type',
+                  'property_id': 'add_new_slide_over_output_type_property_toggle',
+                  'data_type': 'dt_text',
+                  'data': {'value': 'html', 'value_text': 'html'},
+                },
+                {
+                  'id': 'f54a4d15-96f7-4284-b647-b19a755ccb6d',
+                  'property_label': 'Output Type',
+                  'property_id': 'add_new_slide_over_output_type_property_toggle',
+                  'data_type': 'dt_text',
+                  'data': {'value': 'json', 'value_text': 'json'},
+                },
+              ],
+            },
+            'selected': {
+              'id': 'edc176af-b20a-4347-964d-13f00373e6a5',
+              'data_type': 'dt_text',
+              'data': {'value': 'html', 'value_text': 'html'},
+            },
+          };
+        }
+
         return {
           'workflows': ['register_free'],
           'jinja_data': {
@@ -1329,17 +1399,30 @@ void main() async {
     //   '--------------------------------------------------------------------------------------------------------------------------------',
     // );
     // Example 5: custom_jinja_script.jinja
-    print('\n=== Example 5: custom_jinja_script.jinja ===');
-    final template8 = env.fromString(customJinjaScript);
-    final result8 = await template8.renderAsync(jinjaData);
-    print('Result length: ${result8.length}');
-    print(
-      '--------------------------------------------------------------------------------------------------------------------------------',
-    );
-    print(result8.replaceAll('\n', ''));
-    print(
-      '--------------------------------------------------------------------------------------------------------------------------------',
-    );
+    // print('\n=== Example 5: custom_jinja_script.jinja ===');
+    // final template8 = env.fromString(customJinjaScript);
+    // final result8 = await template8.renderAsync(jinjaData);
+    // print('Result length: ${result8.length}');
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
+    // print(result8.replaceAll('\n', ''));
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
+
+    // Example 6: macro_toggle.jinja
+    print('\n=== Example 6: macro_toggle.jinja ===');
+    final template9 = env.fromString(toggleExecutionScript);
+    final result9 = await template9.renderAsync(jinjaData);
+    print('Result length: ${result9.length}');
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
+    // print(result9.replaceAll('\n', ''));
+    // print(
+    //   '--------------------------------------------------------------------------------------------------------------------------------',
+    // );
   } catch (e, stack) {
     print('\n!!! UNHANDLED EXCEPTION !!!');
     print(e);

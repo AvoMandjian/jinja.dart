@@ -56,6 +56,10 @@ Object? getAttribute(
   }
 
   if (object is Map) {
+    if (object.containsKey(attribute)) {
+      return object[attribute];
+    }
+
     if (attribute == 'entries') {
       return object.entries;
     }

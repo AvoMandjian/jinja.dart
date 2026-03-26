@@ -1,0 +1,402 @@
+{% macro macro_toggle(data, properties) %}
+{% set properties = jinja_action('get_properties_by_widget_property_id','db', {'property_widget_id': data.property_id}) %}
+{
+  "widget_id": "{{data.id}}",
+  "object_id": "segmented_button_text",
+  "widget_type": "toggle",
+  "events": {
+    "on_pressed": {
+      "workflow_id": ""
+    }
+  },
+  "property_settings": {
+    "full_expanded": {
+      "data_type": "dt_boolean",
+      "property_id": "full_expanded",
+      "property_label": "Full Expanded",
+      "ui_widget": "switch",
+      "data": {
+        "value": 0,
+        "value_text": ""
+      }
+    },
+    "show_tooltip": {
+      "data_type": "dt_boolean",
+      "property_id": "show_tooltip",
+      "property_label": "Show Tooltip",
+      "ui_widget": "switch",
+      "data": {
+        "value": 1,
+        "value_text": ""
+      }
+    },
+    "max_line": {
+      "data_type": "dt_text",
+      "property_id": "max_line",
+      "property_label": "Max Line",
+      "ui_widget": "input_text_number",
+      "data": {
+        "value": 1,
+        "value_text": ""
+      }
+    },
+    "border": {
+      "data_type": "dt_border",
+      "ui_widget": "border",
+      "property_id": "border",
+      "property_label": "Border",
+      "data": {
+        "value": 1,
+        "value_text": "",
+        "value_metadata": {
+          "border_radius": {
+            "data_type": "dt_radius",
+            "ui_widget": "radius",
+            "property_id": "border_radius",
+            "property_label": "Border radius",
+            "data": {
+              "value": 0,
+              "value_text": "0",
+              "value_metadata": {
+                "top_left": {
+                  "property_id": "top_left",
+                  "property_label": "Top-left border",
+                  "data_type": "dt_number",
+                  "ui_widget": "input_text_number",
+                  "data": {
+                    "value": 0,
+                    "value_text": "0"
+                  }
+                },
+                "top_right": {
+                  "property_id": "top_right",
+                  "property_label": "Top-right border",
+                  "data_type": "dt_number",
+                  "ui_widget": "input_text_number",
+                  "data": {
+                    "value": 0,
+                    "value_text": "0"
+                  }
+                },
+                "bottom_left": {
+                  "property_id": "bottom_left",
+                  "property_label": "Bottom-left border",
+                  "data_type": "dt_number",
+                  "ui_widget": "input_text_number",
+                  "data": {
+                    "value": 0,
+                    "value_text": "0"
+                  }
+                },
+                "bottom_right": {
+                  "property_id": "bottom_right",
+                  "property_label": "Bottom-right border",
+                  "data_type": "dt_number",
+                  "ui_widget": "input_text_number",
+                  "data": {
+                    "value": 0,
+                    "value_text": "0"
+                  }
+                }
+              }
+            }
+          },
+          "border_color": {
+            "property_id": "border_color",
+            "property_label": "Border Color",
+            "data_type": "dt_system_colors",
+            "ui_widget": "system_colors",
+            "data": {
+              "value": "neutral_lighter",
+              "value_text": "neutral_lighter"
+            }
+          },
+          "selected_border_color": {
+            "property_id": "selected_border_color",
+            "property_label": "Selected Border Color",
+            "data_type": "dt_system_colors",
+            "ui_widget": "system_colors",
+            "data": {
+              "value": "neutral_lighter",
+              "value_text": "neutral_lighter"
+            }
+          },
+          "border_width": {
+            "property_id": "border_width",
+            "property_label": "Border Width",
+            "data_type": "dt_number",
+            "ui_widget": "input_text_number",
+            "data": {
+              "value": 1,
+              "value_text": "1"
+            }
+          }
+        }
+      }
+    },
+    "vertical": {
+      "data_type": "dt_boolean",
+      "property_id": "vertical",
+      "property_label": "Vertical",
+      "ui_widget": "switch",
+      "data": {
+        "value": 0,
+        "value_text": ""
+      }
+    },
+    "text_style": {
+      "property_id": "text_style",
+      "property_label": "Label Text Style",
+      "data_type": "dt_text_styles",
+      "ui_widget": "text_styles",
+      "data": {
+        "value": "body",
+        "value_text": "Body",
+        "value_metadata": {
+          "font_family": {
+            "property_id": "font_family",
+            "property_label": "Font Family",
+            "data_type": "dt_single_select",
+            "ui_widget": "single_select_dropdown",
+            "data": {
+              "value": "",
+              "value_text": ""
+            }
+          },
+          "font_size": {
+            "property_id": "font_size",
+            "property_label": "Font Size",
+            "data_type": "dt_number",
+            "ui_widget": "input_text_number",
+            "data": {
+              "value": 16,
+              "value_text": "16"
+            }
+          },
+          "font_weight": {
+            "property_id": "font_weight",
+            "property_label": "Font Weight",
+            "data_type": "dt_number",
+            "ui_widget": "input_text_number",
+            "data": {
+              "value": 400,
+              "value_text": "400"
+            }
+          },
+          "text_color": {
+            "property_id": "text_color",
+            "property_label": "Text Color",
+            "data_type": "dt_system_colors",
+            "ui_widget": "system_colors",
+            "data": {
+              "value": "neutral_dark",
+              "value_text": "neutral_dark"
+            }
+          },
+          "text_align": {
+            "property_id": "text_align",
+            "property_label": "Text Align",
+            "data_type": "dt_single_select",
+            "ui_widget": "single_select_segmented_button",
+            "data": {
+              "value": "center",
+              "value_text": "center"
+            }
+          },
+          "text_decoration_color": {
+            "property_id": "text_decoration_color",
+            "property_label": "Decoration Color",
+            "data_type": "dt_system_colors",
+            "ui_widget": "system_colors",
+            "data": {
+              "value": "",
+              "value_text": ""
+            }
+          },
+          "text_decoration_style": {
+            "property_id": "text_decoration_style",
+            "property_label": "Decoration Style",
+            "data_type": "dt_single_select",
+            "ui_widget": "single_select_dropdown",
+            "data": {
+              "value": "",
+              "value_text": ""
+            }
+          },
+          "text_decoration_line": {
+            "property_id": "text_decoration_line",
+            "property_label": "Decoration Line",
+            "data_type": "dt_single_select",
+            "ui_widget": "single_select_dropdown",
+            "data": {
+              "value": "",
+              "value_text": ""
+            }
+          },
+          "font_style": {
+            "property_id": "font_style",
+            "property_label": "Font Style",
+            "data_type": "dt_single_select",
+            "ui_widget": "single_select_dropdown",
+            "data": {
+              "value": "",
+              "value_text": ""
+            }
+          },
+          "letter_spacing": {
+            "property_id": "letter_spacing",
+            "property_label": "Letter Spacing",
+            "data_type": "dt_number",
+            "ui_widget": "input_text_number",
+            "data": {
+              "value": 0,
+              "value_text": "0"
+            }
+          },
+          "line_height": {
+            "property_id": "line_height",
+            "property_label": "Line Height",
+            "data_type": "dt_number",
+            "ui_widget": "input_text_number",
+            "data": {
+              "value": 1.5,
+              "value_text": "1.5"
+            }
+          }
+        }
+      }
+    },
+    "style": {
+      "size": {
+        "data_type": "dt_number",
+        "property_id": "size",
+        "property_label": "Size",
+        "ui_widget": "input_text_number",
+        "data": {
+          "value": 50,
+          "value_text": 50
+        }
+      },
+      "height": {
+        "data_type": "dt_number",
+        "property_id": "height",
+        "property_label": "Height",
+        "ui_widget": "input_text_number",
+        "data": {
+          "value": 30,
+          "value_text": 30
+        }
+      },
+      "width": {
+        "data_type": "dt_number",
+        "property_id": "width",
+        "property_label": "Width",
+        "ui_widget": "input_text_number",
+        "data": {
+          "value": 100,
+          "value_text": 100
+        }
+      }
+    },
+    "widget_list": [
+      {{print("--------------------------------")}}
+      {{print("STEP: 1")}}
+      {{print(data.data)}}
+      {{print("--------------------------------")}}
+      {{print("STEP: 2")}}
+      {{print(data.data.values)}}
+      {{print("--------------------------------")}}
+      {{print("STEP: 3")}}
+      {{print(data.data.values.data)}}
+      {{print("--------------------------------")}}
+      {{print("STEP: 4")}}
+      {{print(data.data.selected)}}
+      {{print("--------------------------------")}}
+      {{print("STEP: 5")}}
+      {% for value in data.data.values.data %}
+        {{print("STEP: 6")}}
+        {{print("--------------------------------")}}
+        {{print(value)}}
+      {{print("--------------------------------")}}
+        {
+        "value": "{{value.data.value}}",
+        "value_text": "{{value.data.value_text}}",
+        "value_metadata": {
+          "selected_icon": {
+            "data_type": "dt_icon",
+            "property_id": "trailing_icon",
+            "property_label": "Trailing Icon",
+            "ui_widget": "icon",
+            "data": {
+              "value": "https://files.svgcdn.io/zmdi/check.svg",
+              "value_text": "https://files.svgcdn.io/zmdi/check.svg",
+              "value_metadata": {
+                "icon_color": {
+                  "property_id": "icon_color",
+                  "property_label": "Icon color",
+                  "data_type": "dt_system_colors",
+                  "ui_widget": "system_colors",
+                  "data": {
+                    "value": "neutral_dark",
+                    "value_text": "neutral_dark"
+                  }
+                },
+                "selected_icon_color": {
+                  "property_id": "selected_icon_color",
+                  "property_label": "Icon Selected Color",
+                  "data_type": "dt_system_colors",
+                  "ui_widget": "system_colors",
+                  "data": {
+                    "value": "neutral_white",
+                    "value_text": "neutral_white"
+                  }
+                },
+                "height": {
+                  "property_id": "height",
+                  "property_label": "Height",
+                  "data_type": "dt_number",
+                  "ui_widget": "input_text_number",
+                  "data": {
+                    "value": 16,
+                    "value_text": "16"
+                  }
+                },
+                "width": {
+                  "property_id": "width",
+                  "property_label": "Width",
+                  "data_type": "dt_number",
+                  "ui_widget": "input_text_number",
+                  "data": {
+                    "value": 16,
+                    "value_text": "16"
+                  }
+                }
+              }
+            }
+          },
+          "tooltip_message": {
+            "data_type": "dt_text",
+            "property_id": "tooltip_message",
+            "property_label": "Tooltip Message",
+            "ui_widget": "inpu_text_single_line",
+            "data": {
+              "value": "Tooltip Message",
+              "value_text": "Tooltip Message"
+            }
+          },
+          "disabled": {
+            "data_type": "dt_boolean",
+            "property_id": "disabled",
+            "property_label": "Disabled",
+            "ui_widget": "switch",
+            "data": {
+              "value": 0
+            }
+          }
+        }
+      } {% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+}
+{% endmacro %}

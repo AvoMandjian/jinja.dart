@@ -69,6 +69,8 @@ Project memory files are stored in `.serena/memories/`:
 - Prioritize fixing lints in core library files (`lib/src/`).
 - Debugging features should be robust and match Jinja2 capabilities.
 - When implementing `visitSlice`, handle `String` values by splitting, slicing, and re-joining.
+- In example setups, load Jinja scripts by reading from files rather than hardcoding string literals.
+
 
 ## Learned Workspace Facts
 - `example/get_jinja.dart` is a utility script that provides a pre-configured environment; it does not have a `main` function and should mirror `environment.py`.
@@ -78,6 +80,9 @@ Project memory files are stored in `.serena/memories/`:
 - Template rendering in `defaults.dart` supports python-like numeric formatting.
 - `TemplateSyntaxError` field redundancy was removed to align with the base `TemplateError` implementation.
 - Test coverage significantly improved: `lib/src/filters.dart` (91.6%), `lib/src/environment.dart` (91.9%), `lib/src/exceptions.dart` (>95%), `lib/src/renderer.dart` (82.9%).
+- The engine supports a Python-like `.items()` method on dictionaries for key-value iteration in templates.
+- Async functions within imported macros (via `MapLoader`) properly await future filters or globals in the async renderers.
+
 
 ## Last Updated
-2026-03-24
+2026-03-25
