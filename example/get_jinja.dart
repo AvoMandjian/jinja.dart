@@ -1179,6 +1179,53 @@ class GetJinja {
       },
       loader: loader,
       filters: {
+        'format_time': (
+          String? value,
+          String? pythonTimeFormat, [
+          bool? isPythonFormat = false,
+        ]) {
+          if (value == null || pythonTimeFormat == null) {
+            return DateTime.now().toString();
+          }
+          // Convert Python format to Dart format
+          final dartFormat = isPythonFormat == true ? convertPythonToDartDateFormat(pythonTimeFormat) : pythonTimeFormat;
+          final inputFormat = DateFormat(
+            dartFormat,
+          ).format(DateTime.parse(value));
+          return inputFormat;
+        },
+        'format_date': (
+          String? value,
+          String? pythonDateFormat, [
+          bool? isPythonFormat = false,
+        ]) {
+          if (value == null || pythonDateFormat == null) {
+            return DateTime.now().toString();
+          }
+          // Convert Python format to Dart format
+          final dartFormat = isPythonFormat == true ? convertPythonToDartDateFormat(pythonDateFormat) : pythonDateFormat;
+          final inputFormat = DateFormat(
+            dartFormat,
+          ).format(DateTime.parse(value));
+          return inputFormat;
+        },
+
+        /// Return a string representation of a datetime in a particular format.
+        'format_datetime': (
+          String? value,
+          String? pythonDateTimeFormat, [
+          bool? isPythonFormat = true,
+        ]) {
+          if (value == null || pythonDateTimeFormat == null) {
+            return DateTime.now().toString();
+          }
+          final dartFormat = isPythonFormat == true ? convertPythonToDartDateFormat(pythonDateTimeFormat) : pythonDateTimeFormat;
+          final inputFormat = DateFormat(
+            dartFormat,
+          ).format(DateTime.parse(value));
+          return inputFormat;
+        },
+
         /// Decode a base64 encoded string.
         'frombase64': (String? s) {
           if (s == null) return null;
@@ -2503,23 +2550,6 @@ class GetJinja {
           }
         },
 
-        /// Formats a date string according to a Python or Dart date format.
-        'date_format': (
-          String? value,
-          String? pythonDateFormat, [
-          bool? isPythonFormat = false,
-        ]) {
-          if (value == null || pythonDateFormat == null) {
-            return DateTime.now().toString();
-          }
-          // Convert Python format to Dart format
-          final dartFormat = isPythonFormat == true ? convertPythonToDartDateFormat(pythonDateFormat) : pythonDateFormat;
-          final inputFormat = DateFormat(
-            dartFormat,
-          ).format(DateTime.parse(value));
-          return inputFormat;
-        },
-
         /// Replaces occurrences of a character or substring in a string.
         'replace_each': (
           String? value,
@@ -2732,18 +2762,6 @@ class GetJinja {
             res = res.replaceFirst('{}', arg.toString());
           }
           return res;
-        },
-
-        /// Return a string representation of a datetime in a particular format.
-        'format_datetime': (String? dateStr, String fmt) {
-          if (dateStr == null) return '';
-          try {
-            final date = DateTime.parse(dateStr);
-            final dartFmt = convertPythonToDartDateFormat(fmt);
-            return DateFormat(dartFmt).format(date);
-          } catch (e) {
-            return dateStr;
-          }
         },
 
         /// Deserialize from a JSON-serialized string.
