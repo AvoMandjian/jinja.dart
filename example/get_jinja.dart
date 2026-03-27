@@ -52,8 +52,30 @@ class JinjaGoogleTranslateService {
 }
 
 String convertPythonToDartDateFormat(String format) {
-  // Simple conversion, can be expanded.
-  return format.replaceAll('%Y', 'yyyy').replaceAll('%m', 'MM').replaceAll('%d', 'dd');
+  // Python strftime -> intl DateFormat conversion for common directives.
+  String converted = format
+      .replaceAll('%Y', 'yyyy')
+      .replaceAll('%y', 'yy')
+      .replaceAll('%m', 'MM')
+      .replaceAll('%d', 'dd')
+      .replaceAll('%H', 'HH')
+      .replaceAll('%I', 'hh')
+      .replaceAll('%M', 'mm')
+      .replaceAll('%S', 'ss')
+      .replaceAll('%f', 'SSS')
+      .replaceAll('%p', 'a')
+      .replaceAll('%a', 'EEE')
+      .replaceAll('%A', 'EEEE')
+      .replaceAll('%b', 'MMM')
+      .replaceAll('%B', 'MMMM');
+
+  // Prevent leftover `%` directives from rendering as literals (e.g. `%10`).
+  converted = converted.replaceAllMapped(
+    RegExp(r'%([A-Za-z])'),
+    (match) => match.group(1)!,
+  );
+
+  return converted;
 }
 
 class GetJinja {
@@ -1182,22 +1204,31 @@ class GetJinja {
         'format_time': (
           String? value,
           String? pythonTimeFormat, [
-          bool? isPythonFormat = false,
+          bool? isPythonFormat = true,
         ]) {
           if (value == null || pythonTimeFormat == null) {
             return DateTime.now().toString();
           }
           // Convert Python format to Dart format
           final dartFormat = isPythonFormat == true ? convertPythonToDartDateFormat(pythonTimeFormat) : pythonTimeFormat;
-          final inputFormat = DateFormat(
-            dartFormat,
-          ).format(DateTime.parse(value));
+          DateTime parsedDateTime;
+          final parsedIsoDateTime = DateTime.tryParse(value);
+          if (parsedIsoDateTime != null) {
+            parsedDateTime = parsedIsoDateTime;
+          } else {
+            try {
+              parsedDateTime = DateFormat('HH:mm:ss').parseStrict(value);
+            } catch (_) {
+              parsedDateTime = DateFormat('HH:mm').parseStrict(value);
+            }
+          }
+          final inputFormat = DateFormat(dartFormat).format(parsedDateTime);
           return inputFormat;
         },
         'format_date': (
           String? value,
           String? pythonDateFormat, [
-          bool? isPythonFormat = false,
+          bool? isPythonFormat = true,
         ]) {
           if (value == null || pythonDateFormat == null) {
             return DateTime.now().toString();

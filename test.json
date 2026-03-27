@@ -1,97 +1,171 @@
+[
+    {
+        "id": "9c169d58-56d4-4c20-96a6-8b44a84a9582",
+        "ui_widget": "single_line_text",
+        "property_label": "Font Name",
+        "property_id": "font_name",
+        "data_type": "dt_text",
+        "data": {
+            "value": "test string",
+            "value_text": "Test String"
+        }
+    },
+    {
+        "id": "1da7b293-3e3d-4b6b-9789-c5dc7b6214cd",
+        "data_type": "dt_base64",
+        "data": {
+            "value": "SGVsbG8gV29ybGQ=",
+            "value_text": "Hello World"
+        }
+    },
+    {
+        "id": "dab59e2b-73b7-4974-ae2e-79caf014bc59",
+        "data_type": "dt_uuid",
+        "data": {
+            "value": "065d4098-8c9e-4ec1-8348-9a6beaf6a135",
+            "value_text": "065d4098-8c9e-4ec1-8348-9a6beaf6a135"
+        }
+    },
+    {
+        "id": "153a4065-137f-4864-b169-76e685074b0e",
+        "data_type": "dt_link",
+        "data": {
+            "value": "https://digitalpomegranate.com",
+            "value_text": "https://digitalpomegranate.com"
+        }
+    },
+    {
+        "id": "5311be60-c10a-4fde-bcaf-2d2b3299f0ab",
+        "data_type": "dt_datetime",
+        "data": {
+            "value": "2026-10-10 10:10:10",
+            "value_text": "10/10/2026 10:10:10"
+        }
+    },
+    {
+        "id": "92daedef-b722-4557-93ac-7f806bedc7dd",
+        "data_type": "dt_datetime",
+        "data": {
+            "value": "2026-10-10 10:10:10",
+            "value_text": "10/10/2026 10:10:10"
+        }
+    },
+    {
+        "id": "babee08b-a324-4915-9f3d-08889af5337e",
+        "data_type": "dt_date",
+        "data": {
+            "value": "2026-10-10",
+            "value_text": "10/10/2026"
+        }
+    },
+    {
+        "id": "d8b496b3-e771-4949-851b-5029e9de3922",
+        "data_type": "dt_time",
+        "data": {
+            "value": "10:10:10",
+            "value_text": "10:10:10"
+        }
+    },
+    {
+        "id": "cda613b8-5b45-4fa7-8d8b-785f942e08f2",
+        "ui_widget": "number_input",
+        "data_type": "dt_number",
+        "data": {
+            "value": 1000.252,
+            "value_text": "1000.25"
+        }
+    },
+    {
+        "id": "6a057bd9-c157-4761-b681-33147dc4ae2d",
+        "data_type": "dt_percent",
+        "data": {
+            "value": 10,
+            "value_text": "10.00%"
+        }
+    },
+    {
+        "id": "097f1edc-70d3-41dd-9673-ef53eb8c4f21",
+        "data_type": "dt_money",
+        "data": {
+            "value": 1000,
+            "value_metadata": {
+                "currency_id": "USD",
+                "currency_symb": "$",
+                "convert_rate": null
+            },
+            "value_text": "$1,000.00"
+        }
+    },
+    {
+        "id": "adabc81d-556f-4b85-b61d-f4521c6a35a7",
+        "ui_widget": "switch",
+        "data_type": "dt_boolean",
+        "data": {
+            "value": true,
+            "value_text": "On"
+        }
+    },
+    {
+        "id": "e573fcfe-49ed-48a7-a56a-6820c4317a19",
+        "data_type": "dt_list",
+        "data": [
             {
-                "id": "ddbadb42-4a3f-4588-9138-7014b560022c",
-                "ui_widget": "jframe",
-                "data_type": "dt_object",
+                "id": "19a86a5a-9958-4d0b-99e6-28f159599d76",
+                "data_type": "dt_number",
                 "data": {
-                    "script_type": {
-                        "id": "4e67321e-5bea-465b-93e8-2fa1c74f273c",
-                        "ui_widget": "custom_container",
-                        "data_type": "dt_object",
-                        "data": {
-                            "label": {
-                                "id": "f6466b6e-8d36-4262-a3e9-9300a5cadb54",
-                                "ui_widget": "text_single_line",
-                                "data_type": "dt_text",
-                                "data": {
-                                    "value": "Script Type",
-                                    "value_text": "Script Type"
-                                }
-                            },
-                            "toggle": {
-                                "id": "2e1c02ff-cac9-4175-a8b5-9c6a7e2ebbb4",
-                                "ui_widget": "single_select_segmented_button",
-                                "data_type": "dt_object",
-                                "data": {
-                                    "values": {
-                                        "id": "b398ca44-1456-4dbc-8047-4f62e46e1f26",
-                                        "data_type": "dt_list",
-                                        "data": [
-                                            {
-                                                "id": "e6cd9b38-57a3-4149-af01-0d3b95727c9d",
-                                                "data_type": "dt_text",
-                                                "data": {
-                                                    "value": "script",
-                                                    "value_text": "script"
-                                                }
-                                            },
-                                            {
-                                                "id": "27b073d3-fc2e-4863-b850-01ed00af9b66",
-                                                "data_type": "dt_text",
-                                                "data": {
-                                                    "value": "server",
-                                                    "value_text": "server"
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "output_type": {
-                        "id": "cd955b60-2406-4c0a-b3e5-87b55405f17d",
-                        "ui_widget": "custom_container",
-                        "data_type": "dt_object",
-                        "data": {
-                            "label": {
-                                "id": "26038f06-7a1a-4a74-8c68-1a3e20f0403c",
-                                "ui_widget": "text_single_line",
-                                "data_type": "dt_text",
-                                "data": {
-                                    "value": "Output Type",
-                                    "value_text": "Output Type"
-                                }
-                            },
-                            "toggle": {
-                                "id": "42117e41-0f8c-4576-ae55-49d08366bc61",
-                                "ui_widget": "single_select_segmented_button",
-                                "data_type": "dt_object",
-                                "data": {
-                                    "values": {
-                                        "id": "2837654e-cea5-442a-9679-4a86e4e942e7",
-                                        "data_type": "dt_list",
-                                        "data": [
-                                            {
-                                                "id": "215684c8-e68e-4d94-b4dd-1142858c18ee",
-                                                "data_type": "dt_text",
-                                                "data": {
-                                                    "value": "html",
-                                                    "value_text": "html"
-                                                }
-                                            },
-                                            {
-                                                "id": "43153a51-00c6-4d87-ae19-9799ff85c0cb",
-                                                "data_type": "dt_text",
-                                                "data": {
-                                                    "value": "json",
-                                                    "value_text": "json"
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    "value": 1,
+                    "value_text": "1.00"
+                }
+            },
+            {
+                "id": "353a022d-3d8d-4d46-a354-c20a40d7ab09",
+                "data_type": "dt_number",
+                "data": {
+                    "value": 2,
+                    "value_text": "2.00"
+                }
+            },
+            {
+                "id": "520ad1ef-9317-4577-a567-790f51177fc2",
+                "data_type": "dt_number",
+                "data": {
+                    "value": 3,
+                    "value_text": "3.00"
                 }
             }
+        ]
+    },
+    {
+        "id": "1",
+        "ui_widget": "complex_object",
+        "data_type": "dt_object",
+        "data": {
+            "a": {
+                "id": "45f6f72e-d690-490e-a1db-3cdb4bc85436",
+                "data_type": "dt_number",
+                "data": {
+                    "value": 1,
+                    "value_text": "1.00"
+                }
+            },
+            "b": {
+                "id": "7269791e-df56-4ef9-9cb3-3e82addd9bf7",
+                "data_type": "dt_text",
+                "data": {
+                    "value": "2",
+                    "value_text": "2"
+                }
+            }
+        }
+    },
+    {
+        "id": "bd95c406-1393-4cc9-9f80-69abbe21e683",
+        "data_type": "dt_event",
+        "workflow_id": "test_workflow"
+    },
+    {
+        "id": "b9b48df8-c233-496b-bd2b-575df850eb74",
+        "data_type": "dt_events",
+        "data": {}
+    }
+]

@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:jinja/jinja.dart';
@@ -1253,6 +1254,12 @@ void main() async {
     final containerTypesIn = await File(
       'data-types/examples/app_jinja_ide/list_in.jinja',
     ).readAsString();
+    final headerIn = await File(
+      'data-types/examples/app_jinja_ide/header_in.jinja',
+    ).readAsString();
+    final storeIn = await File(
+      'data-types/examples/app_jinja_store/store_in.jinja',
+    ).readAsString();
     final viewsTemplate = await File('data-types/jinja/views.jinja').readAsString();
     final nativeTypesTemplate = await File(
       'data-types/jinja/native_types.jinja',
@@ -1265,6 +1272,12 @@ void main() async {
     ).readAsString();
     final slideoverTemplate = await File(
       'data-types/jinja/app_jinja_ide/slideover.jinja',
+    ).readAsString();
+    final headerTemplate = await File(
+      'data-types/jinja/app_jinja_ide/header.jinja',
+    ).readAsString();
+    final storeTemplate = await File(
+      'data-types/jinja/app_jinja_store/store.jinja',
     ).readAsString();
     final macroToggleTemplate = await File(
       'example/data_types/macro_toggle.jinja',
@@ -1283,9 +1296,13 @@ void main() async {
       {
         'views.jinja': viewsTemplate,
         'slideover.jinja': slideoverTemplate,
+        'app_jinja_ide/slideover.jinja': slideoverTemplate,
         'native_types.jinja': nativeTypesTemplate,
         'media_types.jinja': mediaTypesTemplate,
         'container_types.jinja': containerTypesTemplate,
+        'app_jinja_ide/list.jinja': containerTypesTemplate,
+        'app_jinja_ide/header.jinja': headerTemplate,
+        'app_jinja_store/store.jinja': storeTemplate,
         'macro_toggle.jinja': macroToggleTemplate,
       },
       globalJinjaData: jinjaData,
@@ -1357,76 +1374,107 @@ void main() async {
     // Example 1: native_types_in.jinja
     print('\n=== Example 1: native_types_in.jinja ===');
     final template4 = env.fromString(nativeTypesIn);
-    final result4 = await template4.renderAsync(jinjaData);
-    print('Result length: ${result4.length}');
+    String resultOfJinjaScript = await template4.renderAsync(jinjaData);
+    print('Result length: ${resultOfJinjaScript.length}');
     print(
       '--------------------------------------------------------------------------------------------------------------------------------',
     );
-    print(result4.replaceAll('\n', ''));
+    print(resultOfJinjaScript.replaceAll('\n', ''));
     print(
       '--------------------------------------------------------------------------------------------------------------------------------',
     );
+    jsonDecode(resultOfJinjaScript);
     // Example 2: slideover_in.jinja
     print('\n=== Example 2: slideover_in.jinja ===');
     final template5 = env.fromString(slideoverIn);
-    final result5 = await template5.renderAsync(jinjaData);
-    print('Result length: ${result5.length}');
+    resultOfJinjaScript = await template5.renderAsync(jinjaData);
+    print('Result length: ${resultOfJinjaScript.length}');
     print(
       '--------------------------------------------------------------------------------------------------------------------------------',
     );
-    print(result5.replaceAll('\n', ''));
+    print(resultOfJinjaScript.replaceAll('\n', ''));
     print(
       '--------------------------------------------------------------------------------------------------------------------------------',
     );
+    jsonDecode(resultOfJinjaScript);
     // Example 3: container_types_in.jinja
     print('\n=== Example 3: container_types_in.jinja ===');
     final template6 = env.fromString(containerTypesIn);
-    final result6 = await template6.renderAsync(jinjaData);
-    print('Result length: ${result6.length}');
+    resultOfJinjaScript = await template6.renderAsync(jinjaData);
+    print('Result length: ${resultOfJinjaScript.length}');
     print(
       '--------------------------------------------------------------------------------------------------------------------------------',
     );
-    print(result6.replaceAll('\n', ''));
+    print(resultOfJinjaScript.replaceAll('\n', ''));
     print(
       '--------------------------------------------------------------------------------------------------------------------------------',
     );
-    // Example 4: views.jinja
-    print('\n=== Example 4: views.jinja ===');
-    final template7 = env.fromString(viewsTemplate);
-    final result7 = await template7.renderAsync(jinjaData);
-    print('Result length: ${result7.length}');
+    jsonDecode(resultOfJinjaScript);
+    // Example 4: header_in.jinja
+    print('\n=== Example 4: header_in.jinja ===');
+    final template7 = env.fromString(headerIn);
+    resultOfJinjaScript = await template7.renderAsync(jinjaData);
+    print('Result length: ${resultOfJinjaScript.length}');
     print(
       '--------------------------------------------------------------------------------------------------------------------------------',
     );
-    print(result7.replaceAll('\n', ''));
+    print(resultOfJinjaScript.replaceAll('\n', ''));
     print(
       '--------------------------------------------------------------------------------------------------------------------------------',
     );
-    // Example 5: custom_jinja_script.jinja
-    print('\n=== Example 5: custom_jinja_script.jinja ===');
-    final template8 = env.fromString(customJinjaScript);
-    final result8 = await template8.renderAsync(jinjaData);
-    print('Result length: ${result8.length}');
+    jsonDecode(resultOfJinjaScript);
+    // Example 5: store_in.jinja
+    print('\n=== Example 5: store_in.jinja ===');
+    final template8 = env.fromString(storeIn);
+    resultOfJinjaScript = await template8.renderAsync(jinjaData);
+    print('Result length: ${resultOfJinjaScript.length}');
     print(
       '--------------------------------------------------------------------------------------------------------------------------------',
     );
-    print(result8.replaceAll('\n', ''));
+    print(resultOfJinjaScript.replaceAll('\n', ''));
     print(
       '--------------------------------------------------------------------------------------------------------------------------------',
     );
-
-    // Example 6: macro_toggle.jinja
-    print('\n=== Example 6: macro_toggle.jinja ===');
-    final template9 = env.fromString(toggleExecutionScript);
-    final result9 = await template9.renderAsync(jinjaData);
-    print('Result length: ${result9.length}');
+    // jsonDecode(resultOfJinjaScript);
+    // // Example 6: views.jinja
+    // print('\n=== Example 6: views.jinja ===');
+    // final template9 = env.fromString(viewsTemplate);
+    // resultOfJinjaScript = await template9.renderAsync(jinjaData);
+    // print('Result length: ${resultOfJinjaScript.length}');
     // print(
     //   '--------------------------------------------------------------------------------------------------------------------------------',
     // );
-    // print(result9.replaceAll('\n', ''));
+    // print(resultOfJinjaScript.replaceAll('\n', ''));
     // print(
     //   '--------------------------------------------------------------------------------------------------------------------------------',
     // );
+    // jsonDecode(resultOfJinjaScript);
+    // Example 7: custom_jinja_script.jinja
+    print('\n=== Example 7: custom_jinja_script.jinja ===');
+    final template10 = env.fromString(customJinjaScript);
+    resultOfJinjaScript = await template10.renderAsync(jinjaData);
+    print('Result length: ${resultOfJinjaScript.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(resultOfJinjaScript.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    jsonDecode(resultOfJinjaScript);
+    // Example 8: macro_toggle.jinja
+    print('\n=== Example 8: macro_toggle.jinja ===');
+    final template11 = env.fromString(toggleExecutionScript);
+    resultOfJinjaScript = await template11.renderAsync(jinjaData);
+    print('Result length: ${resultOfJinjaScript.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(resultOfJinjaScript.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    jsonDecode(resultOfJinjaScript);
   } catch (e, stack) {
     print('\n!!! UNHANDLED EXCEPTION !!!');
     print(e);
