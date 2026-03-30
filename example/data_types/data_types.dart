@@ -1257,8 +1257,20 @@ void main() async {
     final headerIn = await File(
       'data-types/examples/app_jinja_ide/header_in.jinja',
     ).readAsString();
+    final agentListIn = await File(
+      'data-types/examples/app_jinja_ide/agent_list_in.jinja',
+    ).readAsString();
     final storeIn = await File(
       'data-types/examples/app_jinja_store/store_in.jinja',
+    ).readAsString();
+    final cardIn = await File(
+      'data-types/examples/html_widgets/card_in.jinja',
+    ).readAsString();
+    final userSummaryIn = await File(
+      'data-types/examples/html_widgets/user_summary_in.jinja',
+    ).readAsString();
+    final eventsIn = await File(
+      'data-types/examples/other/events_in.jinja',
     ).readAsString();
     final viewsTemplate = await File('data-types/jinja/views.jinja').readAsString();
     final nativeTypesTemplate = await File(
@@ -1276,8 +1288,23 @@ void main() async {
     final headerTemplate = await File(
       'data-types/jinja/app_jinja_ide/header.jinja',
     ).readAsString();
+    final agentListTemplate = await File(
+      'data-types/jinja/app_jinja_ide/agent_list.jinja',
+    ).readAsString();
+    final listEventsTemplate = await File(
+      'data-types/jinja/app_jinja_ide/list_events.jinja',
+    ).readAsString();
     final storeTemplate = await File(
       'data-types/jinja/app_jinja_store/store.jinja',
+    ).readAsString();
+    final cardTemplate = await File(
+      'data-types/jinja/html_widgets/card.jinja',
+    ).readAsString();
+    final userSummaryTemplate = await File(
+      'data-types/jinja/html_widgets/user_summary.jinja',
+    ).readAsString();
+    final eventsTemplate = await File(
+      'data-types/jinja/other/events.jinja',
     ).readAsString();
     final macroToggleTemplate = await File(
       'example/data_types/macro_toggle.jinja',
@@ -1302,7 +1329,12 @@ void main() async {
         'container_types.jinja': containerTypesTemplate,
         'app_jinja_ide/list.jinja': containerTypesTemplate,
         'app_jinja_ide/header.jinja': headerTemplate,
+        'app_jinja_ide/agent_list.jinja': agentListTemplate,
+        'app_jinja_ide/list_events.jinja': listEventsTemplate,
         'app_jinja_store/store.jinja': storeTemplate,
+        'html_widgets/card.jinja': cardTemplate,
+        'html_widgets/user_summary.jinja': userSummaryTemplate,
+        'other/events.jinja': eventsTemplate,
         'macro_toggle.jinja': macroToggleTemplate,
       },
       globalJinjaData: jinjaData,
@@ -1475,6 +1507,70 @@ void main() async {
       '--------------------------------------------------------------------------------------------------------------------------------',
     );
     jsonDecode(resultOfJinjaScript);
+    // Example 9: agent_list_in.jinja
+    print('\n=== Example 9: agent_list_in.jinja ===');
+    final template12 = env.fromString(agentListIn);
+    resultOfJinjaScript = await template12.renderAsync(jinjaData);
+    print('Result length: ${resultOfJinjaScript.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(resultOfJinjaScript.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    final agentListJson = jsonDecode(resultOfJinjaScript) as Map<String, dynamic>;
+    if (agentListJson['data_type'] != 'dt_object') {
+      throw StateError('agent_list_in.jinja did not return dt_object');
+    }
+    // Example 10: card_in.jinja
+    print('\n=== Example 10: card_in.jinja ===');
+    final template13 = env.fromString(cardIn);
+    resultOfJinjaScript = await template13.renderAsync(jinjaData);
+    print('Result length: ${resultOfJinjaScript.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(resultOfJinjaScript.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    final cardJson = jsonDecode(resultOfJinjaScript) as Map<String, dynamic>;
+    if (cardJson['data_type'] != 'dt_object') {
+      throw StateError('card_in.jinja did not return dt_object');
+    }
+    // Example 11: user_summary_in.jinja
+    print('\n=== Example 11: user_summary_in.jinja ===');
+    final template14 = env.fromString(userSummaryIn);
+    resultOfJinjaScript = await template14.renderAsync(jinjaData);
+    print('Result length: ${resultOfJinjaScript.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(resultOfJinjaScript.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    final userSummaryJson = jsonDecode(resultOfJinjaScript) as Map<String, dynamic>;
+    if (userSummaryJson['data_type'] != 'dt_object') {
+      throw StateError('user_summary_in.jinja did not return dt_object');
+    }
+    // Example 12: events_in.jinja
+    print('\n=== Example 12: events_in.jinja ===');
+    final template15 = env.fromString(eventsIn);
+    resultOfJinjaScript = await template15.renderAsync(jinjaData);
+    print('Result length: ${resultOfJinjaScript.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(resultOfJinjaScript.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    final eventsJson = jsonDecode(resultOfJinjaScript) as Map<String, dynamic>;
+    if (eventsJson['data_type'] != 'dt_object') {
+      throw StateError('events_in.jinja did not return dt_object');
+    }
   } catch (e, stack) {
     print('\n!!! UNHANDLED EXCEPTION !!!');
     print(e);
