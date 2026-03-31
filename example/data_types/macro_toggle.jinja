@@ -299,25 +299,7 @@
       }
     },
     "widget_list": [
-      {{print("--------------------------------")}}
-      {{print("STEP: 1")}}
-      {{print(data.data)}}
-      {{print("--------------------------------")}}
-      {{print("STEP: 2")}}
-      {{print(data.data.values)}}
-      {{print("--------------------------------")}}
-      {{print("STEP: 3")}}
-      {{print(data.data.values.data)}}
-      {{print("--------------------------------")}}
-      {{print("STEP: 4")}}
-      {{print(data.data.selected)}}
-      {{print("--------------------------------")}}
-      {{print("STEP: 5")}}
       {% for value in data.data.values.data %}
-        {{print("STEP: 6")}}
-        {{print("--------------------------------")}}
-        {{print(value)}}
-      {{print("--------------------------------")}}
         {
         "value": "{{value.data.value}}",
         "value_text": "{{value.data.value_text}}",
