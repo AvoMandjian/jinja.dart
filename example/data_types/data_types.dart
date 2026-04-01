@@ -63,6 +63,30 @@ void main() async {
     final eventsOut = await File(
       'data-types/examples/other/events_out.json',
     ).readAsString();
+    final slideoverOutFlatten = await File(
+      'data-types/examples/app_jinja_ide/slideover_out_flatten.json',
+    ).readAsString();
+    final containerTypesOutFlatten = await File(
+      'data-types/examples/app_jinja_ide/list_out_flatten.json',
+    ).readAsString();
+    final headerOutFlatten = await File(
+      'data-types/examples/app_jinja_ide/header_out_flatten.json',
+    ).readAsString();
+    final agentListOutFlatten = await File(
+      'data-types/examples/app_jinja_ide/agent_list_out_flatten.json',
+    ).readAsString();
+    final storeOutFlatten = await File(
+      'data-types/examples/app_jinja_store/store_out_flatten.json',
+    ).readAsString();
+    final cardOutFlatten = await File(
+      'data-types/examples/html_widgets/card_out_flatten.json',
+    ).readAsString();
+    final userSummaryOutFlatten = await File(
+      'data-types/examples/html_widgets/user_summary_in_out_flatten.json',
+    ).readAsString();
+    final eventsOutFlatten = await File(
+      'data-types/examples/other/events_out_flatten.json',
+    ).readAsString();
     final viewsTemplate = await File('data-types/jinja/views.jinja').readAsString();
     final nativeTypesTemplate = await File(
       'data-types/jinja/native_types.jinja',
@@ -122,7 +146,6 @@ void main() async {
       },
       globalJinjaData: {},
     );
-
     final env = GetJinja.environment(
       MockBuildContext(),
       loader,
@@ -170,6 +193,22 @@ void main() async {
       actualJson: resultOfJinjaScript,
       expectedJson: slideoverOut,
     );
+    final slideoverFlatten = jsonEncode(
+      _flattenDataType(jsonDecode(resultOfJinjaScript)),
+    );
+    print('Flatten result length: ${slideoverFlatten.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(slideoverFlatten.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    assertJsonMatchesGolden(
+      name: 'slideover_out_flatten.json',
+      actualJson: slideoverFlatten,
+      expectedJson: slideoverOutFlatten,
+    );
     // Example 3: container_types_in.jinja
     print('\n=== Example 3: container_types_in.jinja ===');
     final template6 = env.fromString(containerTypesIn);
@@ -187,6 +226,22 @@ void main() async {
       name: 'container_types_in.jinja',
       actualJson: resultOfJinjaScript,
       expectedJson: containerTypesOut,
+    );
+    final containerTypesFlatten = jsonEncode(
+      _flattenDataType(jsonDecode(resultOfJinjaScript)),
+    );
+    print('Flatten result length: ${containerTypesFlatten.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(containerTypesFlatten.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    assertJsonMatchesGolden(
+      name: 'container_types_out_flatten.json',
+      actualJson: containerTypesFlatten,
+      expectedJson: containerTypesOutFlatten,
     );
     // Example 4: header_in.jinja
     print('\n=== Example 4: header_in.jinja ===');
@@ -206,6 +261,22 @@ void main() async {
       actualJson: resultOfJinjaScript,
       expectedJson: headerOut,
     );
+    final headerFlatten = jsonEncode(
+      _flattenDataType(jsonDecode(resultOfJinjaScript)),
+    );
+    print('Flatten result length: ${headerFlatten.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(headerFlatten.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    assertJsonMatchesGolden(
+      name: 'header_out_flatten.json',
+      actualJson: headerFlatten,
+      expectedJson: headerOutFlatten,
+    );
     // Example 5: store_in.jinja
     print('\n=== Example 5: store_in.jinja ===');
     final template8 = env.fromString(storeIn);
@@ -223,6 +294,22 @@ void main() async {
       name: 'store_in.jinja',
       actualJson: resultOfJinjaScript,
       expectedJson: storeOut,
+    );
+    final storeFlatten = jsonEncode(
+      _flattenDataType(jsonDecode(resultOfJinjaScript)),
+    );
+    print('Flatten result length: ${storeFlatten.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(storeFlatten.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    assertJsonMatchesGolden(
+      name: 'store_out_flatten.json',
+      actualJson: storeFlatten,
+      expectedJson: storeOutFlatten,
     );
     jsonDecode(resultOfJinjaScript);
     // Example 9: agent_list_in.jinja
@@ -246,6 +333,22 @@ void main() async {
       actualJson: resultOfJinjaScript,
       expectedJson: agentListOut,
     );
+    final agentListFlatten = jsonEncode(
+      _flattenDataType(jsonDecode(resultOfJinjaScript)),
+    );
+    print('Flatten result length: ${agentListFlatten.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(agentListFlatten.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    assertJsonMatchesGolden(
+      name: 'agent_list_out_flatten.json',
+      actualJson: agentListFlatten,
+      expectedJson: agentListOutFlatten,
+    );
     // Example 10: card_in.jinja
     print('\n=== Example 10: card_in.jinja ===');
     final template13 = env.fromString(cardIn);
@@ -266,6 +369,22 @@ void main() async {
       name: 'card_in.jinja',
       actualJson: resultOfJinjaScript,
       expectedJson: cardOut,
+    );
+    final cardFlatten = jsonEncode(
+      _flattenDataType(jsonDecode(resultOfJinjaScript)),
+    );
+    print('Flatten result length: ${cardFlatten.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(cardFlatten.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    assertJsonMatchesGolden(
+      name: 'card_out_flatten.json',
+      actualJson: cardFlatten,
+      expectedJson: cardOutFlatten,
     );
     // Example 11: user_summary_in.jinja
     print('\n=== Example 11: user_summary_in.jinja ===');
@@ -288,6 +407,22 @@ void main() async {
       actualJson: resultOfJinjaScript,
       expectedJson: userSummaryOut,
     );
+    final userSummaryFlatten = jsonEncode(
+      _flattenDataType(jsonDecode(resultOfJinjaScript)),
+    );
+    print('Flatten result length: ${userSummaryFlatten.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(userSummaryFlatten.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    assertJsonMatchesGolden(
+      name: 'user_summary_out_flatten.json',
+      actualJson: userSummaryFlatten,
+      expectedJson: userSummaryOutFlatten,
+    );
     // Example 12: events_in.jinja
     print('\n=== Example 12: events_in.jinja ===');
     final template15 = env.fromString(eventsIn);
@@ -308,6 +443,22 @@ void main() async {
       name: 'events_in.jinja',
       actualJson: resultOfJinjaScript,
       expectedJson: eventsOut,
+    );
+    final eventsFlatten = jsonEncode(
+      _flattenDataType(jsonDecode(resultOfJinjaScript)),
+    );
+    print('Flatten result length: ${eventsFlatten.length}');
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    print(eventsFlatten.replaceAll('\n', ''));
+    print(
+      '--------------------------------------------------------------------------------------------------------------------------------',
+    );
+    assertJsonMatchesGolden(
+      name: 'events_out_flatten.json',
+      actualJson: eventsFlatten,
+      expectedJson: eventsOutFlatten,
     );
   } catch (e, stack) {
     print('\n!!! UNHANDLED EXCEPTION !!!');
@@ -428,6 +579,82 @@ void _collectJsonMismatches({
       '$path -> actual=${jsonEncode(actual)}, expected=${jsonEncode(expected)}',
     );
   }
+}
+
+dynamic _flattenDataType(dynamic dt) {
+  if (dt is List) {
+    return dt.map(_flattenDataType).toList();
+  }
+  if (dt is! Map<String, dynamic>) {
+    return dt;
+  }
+
+  final dataType = dt['data_type'];
+  if (dataType == 'dt_object') {
+    final data = dt['data'];
+    if (data is! Map<String, dynamic>) {
+      return <String, dynamic>{};
+    }
+    return <String, dynamic>{
+      for (final entry in data.entries) entry.key: _flattenDataType(entry.value),
+    };
+  }
+  if (dataType == 'dt_events') {
+    final data = dt['data'];
+    if (data is! Map<String, dynamic>) {
+      return <String, dynamic>{};
+    }
+    return <String, dynamic>{
+      for (final entry in data.entries) entry.key: _flattenDataType(entry.value),
+    };
+  }
+  if (dataType == 'dt_event') {
+    final properties = dt['properties'];
+    return <String, dynamic>{
+      'workflow_id': dt['workflow_id'],
+      'properties': properties is Map<String, dynamic>
+          ? <String, dynamic>{
+              for (final entry in properties.entries) entry.key: _flattenDataType(entry.value),
+            }
+          : <String, dynamic>{},
+    };
+  }
+  if (dataType == 'dt_list') {
+    final data = dt['data'];
+    if (data is! List) {
+      return <dynamic>[];
+    }
+    return data.map(_flattenDataType).toList();
+  }
+  if (dataType == 'dt_money') {
+    final moneyData = dt['data'];
+    if (moneyData is! Map<String, dynamic>) {
+      return <String, dynamic>{};
+    }
+    final metadata = moneyData['value_metadata'];
+    final flattened = <String, dynamic>{};
+    if (moneyData.containsKey('value')) {
+      flattened['amount'] = moneyData['value'];
+    }
+    if (metadata is Map<String, dynamic>) {
+      if (metadata.containsKey('currency_id')) {
+        flattened['currency_id'] = metadata['currency_id'];
+      }
+      if (metadata.containsKey('currency_symb')) {
+        flattened['currency_symb'] = metadata['currency_symb'];
+      }
+      if (metadata.containsKey('convert_rate')) {
+        flattened['convert_rate'] = metadata['convert_rate'];
+      }
+    }
+    return flattened;
+  }
+
+  final data = dt['data'];
+  if (data is Map<String, dynamic>) {
+    return data['value'];
+  }
+  return data;
 }
 
 Future<String> fetchData() async {
